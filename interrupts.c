@@ -4,6 +4,7 @@
 #include "usb_istr.h"
 #include "usb_pwr.h"
 #include "Util/fat_fs/inc/diskio.h"
+#include "Util/fat_fs/inc/ff.h"
 #include "core_cm3.h"
 #if defined(STM32F10X_HD) || defined(STM32F10X_XL) 
  #include "stm32_eval_sdio_sd.h"
@@ -76,6 +77,7 @@ void EXTI0_IRQHandler(void) {
 		EXTI_ClearITPendingBit(EXTI_Line0);
 		/*Called Code goes here*/
 		delay();					//Debouncing delay
+		if(file_opened)f_close(&FATFS_logfile);		//Close any opened file
 		if(GET_CHRG_STATE)				//Interrupt due to USB insertion - reset to usb mode
 			NVIC_SystemReset();			//Software reset of the system - USB inserted whilst running
 		else
