@@ -13,6 +13,7 @@ do {							\
 
 //function prototypes
 void __fat_print_char(char c);
+void __str_print_char(char c);
 //globals
 extern volatile uint8_t file_opened;
 extern FIL FATFS_logfile;

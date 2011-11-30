@@ -77,7 +77,10 @@ void EXTI0_IRQHandler(void) {
 		EXTI_ClearITPendingBit(EXTI_Line0);
 		/*Called Code goes here*/
 		delay();					//Debouncing delay
-		if(file_opened)f_close(&FATFS_logfile);		//Close any opened file
+		if(file_opened) {
+			f_truncate(&FATFS_logfile);		//Truncate the lenght - fix pre allocation
+			f_close(&FATFS_logfile);		//Close any opened file
+		}
 		if(GET_CHRG_STATE)				//Interrupt due to USB insertion - reset to usb mode
 			NVIC_SystemReset();			//Software reset of the system - USB inserted whilst running
 		else
