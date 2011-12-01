@@ -34,9 +34,8 @@ int main(void)
 	setup_gpio();					//Initialised pins, and detects boot source
 	SysTick_Configuration();			//Start up system timer at 100Hz for uSD card functionality
 	rtc_init();					//Real time clock initialise - (keeps time unchanged if set)
-	ADC_Configuration();
 	Usarts_Init();
-	EXTI_Config();
+	ISR_Config();
 	rprintfInit(__usart_send_char);			//Printf over the bluetooth
 	if(USB_SOURCE==bootsource) {
 		Set_System();				//This actually just inits the storage layer
@@ -96,7 +95,10 @@ int main(void)
 			shutdown();			//Abort after a single red flash
 		}
 	}
+	ADC_Configuration();				//We leave this a bit later to allow stabilisation
+	delay();
 	calibrate_sensor();				//Calibrate the offset on the diff pressure sensor
+	EXTI_ONOFF_EN();				//Enable the off interrupt - allow some time for debouncing
 	while (1) {
 		switch_leds_on();
 		delay();

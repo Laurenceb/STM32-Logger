@@ -13,13 +13,33 @@
 
 
 /**
-  * @brief  Configure all interrupts
+  * @brief  Configure all interrupts accept on/off pin
   * @param  None
   * @retval None
-  * Note that this is hardcoded to the ITG-3200 and LSM303DLH pins on v1.0 dactyl board
   * This initialiser function assumes the clocks and gpio have been configured
   */
-void EXTI_Config(void) {
+void ISR_Config(void) {
+	NVIC_InitTypeDef   NVIC_InitStructure;
+	/* Set the Vector Table base location at 0x08000000 */    
+	NVIC_SetVectorTable(NVIC_VectTab_FLASH, 0x0);      
+	//First we configure the Kalman ISR
+	/* Configure one bit for preemption priority */   
+	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
+	/* Enable and set SYSTICK Interrupt to the fifth priority */
+	NVIC_InitStructure.NVIC_IRQChannel = SysTick_IRQn;	//The 100hz timer triggered interrupt	
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x00;//Higher pre-emption priority - can nest inside USB/SD
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x05;	//5th subpriority
+	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&NVIC_InitStructure);
+}
+
+/**
+  * @brief  Configure on/off pin interrupt
+  * @param  None
+  * @retval None
+  * This initialiser function assumes the clocks and gpio have been configured
+  */
+void EXTI_ONOFF_EN(void) {
 	EXTI_InitTypeDef   EXTI_InitStructure;
 	NVIC_InitTypeDef   NVIC_InitStructure;
 	EXTI_DeInit();
@@ -36,21 +56,10 @@ void EXTI_Config(void) {
 	EXTI_InitStructure.EXTI_LineCmd = ENABLE;
 	EXTI_Init(&EXTI_InitStructure);
 
-	/* Set the Vector Table base location at 0x08000000 */    
-	NVIC_SetVectorTable(NVIC_VectTab_FLASH, 0x0);      
-	//First we configure the Kalman ISR
-	/* Configure one bit for preemption priority */   
-	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
 	/* Enable and set EXTI0 Interrupt to the lowest priority */
 	NVIC_InitStructure.NVIC_IRQChannel = EXTI0_IRQn;	//The WKUP triggered interrupt	
 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x01;//Lower pre-emption priority
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x07;	//low group priority
-	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-	NVIC_Init(&NVIC_InitStructure);
-	/* Enable and set SYSTICK Interrupt to the fifth priority */
-	NVIC_InitStructure.NVIC_IRQChannel = SysTick_IRQn;	//The 100hz timer triggered interrupt	
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x00;//Higher pre-emption priority - can nest inside USB/SD
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x05;	//5th subpriority
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
 }

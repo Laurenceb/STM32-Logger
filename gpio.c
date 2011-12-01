@@ -14,11 +14,15 @@ void setup_gpio(void)
 	GPIO_InitStructure.GPIO_Pin = CHARGER_EN;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPD;
 	GPIO_Init( GPIOB, &GPIO_InitStructure );/* configure pin 2 as input*/
-	if(GET_CHRG_STATE) {			//We booted from USB
-		bootsource=USB_SOURCE;		//so we know for reference later
-		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD;//reset the pin to an open drain output
-		GPIO_Init( GPIOB, &GPIO_InitStructure );//This enables the pin to be used to shutdown the charger in suspend mode
-		CHRG_ON;			//default to charger enabled
+	for(uint16_t n=1;n;n++) {		//USB insertion can be really messy, so loop to detect anything on chrg pin over a few milliseconds
+		if(GET_CHRG_STATE) {		//We booted from USB
+			bootsource=USB_SOURCE;	//so we know for reference later
+			GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD;//reset the pin to an open drain output
+			GPIO_Init( GPIOB, &GPIO_InitStructure );//This enables the pin to be used to shutdown the charger in suspend mode
+			CHRG_ON;		//default to charger enabled
+			n=0;
+			break;
+		}
 	}
 	//Configure the io pins
 	//Pull up the SD CS pin

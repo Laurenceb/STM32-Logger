@@ -4,6 +4,7 @@
 #include "gpio.h"
 #include "pwr.h"
 
-void EXTI_Config(void);
+void ISR_Config(void);
+void EXTI_ONOFF_EN(void);
 void SysTick_Configuration(void);
 void EXTI0_IRQHandler(void);
