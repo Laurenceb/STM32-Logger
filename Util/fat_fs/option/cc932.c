@@ -4,9 +4,9 @@
 /* CP932 (Japanese Shift-JIS)                                             */
 /*------------------------------------------------------------------------*/
 
-#include "../ff.h"
+#include "../inc/ff.h"
 
-#define _TINY_TABLE	0
+#define _TINY_TABLE	1
 
 #if !_USE_LFN || _CODE_PAGE != 932
 #error This file is not needed in current configuration. Remove from the project.
@@ -3770,6 +3770,7 @@ WCHAR ff_convert (	/* Converted code, 0 means conversion error */
 				if (src == uni2sjis[i * 2]) break;
 				if (src > uni2sjis[i * 2])
 					li = i;
+
 				else
 					hi = i;
 			}

@@ -78,6 +78,7 @@ void EXTI0_IRQHandler(void) {
 		/*Called Code goes here*/
 		delay();					//Debouncing delay
 		if(file_opened) {
+			f_sync(&FATFS_logfile);			//Flush buffers
 			f_truncate(&FATFS_logfile);		//Truncate the lenght - fix pre allocation
 			f_close(&FATFS_logfile);		//Close any opened file
 		}

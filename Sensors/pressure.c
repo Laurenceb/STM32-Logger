@@ -7,8 +7,8 @@ static float pressure_offset;			//zero offset - calibrated at power on
 
 void calibrate_sensor(void) {
 	float pressoff=0;
-	for(uint8_t n=0;n<100;n++)
-		pressoff+=conv_adc_diff()/100.0;
+	for(uint8_t n=0;n<250;n++)
+		pressoff+=conv_adc_diff()/250.0;
 	pressure_offset=pressoff;
 }
 

@@ -2,16 +2,17 @@
 /* Sample code of OS dependent synchronization object controls            */
 /* for FatFs R0.07d  (C)ChaN, 2009                                        */
 /*------------------------------------------------------------------------*/
-
+#ifdef WINDOWS
 #include <windows.h>	// Win32
+#endif
 //#include <ucos_ii.h>	// uC/OS-II
 
-#include "../ff.h"
+#include "../../inc/ff.h"
 
 #if _FS_REENTRANT
 
 /*------------------------------------------------------------------------*/
-/* Create a Synchronization Object for a Volume
+/* Create a Synchronization Object for a Volume */
 /*------------------------------------------------------------------------*/
 /* This function is called in f_mount function to create a new
 /  synchronization object, such as semaphore and mutex. When a FALSE is

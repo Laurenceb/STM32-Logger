@@ -90,15 +90,16 @@ MAIN_OBJS = $(sort \
  $(patsubst %.c,%.o,$(wildcard Util/*.c)) \
  $(patsubst %.c,%.o,$(wildcard Util/USB/*.c)) \
  $(patsubst %.c,%.o,$(wildcard Util/fat_fs/src/*.c)) \
+ $(patsubst %.c,%.o,$(wildcard Util/fat_fs/option/*.c)) \
  $(patsubst %.c,%.o,$(wildcard Sensors/*.c)) \
  $(STARTUP_OBJ))
 
 CONTROL_OBJS = $(sort $(patsubst %.c,%.o,$(wildcard Control/*.c)))
 
 #optimisation
-$(MAIN_OBJS): OPTIMISE= -O3
+$(MAIN_OBJS): OPTIMISE= -Os
 
-$(CONTROL_OBJS): OPTIMISE= -O3
+$(CONTROL_OBJS): OPTIMISE= -Os
 
 #all - output the size from the elf
 .PHONY: all
