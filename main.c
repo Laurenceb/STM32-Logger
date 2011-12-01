@@ -64,9 +64,9 @@ int main(void)
 						rprintfInit(__fat_print_char);//printf to the open file
 						printf("RTC set to %d/%d/%d %d:%d:%d\n",RTC_time.mday,RTC_time.month,RTC_time.year,\
 						RTC_time.hour,RTC_time.min,RTC_time.sec);
-						f_close(&FATFS_logfile);//Close the time.txt file
 					}				
 				}
+				f_close(&FATFS_logfile);//Close the time.txt file
 			}
 			if((f_err_code=f_open(&FATFS_logfile,"logfile.txt",FA_CREATE_ALWAYS | FA_WRITE))) {//Present
 				printf("FatFs drive error %d\r\n",f_err_code);
