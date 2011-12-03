@@ -9,7 +9,7 @@ void calibrate_sensor(void) {
 	uint32_t pressoff=0;
 	register l;
 	for(uint8_t n=1;n;n++) {		//take 256 samples from the pressure sensor
-		pressoff+=readADC1(1);
+		pressoff+=readADC2(1);
 		for(l=10000;l;l--);		//~1ms between samples
 	}
 	pressure_offset=(float)pressoff/(float)256.0;
@@ -17,6 +17,6 @@ void calibrate_sensor(void) {
 
 
 float conv_adc_diff(void) {
-	uint16_t p=readADC1(1);
+	uint16_t p=readADC2(1);
 	return 	(DIFF_GAIN)*((float)p-pressure_offset);
 }

@@ -1,5 +1,6 @@
 #include "interrupts.h"
 #include "main.h"
+#include "adc.h"
 #include "usb_lib.h"
 #include "usb_istr.h"
 #include "usb_pwr.h"
@@ -65,6 +66,22 @@ void EXTI_ONOFF_EN(void) {
 }
 
 /**
+  * @brief  Configure the DMA interrupt from ADC1 - do this before configuring the ADC+DMA?
+  * @param  None
+  * @retval None
+  * This initialiser function assumes the clocks and gpio have been configured
+  */
+void DMA_ISR_Config(void) {
+	NVIC_InitTypeDef   NVIC_InitStructure;
+	/* Enable and set DMA1 Interrupt to the sixth priority */
+	NVIC_InitStructure.NVIC_IRQChannel = DMA1_Channel1_IRQn;//The DMA complete/half complete triggered interrupt	
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x00;//Higher pre-emption priority - can nest inside USB/SD
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x06;	//6th subpriority
+	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&NVIC_InitStructure);
+}
+
+/**
   * @brief  This function configures the systick timer to 100hz overflow
   * @param  None
   * @retval None
@@ -96,6 +113,18 @@ void EXTI0_IRQHandler(void) {
 		else
 			shutdown();				//Shuts down - only wakes up on power pin i.e. WKUP
 	}
+}
+
+/**
+  * @brief  This function handles DMA channel interrupt request.- PPG adc data ISR
+  * @param  None
+  * @retval None
+  */
+void DMAChannel1_IRQHandler(void) {
+	if ( DMA_GetITStatus(DMA1_IT_HT1) )			//Half transfer completed
+		PPG_LO_Filter(ADC1_Convertion_buff);		//Process lower half
+	else
+		PPG_LO_Filter(&ADC1_Convertion_buff[sizeof(ADC1_Convertion_buff)/2]);//Transfer complete, process upper half
 }
 
 /*******************************************************************************
