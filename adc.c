@@ -14,6 +14,8 @@ void ADC_Configuration(void)
   /* Enable ADC1,2 clock so that we can talk to them */
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC2, ENABLE);
+  /*Enable the DMA1 clk*/
+  RCC_APB2PeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
   /* Put everything back to power-on defaults */
   ADC_DeInit(ADC1);
   ADC_DeInit(ADC2);

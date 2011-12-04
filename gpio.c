@@ -7,7 +7,7 @@ void setup_gpio(void)
 {
 	GPIO_InitTypeDef	GPIO_InitStructure;
 	//enable the clocks 
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB|RCC_APB2Periph_GPIOA, ENABLE);//GPIO clks
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB|RCC_APB2Periph_GPIOA|RCC_APB2Periph_AFIO, ENABLE);//GPIO/AFIO clks
 	setuppwr();				//configure power control
 	disable_pin();				//disable WKUP pin functionality
 	//Configure and read the Charger EN pin - this has a pullup to V_USB, so if it reads 1 we booted off usb so setup USB detatch isr
@@ -55,6 +55,10 @@ void setup_gpio(void)
 	GPIO_Init( GPIOA, &GPIO_InitStructure );
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0|GPIO_Pin_1;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
+	GPIO_Init( GPIOB, &GPIO_InitStructure );
+	//Configure the PWM outputs
+	GPIO_InitStructure.GPIO_Pin = PWM0|PWM1|PWM2;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
 	GPIO_Init( GPIOB, &GPIO_InitStructure );
 }
 
