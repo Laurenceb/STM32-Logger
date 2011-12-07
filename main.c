@@ -96,12 +96,17 @@ int main(void)
 		}
 	}
 	ADC_Configuration();				//We leave this a bit later to allow stabilisation
-	delay();
+	//delay();
 	calibrate_sensor();				//Calibrate the offset on the diff pressure sensor
 	EXTI_ONOFF_EN();				//Enable the off interrupt - allow some time for debouncing
 	while (1) {
 		switch_leds_on();
 		delay();
+		printf("Pressure:%f\n",conv_adc_diff());
+		if(file_opened) {
+			f_puts(print_string,&FATFS_logfile);
+			print_string[0]=0x00;		//Set string length to 0
+		}
 		switch_leds_off();
 		delay();
 		printf("Pressure:%f\n",conv_adc_diff());
