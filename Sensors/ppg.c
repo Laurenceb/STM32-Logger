@@ -1,5 +1,5 @@
 #include "ppg.h"
-#include "../Util/buffers.h"
+#include "../Util/buffer.h"
 
 
 PPG_LO_Filter(uint16_t* buff) {
@@ -10,5 +10,6 @@ PPG_LO_Filter(uint16_t* buff) {
 		I-=buff[n++];
 		Q-=buff[n++];
 	}
-	Add_To_Buffer((uint32_t)sqrt((int64_t)I^2+(int64_t)Q^2),&Baseband_Buff);//find the magnitude using 64bit ints, add to buff
+	Add_To_Buffer((uint32_t)I,&Baseband_Buff);//add to buffer
+	Add_To_Buffer((uint32_t)Q,&Baseband_Buff);
 }
