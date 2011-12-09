@@ -21,7 +21,7 @@ extern uint16_t MAL_Init (uint8_t lun);			//For the USB filesystem driver
 volatile uint8_t file_opened=0;				//So we know to close any opened files before turning off
 uint8_t print_string[256];				//For printf data
 UINT a;							//File bytes counter
-buff_type Buff;
+volatile buff_type Buff;				//Shared with ISR
 //FatFs filesystem globals go here
 FRESULT f_err_code;
 static FATFS FATFS_Obj;

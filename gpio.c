@@ -57,6 +57,7 @@ void setup_gpio(void)
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
 	GPIO_Init( GPIOB, &GPIO_InitStructure );
 	//Configure the PWM outputs
+	GPIO_PinRemapConfig( GPIO_PartialRemap_TIM3, ENABLE );//to B.5
 	GPIO_InitStructure.GPIO_Pin = PWM0|PWM1|PWM2;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
 	GPIO_Init( GPIOB, &GPIO_InitStructure );
