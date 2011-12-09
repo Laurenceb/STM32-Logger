@@ -1,4 +1,7 @@
 #include "stm32f10x.h"
+#pragma once
+
+#define bytes_in_buff(buffer) (((buffer)->head==(buffer)->tail)?0:1)
 
 typedef struct{
 	uint16_t head;

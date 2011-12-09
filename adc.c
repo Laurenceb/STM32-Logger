@@ -5,6 +5,7 @@ uint16_t * ADC1_Convertion_buff;	//malloc this to a different size depending on 
 
 void ADC_Configuration(void)
 {
+  ADC1_Convertion_buff=malloc(256);	//64 samples * 2 for interleaving, * 2bytes/sample==256
   ADC_InitTypeDef  ADC_InitStructure;
   DMA_InitTypeDef  DMA_InitStructure;
   /* PCLK2 is the APB2 clock */

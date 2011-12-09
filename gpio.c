@@ -73,9 +73,9 @@ void switch_leds_on(void)
 void switch_leds_off(void)
 {
 	if(USB_SOURCE==bootsource)
-		GPIO_WriteBit(GPIOB,RED|TST,Bit_RESET);
+		GPIO_WriteBit(GPIOB,RED,Bit_RESET);
 	else
-		GPIO_WriteBit(GPIOB,GREEN|TST,Bit_RESET);
+		GPIO_WriteBit(GPIOB,GREEN,Bit_RESET);
 }
 
 uint8_t get_wkup()

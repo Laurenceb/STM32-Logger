@@ -5,6 +5,7 @@
 #include "gpio.h"
 #include "usart.h"
 #include "interrupts.h"
+#include "timer.h"
 #include "Util/rprintf.h"
 #include "Sensors/pressure.h"
 #include "usb_lib.h"
@@ -20,6 +21,7 @@ extern uint16_t MAL_Init (uint8_t lun);			//For the USB filesystem driver
 volatile uint8_t file_opened=0;				//So we know to close any opened files before turning off
 uint8_t print_string[256];				//For printf data
 UINT a;							//File bytes counter
+buff_type Buff;
 //FatFs filesystem globals go here
 FRESULT f_err_code;
 static FATFS FATFS_Obj;
@@ -28,13 +30,15 @@ FILINFO FATFS_info;
 
 int main(void)
 {
-	int a=0;
+	int a=0,ppg;
+	init_buffer(&Buff,1024);			//Enough for ~0.25S of data
 	RTC_t RTC_time;
 	SystemInit();					//Sets up the clk
 	setup_gpio();					//Initialised pins, and detects boot source
 	SysTick_Configuration();			//Start up system timer at 100Hz for uSD card functionality
 	rtc_init();					//Real time clock initialise - (keeps time unchanged if set)
 	Usarts_Init();
+	setup_pwm();					//Enable the PWM outputs on all three channels
 	ISR_Config();
 	rprintfInit(__usart_send_char);			//Printf over the bluetooth
 	if(USB_SOURCE==bootsource) {
@@ -100,7 +104,10 @@ int main(void)
 	calibrate_sensor();				//Calibrate the offset on the diff pressure sensor
 	EXTI_ONOFF_EN();				//Enable the off interrupt - allow some time for debouncing
 	while (1) {
-		switch_leds_on();
+		switch_leds_on();			//Just demo code
+		Set_PWM_0(100);
+		Set_PWM_1(100);
+		Set_PWM_2(100);
 		delay();
 		printf("Pressure:%f\n",conv_adc_diff());
 		if(file_opened) {
@@ -108,11 +115,20 @@ int main(void)
 			print_string[0]=0x00;		//Set string length to 0
 		}
 		switch_leds_off();
+		Set_PWM_0(200);
+		Set_PWM_1(200);
+		Set_PWM_2(200);
 		delay();
 		printf("Pressure:%f\n",conv_adc_diff());
 		if(file_opened) {
 			f_puts(print_string,&FATFS_logfile);
 			print_string[0]=0x00;		//Set string length to 0
+			while(bytes_in_buff(&Buff)) {
+				Get_From_Buffer(&ppg,&Buff);
+				printf("PPG:%d\n",ppg);
+				f_puts(print_string,&FATFS_logfile);
+				print_string[0]=0x00;	//Set string length to 0
+			}			
 		}
 	}
 }
