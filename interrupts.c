@@ -1,11 +1,14 @@
 #include "interrupts.h"
 #include "main.h"
 #include "adc.h"
+#include "timer.h"
 #include "usb_lib.h"
 #include "usb_istr.h"
 #include "usb_pwr.h"
 #include "Util/fat_fs/inc/diskio.h"
 #include "Util/fat_fs/inc/ff.h"
+#include "Sensors/pressure.h"
+#include "Sensors/ppg.h"
 #include "core_cm3.h"
 #if defined(STM32F10X_HD) || defined(STM32F10X_XL) 
  #include "stm32_eval_sdio_sd.h"
@@ -129,17 +132,35 @@ void DMAChannel1_IRQHandler(void) {
 
 /*******************************************************************************
 * Function Name  : SysTickHandler
-* Description    : This function handles SysTick Handler.
+* Description    : This function handles SysTick Handler - runs at 100hz.
 * Input          : None
 * Output         : None
 * Return         : None
 *******************************************************************************/
 void SysTickHandler(void)
 {
+	static float I;
+	//FatFS timer function
 	disk_timerproc();
+	//Now handle the pressure controller
+	if(Pressure_control) {//If active pressure control is enabled
+		int16_t a=getADC2();
+		if(a>=0) {//ADC2 returned ok - run a PI controller on the air pump motor
+			float error=pressure_setpoint-conv_diff(a);//pressure_setpoint is a global containing the target diff press
+			I+=error*PRESSURE_I_CONST;		//constants defined in main.h
+			if(I>PRESSURE_I_LIM)			//enforce limits
+				I=PRESSURE_I_LIM;
+			if(I<-PRESSURE_I_LIM)
+				I=-PRESSURE_I_LIM;
+			Set_Motor((int16_t)(PRESSURE_P_CONST*error+I));//Set the motor gpio dir and pwm duty cycle
+			setADC2(1);				//TODO: this shouldnt been hardcoded to channels
+		}
+	}
+	else
+		Set_Motor(0);					//Sets the Rohm motor controller to idle (low current shutdown) state
 }
 
-//Included interrupts from ST um0424 mass stroage example
+//Included interrupts from ST um0424 mass storage example
 #ifndef STM32F10X_CL
 /*******************************************************************************
 * Function Name  : USB_HP_CAN1_TX_IRQHandler

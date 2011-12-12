@@ -22,6 +22,8 @@ volatile uint8_t file_opened=0;				//So we know to close any opened files before
 uint8_t print_string[256];				//For printf data
 UINT a;							//File bytes counter
 volatile buff_type Buff;				//Shared with ISR
+volatile uint8_t Pressure_control;			//Enables the pressure control PI
+volatile float pressure_setpoint;			//Target differential pressure for the pump
 //FatFs filesystem globals go here
 FRESULT f_err_code;
 static FATFS FATFS_Obj;

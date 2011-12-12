@@ -1,4 +1,5 @@
 #include "timer.h"
+#include "gpio.h"
 
 /**
   * @brief  Configure the timer channels for PWM out on CRT board
@@ -27,6 +28,9 @@ void setup_pwm(void) {
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
   /*Enable the Tim4 clk*/
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
+  /*Enable the Tim1 clk*/
+  RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, ENABLE);
+  TIM_DeInit(TIM1);
   TIM_DeInit(TIM3);
   TIM_DeInit(TIM4);
   /* No prescaler */
@@ -67,4 +71,34 @@ void setup_pwm(void) {
   TIM_ARRPreloadConfig(TIM3, ENABLE);
   TIM_Cmd(TIM3, ENABLE);
 
+  /*Now setup timer1 as motor control */
+  TIM_TimeBaseStructure.TIM_Period = 2048;//gives a slower frequency - 35KHz, meeting Rohm BD6231F spec, and giving 11 bits of res each way
+  TIM_TimeBaseInit(TIM1, &TIM_TimeBaseStructure);//same as timer4 
+  /* PWM1 Mode configuration: Channel2 */
+  TIM_OC1Init(TIM1, &TIM_OCInitStructure);
+  TIM_OC1PreloadConfig(TIM1, TIM_OCPreload_Enable);
+
+  /* TIM1 enable counter */
+  TIM_ARRPreloadConfig(TIM1, ENABLE);
+  TIM_Cmd(TIM1, ENABLE); 
+
+}
+
+/**
+  * @brief  Configure the timer channel for PWM out to Rohm motor controller
+  * @param  None
+  * @retval None
+  * setting duty=0 gives idle state
+  */
+void Set_Motor(int16_t duty) {
+	duty=(duty>2047)?2047:duty;	//enforce limits on range
+	duty=(duty<-2047)?-2047:duty;
+	if(duty<=0) {
+		SET_MOTOR_DIR(0);
+		Set_PWM_Motor((uint16_t)(-1*duty));
+	}
+	else {//We need to reverse pwm duty cycle to account for polarity of other side of bridge
+		SET_MOTOR_DIR(1);
+		Set_PWM_Motor(2047-duty);
+	}
 }

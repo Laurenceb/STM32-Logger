@@ -90,7 +90,11 @@ void ADC_Configuration(void)
   ADC_Cmd(ADC1, ENABLE);
 }
 
-
+/**
+  * @brief  This function returns a conversion from ADC2 (blocking)
+  * @param  Channel number to convert
+  * @retval unsigned 16 bit integer - adc is 12bit
+  */
 uint16_t readADC2(uint8_t channel)
 {
   ADC_RegularChannelConfig(ADC2, channel, 1, ADC_SampleTime_1Cycles5);
@@ -102,4 +106,29 @@ uint16_t readADC2(uint8_t channel)
   return ADC_GetConversionValue(ADC2);
 }
 
+/**
+  * @brief  This function sets up a conversion from ADC2 (non blocking)
+  * @param  Channel number to convert
+  * @retval None
+  */
+void setADC2(uint8_t channel)
+{
+  ADC_RegularChannelConfig(ADC2, channel, 1, ADC_SampleTime_1Cycles5);
+  // Start the conversion
+  ADC_SoftwareStartConvCmd(ADC2, ENABLE);
+}
+
+/**
+  * @brief  This function gets a conversion from ADC2 (non blocking)
+  * @param  None
+  * @retval Read value (-1 means adc not ready)
+  */
+int16_t getADC2(void)
+{
+  // Make sure we have conversion completion
+  if(ADC_GetFlagStatus(ADC2, ADC_FLAG_EOC) == RESET)
+	return -1;
+  // Get the conversion value
+  return ADC_GetConversionValue(ADC2);
+}
 

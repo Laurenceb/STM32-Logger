@@ -23,6 +23,10 @@
 #define PWM0		GPIO_Pin_5
 #define PWM1		GPIO_Pin_8
 #define PWM2		GPIO_Pin_9
+#define PWM_MOTOR	GPIO_Pin_8
+
+#define DIR_MOTOR	GPIO_Pin_13
+#define SET_MOTOR_DIR(s)	GPIO_WriteBit(GPIOB,DIR_MOTOR,(BitAction)s)
 
 extern uint8_t bootsource;
 

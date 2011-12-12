@@ -6,3 +6,5 @@ extern uint16_t * ADC1_Convertion_buff;	//malloc this
 
 void ADC_Configuration(void);
 uint16_t readADC2(uint8_t channel);
+void setADC2(uint8_t channel);
+int16_t getADC2(void);
