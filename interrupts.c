@@ -127,7 +127,8 @@ void DMAChannel1_IRQHandler(void) {
 	if ( DMA_GetITStatus(DMA1_IT_HT1) )			//Half transfer completed
 		PPG_LO_Filter(ADC1_Convertion_buff);		//Process lower half
 	else
-		PPG_LO_Filter(&ADC1_Convertion_buff[sizeof(ADC1_Convertion_buff)/2]);//Transfer complete, process upper half
+		PPG_LO_Filter(&ADC1_Convertion_buff[ADC_BUFF_SIZE/4]);//Transfer complete, process upper half - indexed as 16bit words
+	DMA_ClearFlag(DMA1_FLAG_TC1|DMA1_FLAG_HT1);  //make sure flags are clear
 }
 
 /*******************************************************************************

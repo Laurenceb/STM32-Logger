@@ -8,6 +8,7 @@
 #include "timer.h"
 #include "Util/rprintf.h"
 #include "Sensors/pressure.h"
+#include "Sensors/ppg.h"
 #include "usb_lib.h"
 #include "Util/USB/hw_config.h"
 #include "Util/USB/usb_pwr.h"
@@ -33,7 +34,7 @@ FILINFO FATFS_info;
 int main(void)
 {
 	int a=0,ppg;
-	init_buffer(&Buff,1024);			//Enough for ~0.25S of data
+	init_buffer(&Buff,PPG_BUFFER_SIZE);		//Enough for ~0.25S of data
 	RTC_t RTC_time;
 	SystemInit();					//Sets up the clk
 	setup_gpio();					//Initialised pins, and detects boot source

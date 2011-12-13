@@ -5,7 +5,7 @@ uint16_t * ADC1_Convertion_buff;	//malloc this to a different size depending on 
 
 void ADC_Configuration(void)
 {
-  ADC1_Convertion_buff=malloc(256);	//64 samples * 2 for interleaving, * 2bytes/sample==256
+  ADC1_Convertion_buff=malloc(ADC_BUFF_SIZE);	//64 samples * 2 for interleaving, * 2bytes/sample==256
   ADC_InitTypeDef  ADC_InitStructure;
   DMA_InitTypeDef  DMA_InitStructure;
   /* PCLK2 is the APB2 clock */
@@ -55,7 +55,7 @@ void ADC_Configuration(void)
   DMA_InitStructure.DMA_PeripheralBaseAddr = ADC1_BASE+0x4C;
   DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)ADC1_Convertion_buff;
   DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
-  DMA_InitStructure.DMA_BufferSize = sizeof(ADC1_Convertion_buff);
+  DMA_InitStructure.DMA_BufferSize = ADC_BUFF_SIZE/2;//2bytes/sample
   DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
   DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
   DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;
@@ -88,6 +88,9 @@ void ADC_Configuration(void)
   
   /* Enable ADC1 */
   ADC_Cmd(ADC1, ENABLE);
+
+  /* Enable the NVIC interrupt */
+  DMA_ISR_Config();
 }
 
 /**

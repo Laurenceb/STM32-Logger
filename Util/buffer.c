@@ -3,9 +3,9 @@
 void Add_To_Buffer(uint32_t data,buff_type* buffer) {
 	buffer->data[buffer->head]=data;//Put data in and increment
 	buffer->head++;
-	buffer->head%=(sizeof(buffer->data)/4);
+	buffer->head%=buffer->size;
 	if(buffer->head==buffer->tail)	//Buffer wraparound due to filling
-		buffer->tail=(buffer->tail+1)%(sizeof(buffer->data)/4);
+		buffer->tail=(buffer->tail+1)%buffer->size;
 }
 
 uint8_t Get_From_Buffer(uint32_t* data,buff_type* buffer) {
@@ -14,12 +14,13 @@ uint8_t Get_From_Buffer(uint32_t* data,buff_type* buffer) {
 	else {
 		*data=buffer->data[buffer->tail];//grab a data sample from the buffer
 		buffer->tail++;
-		buffer->tail%=(sizeof(buffer->data)/4);
+		buffer->tail%=buffer->size;
 		return 0;		//No error
 	}
 }
 
 void init_buffer(buff_type* buff, uint16_t size) {
 	buff->data=malloc(size*4);
+	buff->size=size;
 }
 

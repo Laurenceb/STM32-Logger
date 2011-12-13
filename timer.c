@@ -36,7 +36,7 @@ void setup_pwm(void) {
   /* No prescaler */
   uint16_t PrescalerValue = 0;
   /* Time base configuration */
-  TIM_TimeBaseStructure.TIM_Period = 336;
+  TIM_TimeBaseStructure.TIM_Period = PWM_PERIOD;
   TIM_TimeBaseStructure.TIM_Prescaler = PrescalerValue;
   TIM_TimeBaseStructure.TIM_ClockDivision = 0;
   TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
