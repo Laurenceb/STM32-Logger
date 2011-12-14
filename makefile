@@ -49,7 +49,7 @@ COMPILE_OPTS = $(WARNINGS) $(TARGET_OPTS) $(MESSAGES) $(INCLUDE_DIRS) $(DEFINES)
 WARNINGS = -Wall -W -Wshadow -Wcast-qual -Wwrite-strings -Winline
 
 ifdef DEBUG
- TARGET_OPTS = -O0 -g3
+ TARGET_OPTS = -O3 -g3
  DEBUG_MACRO = -DDEBUG
 else	#Changed from O2 - optimisation split between control loop and rest of project, using a seperate makefile
  TARGET_OPTS = $(OPTIMISE) -finline -finline-functions-called-once\

@@ -19,7 +19,7 @@ void PPG_LO_Filter(uint16_t* buff) {
 	int32_t I=0,Q=0;	//I and Q integration bins
 	static uint8_t bindex;	//Baseband decimation index
 	static uint32_t Frequency_Bin[1][2];//Only one frequency in use atm - consisting of and I and Q component
-	for(uint16_t n=0;n<ADC_BUFF_SIZE/2;) {//buffer size/2 must be a multiple of 4
+	for(uint16_t n=0;n<ADC_BUFF_SIZE/4;) {//buffer size/4 must be a multiple of 4
 		I+=buff[n++];
 		Q+=buff[n++];
 		I-=buff[n++];
@@ -32,6 +32,7 @@ void PPG_LO_Filter(uint16_t* buff) {
 		Add_To_Buffer((uint32_t)sqrt(pow((int64_t)Frequency_Bin[0][0],2)+pow((int64_t)Frequency_Bin[0][1],2)),&Buff);
 		//Other frequencies corresponding to different LEDs could go here - use different buffers maybe?
 		memset(Frequency_Bin,0,sizeof(Frequency_Bin));//Zero everything
+		bindex=0;//reset this
 	}
 }
 

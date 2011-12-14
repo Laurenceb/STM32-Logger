@@ -1,4 +1,6 @@
+#include <stdlib.h>
 #include "adc.h"
+#include "interrupts.h"
 
 uint16_t * ADC1_Convertion_buff;	//malloc this to a different size depending on free ram - before adc init
 
@@ -37,22 +39,23 @@ void ADC_Configuration(void)
 
   /* Now do the setup */
   ADC_Init(ADC2, &ADC_InitStructure);
-  /* Enable ADC1 */
+  /* Enable ADC2 */
   ADC_Cmd(ADC2, ENABLE);
 
-  /* Enable ADC1 reset calibaration register */
+  /* Enable ADC2 reset calibaration register */
   ADC_ResetCalibration(ADC2);
-  /* Check the end of ADC1 reset calibration register */
+  /* Check the end of ADC2 reset calibration register */
   while(ADC_GetResetCalibrationStatus(ADC2));
-  /* Start ADC1 calibaration */
+  /* Start ADC2 calibaration */
   ADC_StartCalibration(ADC2);
-  /* Check the end of ADC1 calibration */
+  /* Check the end of ADC2 calibration */
   while(ADC_GetCalibrationStatus(ADC2));
   
   /* ADC2 is now set up - move the ADC1 using DMA*/
   /* DMA1 channel1(ADC1) configuration -------------------------------------------*/
   DMA_DeInit(DMA1_Channel1);
-  DMA_InitStructure.DMA_PeripheralBaseAddr = ADC1_BASE+0x4C;
+  DMA_StructInit(&DMA_InitStructure);
+  DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&ADC1->DR;
   DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)ADC1_Convertion_buff;
   DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
   DMA_InitStructure.DMA_BufferSize = ADC_BUFF_SIZE/2;//2bytes/sample
@@ -88,6 +91,15 @@ void ADC_Configuration(void)
   
   /* Enable ADC1 */
   ADC_Cmd(ADC1, ENABLE);
+
+  /* Calibrate the ADC1*/
+  ADC_ResetCalibration(ADC1);
+  while (ADC_GetResetCalibrationStatus(ADC1));
+
+  ADC_StartCalibration(ADC1);
+  while (ADC_GetCalibrationStatus(ADC1));
+
+  ADC_SoftwareStartConvCmd(ADC1, ENABLE);
 
   /* Enable the NVIC interrupt */
   DMA_ISR_Config();

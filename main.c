@@ -25,6 +25,7 @@ UINT a;							//File bytes counter
 volatile buff_type Buff;				//Shared with ISR
 volatile uint8_t Pressure_control;			//Enables the pressure control PI
 volatile float pressure_setpoint;			//Target differential pressure for the pump
+volatile float reported_pressure;			//Pressure as measured by the sensor
 //FatFs filesystem globals go here
 FRESULT f_err_code;
 static FATFS FATFS_Obj;
@@ -106,13 +107,14 @@ int main(void)
 	//delay();
 	calibrate_sensor();				//Calibrate the offset on the diff pressure sensor
 	EXTI_ONOFF_EN();				//Enable the off interrupt - allow some time for debouncing
+	Pressure_control=1;				//Enable active pressure control
 	while (1) {
 		switch_leds_on();			//Just demo code
 		Set_PWM_0(100);
 		Set_PWM_1(100);
 		Set_PWM_2(100);
 		delay();
-		printf("Pressure:%f\n",conv_adc_diff());
+		printf("Pressure:%f\n",reported_pressure);
 		if(file_opened) {
 			f_puts(print_string,&FATFS_logfile);
 			print_string[0]=0x00;		//Set string length to 0
@@ -122,7 +124,7 @@ int main(void)
 		Set_PWM_1(200);
 		Set_PWM_2(200);
 		delay();
-		printf("Pressure:%f\n",conv_adc_diff());
+		printf("Pressure:%f\n",reported_pressure);
 		if(file_opened) {
 			f_puts(print_string,&FATFS_logfile);
 			print_string[0]=0x00;		//Set string length to 0

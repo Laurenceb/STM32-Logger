@@ -6,6 +6,7 @@
 //externs for all the globals
 extern volatile uint8_t Pressure_control;
 extern volatile float pressure_setpoint;
+extern volatile float reported_pressure;
 
 #define PRE_SIZE 1000000ul	/*Preallocate size*/
 

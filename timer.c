@@ -73,11 +73,14 @@ void setup_pwm(void) {
 
   /*Now setup timer1 as motor control */
   TIM_TimeBaseStructure.TIM_Period = 2048;//gives a slower frequency - 35KHz, meeting Rohm BD6231F spec, and giving 11 bits of res each way
+  TIM_OCInitStructure.TIM_OutputNState = TIM_OutputNState_Disable;//These settings need to be applied on timers 1 and 8                 
+  TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_Low; 
+  TIM_OCInitStructure.TIM_OCIdleState = TIM_OCIdleState_Set;
   TIM_TimeBaseInit(TIM1, &TIM_TimeBaseStructure);//same as timer4 
-  /* PWM1 Mode configuration: Channel2 */
+  /* PWM1 Mode configuration: Channel1 */
   TIM_OC1Init(TIM1, &TIM_OCInitStructure);
   TIM_OC1PreloadConfig(TIM1, TIM_OCPreload_Enable);
-
+  TIM_CtrlPWMOutputs(TIM1, ENABLE);		//Needs to be applied on 1 and 8
   /* TIM1 enable counter */
   TIM_ARRPreloadConfig(TIM1, ENABLE);
   TIM_Cmd(TIM1, ENABLE); 
