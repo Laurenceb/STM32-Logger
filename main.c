@@ -1,5 +1,5 @@
 #include <string.h>
-
+#include "stm32f10x.h"
 #include "main.h"
 #include "adc.h"
 #include "gpio.h"
@@ -34,7 +34,8 @@ FILINFO FATFS_info;
 
 int main(void)
 {
-	int a=0,ppg;
+	uint8_t a=0;
+	uint32_t ppg;
 	init_buffer(&Buff,PPG_BUFFER_SIZE);		//Enough for ~0.25S of data
 	RTC_t RTC_time;
 	SystemInit();					//Sets up the clk

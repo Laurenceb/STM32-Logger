@@ -28,6 +28,7 @@ void PPG_LO_Filter(uint16_t* buff) {
 	//Now run the "baseband" decimating filter(s)
 	Frequency_Bin[0][0]+=I;Frequency_Bin[0][1]+=Q;//Add the I and Q directly into the zero frequency bin
 	//Other Bins for +ive or -ive frequencies go here - use a lookup table for the sin/cos samples
+	I=0;Q=0;//Zero the quadrature sampling decimation bins
 	if(++bindex==21) {//Decimation factor of 21 - 637.8Hz data output
 		Add_To_Buffer((uint32_t)sqrt(pow((int64_t)Frequency_Bin[0][0],2)+pow((int64_t)Frequency_Bin[0][1],2)),&Buff);
 		//Other frequencies corresponding to different LEDs could go here - use different buffers maybe?

@@ -1,11 +1,11 @@
+#include <stdlib.h>
 #include "buffer.h"
 
 void Add_To_Buffer(uint32_t data,buff_type* buffer) {
-	buffer->data[buffer->head]=data;//Put data in and increment
-	buffer->head++;
+	buffer->data[buffer->head++]=data;//Put data in and increment
 	buffer->head%=buffer->size;
 	if(buffer->head==buffer->tail)	//Buffer wraparound due to filling
-		buffer->tail=(buffer->tail+1)%buffer->size;
+		buffer->tail=(++buffer->tail)%buffer->size;
 }
 
 uint8_t Get_From_Buffer(uint32_t* data,buff_type* buffer) {
@@ -20,7 +20,7 @@ uint8_t Get_From_Buffer(uint32_t* data,buff_type* buffer) {
 }
 
 void init_buffer(buff_type* buff, uint16_t size) {
-	buff->data=malloc(size*4);
+	buff->data=(uint32_t*)malloc(size*4);
 	buff->size=size;
 }
 
