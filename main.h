@@ -2,6 +2,7 @@
 #pragma once
 #include "Util/fat_fs/inc/ff.h"
 #include "Util/buffer.h"
+#include "timer.h"
 
 //externs for all the globals
 extern volatile uint8_t Pressure_control;
@@ -11,7 +12,6 @@ extern volatile float reported_pressure;
 #define PRE_SIZE 1000000ul	/*Preallocate size*/
 
 //Pressure controller constants - a PI controller
-#define PWM_RES 2048
 #define ITERATION_RATE 100
 #define PRESSURE_I_CONST 0.1*(float)(PWM_RES/ITERATION_RATE)/*means an error of 1PSI for 1 second will case a 10% duty cycle shift*/
 #define PRESSURE_I_LIM 0.2*(float)PWM_RES		/*means integral term can never cause more than 20% shift in duty cycle*/

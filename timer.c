@@ -80,7 +80,7 @@ void setup_pwm(void) {
   /* PWM1 Mode configuration: Channel1 */
   TIM_OC1Init(TIM1, &TIM_OCInitStructure);
   TIM_OC1PreloadConfig(TIM1, TIM_OCPreload_Enable);
-  TIM_CtrlPWMOutputs(TIM1, ENABLE);		//Needs to be applied on 1 and 8
+  TIM_CtrlPWMOutputs(TIM1, ENABLE);	//Needs to be applied on 1 and 8
   /* TIM1 enable counter */
   TIM_ARRPreloadConfig(TIM1, ENABLE);
   TIM_Cmd(TIM1, ENABLE); 
@@ -88,20 +88,19 @@ void setup_pwm(void) {
 }
 
 /**
-  * @brief  Configure the timer channel for PWM out to Rohm motor controller
+  * @brief  Configure the timer channel for PWM out to pump motor, -ive duty turns on valve
   * @param  None
   * @retval None
   * setting duty=0 gives idle state
   */
 void Set_Motor(int16_t duty) {
-	duty=(duty>2047)?2047:duty;	//enforce limits on range
-	duty=(duty<-2047)?-2047:duty;
-	if(duty<=0) {
-		SET_MOTOR_DIR(0);
-		Set_PWM_Motor((uint16_t)(-1*duty));
+	duty=(duty>MAX_DUTY)?MAX_DUTY:duty;	//enforce limits on range
+	if(duty<=0) {//We are dumping with the solenoid valve
+		SET_SOLENOID(1);
+		Set_PWM_Motor(0);
 	}
-	else {//We need to reverse pwm duty cycle to account for polarity of other side of bridge
-		SET_MOTOR_DIR(1);
-		Set_PWM_Motor(2047-duty);
+	else {//We are driving the pump
+		SET_SOLENOID(0);
+		Set_PWM_Motor(duty);
 	}
 }

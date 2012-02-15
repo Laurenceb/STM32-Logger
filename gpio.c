@@ -61,14 +61,15 @@ void setup_gpio(void)
 	GPIO_InitStructure.GPIO_Pin = PWM0|PWM1|PWM2;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
 	GPIO_Init( GPIOB, &GPIO_InitStructure );
-	//Configure the Motor PWM
+	//Configure the pump Motor PWM
 	GPIO_InitStructure.GPIO_Pin = PWM_MOTOR;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
 	GPIO_Init( GPIOA, &GPIO_InitStructure );
-	//Configure Motor DIR pin
-	GPIO_InitStructure.GPIO_Pin = DIR_MOTOR;
+	//Configure Solenoid pin
+	GPIO_InitStructure.GPIO_Pin = SOLENOID;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
 	GPIO_Init( GPIOB, &GPIO_InitStructure );
+	GPIO_WriteBit(GPIOB,SOLENOID,Bit_RESET);//Make sure solenoid off
 }
 
 void switch_leds_on(void)

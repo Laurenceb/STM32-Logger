@@ -55,6 +55,8 @@ int main(void)
 		USB_Configured_LED();
 	}
 	else {
+		if(!GET_PWR_STATE)			//Check here to make sure the power button is still pressed, if not, sleep
+			shutdown();			//This means a glitch on the supply line, or a power glitch results in sleep
 		a=Set_System();				//This actually just inits the storage layer - returns 0 for success
 		//a|=init_function();			//Other init functions
 		if((f_err_code = f_mount(0, &FATFS_Obj)))Usart_Send_Str((char*)"FatFs mount error\r\n");//This should only error if internal error

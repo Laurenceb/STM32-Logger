@@ -1,5 +1,8 @@
 #include "stm32f10x.h"
 
+#define MAX_DUTY 2047/2	/*max duty cycle for the motor - dont want to risk going to 100% as it will overrev motor*/
+#define PWM_RES MAX_DUTY/*motor pwm resolution*/
+
 #define PWM_PERIOD 336	/*gives 214khz pwm with 72mhz clk - for quadrature sampling*/
 //Macros to link to the periph functions
 #define Set_PWM_0(compare) TIM_SetCompare2(TIM3, compare)
