@@ -148,13 +148,21 @@ void SysTickHandler(void)
 		int16_t a=getADC2();
 		if(a>=0) {//ADC2 returned ok - run a PI controller on the air pump motor
 			reported_pressure=conv_diff(a);		//Global, holds our pressure as measured
-			float error=pressure_setpoint-reported_pressure;//pressure_setpoint is a global containing the target diff press
-			I+=error*PRESSURE_I_CONST;		//constants defined in main.h
-			if(I>PRESSURE_I_LIM)			//enforce limits
-				I=PRESSURE_I_LIM;
-			if(I<-PRESSURE_I_LIM)
-				I=-PRESSURE_I_LIM;
-			Set_Motor((int16_t)(PRESSURE_P_CONST*error+I));//Set the motor gpio dir and pwm duty cycle
+			if(pressure_setpoint>0) {		//A negative setpoint forces a dump of air
+				float error=pressure_setpoint-reported_pressure;//pressure_setpoint is a global containing the target diff press
+				I+=error*PRESSURE_I_CONST;		//constants defined in main.h
+				if(I>PRESSURE_I_LIM)			//enforce limits
+					I=PRESSURE_I_LIM;
+				if(I<-PRESSURE_I_LIM)
+					I=-PRESSURE_I_LIM;
+				Set_Motor((int16_t)(PRESSURE_P_CONST*error+I));//Set the motor gpio dir and pwm duty cycle
+			}
+			else {
+				if(abs(reported_pressure)>PRESSURE_MARGIN)
+					Set_Motor(-1);		//Set a dump to rapidly drop to zero pressure
+				else
+					Set_Motor(0);
+			}
 		}						//setADC needs to be outside if braces to ensure adc is started
 		setADC2(1);					//TODO: this shouldnt been hardcoded to channels
 	}

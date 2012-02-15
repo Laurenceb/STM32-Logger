@@ -74,8 +74,8 @@ void setup_pwm(void) {
   /*Now setup timer1 as motor control */
   TIM_TimeBaseStructure.TIM_Period = 2048;//gives a slower frequency - 35KHz, meeting Rohm BD6231F spec, and giving 11 bits of res each way
   TIM_OCInitStructure.TIM_OutputNState = TIM_OutputNState_Disable;//These settings need to be applied on timers 1 and 8                 
-  TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_Low; 
-  TIM_OCInitStructure.TIM_OCIdleState = TIM_OCIdleState_Set;
+  TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High; 
+  TIM_OCInitStructure.TIM_OCIdleState = TIM_OCIdleState_Reset;
   TIM_TimeBaseInit(TIM1, &TIM_TimeBaseStructure);//same as timer4 
   /* PWM1 Mode configuration: Channel1 */
   TIM_OC1Init(TIM1, &TIM_OCInitStructure);
@@ -84,7 +84,7 @@ void setup_pwm(void) {
   /* TIM1 enable counter */
   TIM_ARRPreloadConfig(TIM1, ENABLE);
   TIM_Cmd(TIM1, ENABLE); 
-
+  Set_PWM_Motor(0);			//Make sure motor off
 }
 
 /**
@@ -95,7 +95,7 @@ void setup_pwm(void) {
   */
 void Set_Motor(int16_t duty) {
 	duty=(duty>MAX_DUTY)?MAX_DUTY:duty;	//enforce limits on range
-	if(duty<=0) {//We are dumping with the solenoid valve
+	if(duty<0) {//We are dumping with the solenoid valve
 		SET_SOLENOID(1);
 		Set_PWM_Motor(0);
 	}

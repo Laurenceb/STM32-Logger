@@ -16,6 +16,7 @@ extern volatile float reported_pressure;
 #define PRESSURE_I_CONST 0.1*(float)(PWM_RES/ITERATION_RATE)/*means an error of 1PSI for 1 second will case a 10% duty cycle shift*/
 #define PRESSURE_I_LIM 0.2*(float)PWM_RES		/*means integral term can never cause more than 20% shift in duty cycle*/
 #define PRESSURE_P_CONST 0.3*(float)PWM_RES		/*means a 1PSI error gives 30% duty cycle pwm to the motor*/
+#define PRESSURE_MARGIN 0.3				/*means a pressure within 0.3PSI of zero will turn off the dump valve if setpoint -ive*/
 
 #define delay()						\
 do {							\

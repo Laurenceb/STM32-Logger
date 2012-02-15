@@ -111,6 +111,7 @@ int main(void)
 	calibrate_sensor();				//Calibrate the offset on the diff pressure sensor
 	EXTI_ONOFF_EN();				//Enable the off interrupt - allow some time for debouncing
 	Pressure_control=1;				//Enable active pressure control
+	pressure_setpoint=0;				//Not applied pressure, should cause motor and solenoid to go to idle state
 	while (1) {
 		switch_leds_on();			//Just demo code
 		Set_PWM_0(100);
