@@ -14,7 +14,8 @@
  #include "stm32_eval_sdio_sd.h"
 #endif /* STM32F10X_HD | STM32F10X_XL*/
 
-
+//System uptime
+volatile uint32_t Millis;
 
 /**
   * @brief  Configure all interrupts accept on/off pin
@@ -143,6 +144,8 @@ void SysTickHandler(void)
 	static float I;
 	//FatFS timer function
 	disk_timerproc();
+	//Incr the system uptime
+	Millis+=10;
 	//Now handle the pressure controller
 	if(Pressure_control) {//If active pressure control is enabled
 		int16_t a=getADC2();

@@ -32,8 +32,8 @@
 #define MASS_SIZ_CONFIG_DESC              32
 
 #define MASS_SIZ_STRING_LANGID            4
-#define MASS_SIZ_STRING_VENDOR            38
-#define MASS_SIZ_STRING_PRODUCT           38
+#define MASS_SIZ_STRING_VENDOR            50
+#define MASS_SIZ_STRING_PRODUCT           46
 #define MASS_SIZ_STRING_SERIAL            26
 #define MASS_SIZ_STRING_INTERFACE         16
 

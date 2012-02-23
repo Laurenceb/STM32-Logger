@@ -1,7 +1,7 @@
 #include "stm32f10x.h"
 
-#define CRT_PPG_ADC_CHAN 8	//9 is also possible - second PPG channel PORTB0,1
-#define ADC_BUFF_SIZE 256
+#define CRT_PPG_ADC_CHAN 8	/* 9 is also possible - second PPG channel PORTB0,1 */
+#define ADC_BUFF_SIZE 256	/* 64 samples * 2 for interleaving, * 2bytes/sample==256 */
 
 extern uint16_t * ADC1_Convertion_buff;	//malloc this
 

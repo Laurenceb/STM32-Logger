@@ -57,7 +57,7 @@ const uint8_t MASS_ConfigDescriptor[MASS_SIZ_CONFIG_DESC] =
     /*      describing the configuration */
     0xC0,   /* bmAttributes: */
     /*      bus powered */
-    0x32,   /* MaxPower 100 mA */
+    0xFA,   /* MaxPower 500 mA */
 
     /******************** Descriptor of Mass Storage interface ********************/
     /* 09 */
@@ -102,17 +102,18 @@ const uint8_t MASS_StringVendor[MASS_SIZ_STRING_VENDOR] =
     MASS_SIZ_STRING_VENDOR, /* Size of manufacturer string */
     0x03,           /* bDescriptorType = String descriptor */
     /* Manufacturer: "STMicroelectronics" */
-    'S', 0, 'T', 0, 'M', 0, 'i', 0, 'c', 0, 'r', 0, 'o', 0, 'e', 0,
-    'l', 0, 'e', 0, 'c', 0, 't', 0, 'r', 0, 'o', 0, 'n', 0, 'i', 0,
-    'c', 0, 's', 0
+    'U', 0, 'n', 0, 'i', 0, 'v', 0, 'e', 0, 'r', 0, 's', 0, 'i', 0,
+    't', 0, 'y', 0, ' ', 0, 'o', 0, 'f', 0, ' ', 0, 'N', 0, 'o', 0,
+    't', 0, 't', 0, 'i', 0, 'n', 0, 'g', 0, 'h', 0, 'a', 0, 'm', 0
   };
 const uint8_t MASS_StringProduct[MASS_SIZ_STRING_PRODUCT] =
   {
     MASS_SIZ_STRING_PRODUCT,
     0x03,
     /* Product name: "STM32F10x:USB Mass Storage" */
-    'S', 0, 'T', 0, 'M', 0, '3', 0, '2', 0, ' ', 0, 'M', 0, 'a', 0, 's', 0,
-    's', 0, ' ', 0, 'S', 0, 't', 0, 'o', 0, 'r', 0, 'a', 0, 'g', 0, 'e', 0
+    'C', 0, 'a', 0, 'p', 0, 'i', 0, 'l', 0, 'l', 0, 'a', 0, 'r', 0, 'y', 0,
+    ' ', 0, 'r', 0, 'e', 0, 'f', 0, 'i', 0, 'l', 0, 'l', 0, ' ', 0, 't', 0,
+    'i', 0, 'm', 0, 'e', 0, 'r', 0
 
   };
 

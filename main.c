@@ -53,6 +53,12 @@ int main(void)
 		USB_Init();
 		while (bDeviceState != CONFIGURED);	//Wait for USB config
 		USB_Configured_LED();
+		while(1) {				//If running off USB (mounted as mass storage), stay in this loop - dont turn on anything
+			if(Millis%1000>500)		//1Hz on/off flashing
+				switch_leds_on();	//Flash the LED(s)
+			else
+				switch_leds_off();
+		}
 	}
 	else {
 		if(!GET_PWR_STATE)			//Check here to make sure the power button is still pressed, if not, sleep
@@ -112,33 +118,28 @@ int main(void)
 	EXTI_ONOFF_EN();				//Enable the off interrupt - allow some time for debouncing
 	Pressure_control=1;				//Enable active pressure control
 	pressure_setpoint=0;				//Not applied pressure, should cause motor and solenoid to go to idle state
+	Set_PWM_0(10);					//Fixed brightness for the time being
+	Set_PWM_1(10);
+	Set_PWM_2(10);
+	rtc_gettime(&RTC_time);				//Get the RTC time and put a timestamp on the start of the file
+	printf("%d\%d\%d :, %d:%d:%d\n",RTC_time.mday,RTC_time.month,RTC_time.year,RTC_time.hour,RTC_time.min,RTC_time.sec);
+	if(file_opened) {
+		f_puts(print_string,&FATFS_logfile);
+		print_string[0]=0x00;			//Set string length to 0
+	}
+	Millis=0;					//Reset system uptime, we have 50 days before overflow
 	while (1) {
-		switch_leds_on();			//Just demo code
-		Set_PWM_0(100);
-		Set_PWM_1(100);
-		Set_PWM_2(100);
-		delay();
-		printf("Pressure:%f\n",reported_pressure);
+		while(!bytes_in_buff(&Buff));		//Wait for some PPG data
+		Get_From_Buffer(&ppg,&Buff);		//Retraive one sample of PPG
+		printf("%f,%f,%lu\n",(float)Millis/10.0,reported_pressure,ppg);//Print both data samples after a time stamp
 		if(file_opened) {
 			f_puts(print_string,&FATFS_logfile);
 			print_string[0]=0x00;		//Set string length to 0
 		}
-		switch_leds_off();
-		Set_PWM_0(200);
-		Set_PWM_1(200);
-		Set_PWM_2(200);
-		delay();
-		printf("Pressure:%f\n",reported_pressure);
-		if(file_opened) {
-			f_puts(print_string,&FATFS_logfile);
-			print_string[0]=0x00;		//Set string length to 0
-			while(bytes_in_buff(&Buff)) {
-				Get_From_Buffer(&ppg,&Buff);
-				printf("PPG:%d\n",ppg);
-				f_puts(print_string,&FATFS_logfile);
-				print_string[0]=0x00;	//Set string length to 0
-			}			
-		}
+		if(Millis%1000>500)			//1Hz on/off flashing
+			switch_leds_on();		//Flash the LED(s)
+		else
+			switch_leds_off();
 	}
 }
 

@@ -15,8 +15,8 @@ void setup_pwm(void) {
      - Prescaler = (TIM3CLK / TIM3 counter clock) - 1
     SystemCoreClock is set to 72 MHz
 
-    The TIM4 is running at 214.29KHz: TIM4 Frequency = TIM4 counter clock/(ARR + 1)
-                                                  = 72 MHz / 336
+    The TIM4 is running at 11.905KHz: TIM4 Frequency = TIM4 counter clock/(ARR + 1)
+                                                  = 4.5 MHz / 378
     (with 1.5clk adc -> 14adc clk/sample, and 12mhz adc clk this gives quadrature
     sampling)
     TIM3 Channel3 duty cycle = (TIM3_CCR3/ TIM3_ARR)* 100 = 25%
@@ -30,11 +30,12 @@ void setup_pwm(void) {
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
   /*Enable the Tim1 clk*/
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, ENABLE);
+
   TIM_DeInit(TIM1);
   TIM_DeInit(TIM3);
   TIM_DeInit(TIM4);
-  /* No prescaler */
-  uint16_t PrescalerValue = 0;
+  /* Prescaler of 16 times*/
+  uint16_t PrescalerValue = 15;
   /* Time base configuration */
   TIM_TimeBaseStructure.TIM_Period = PWM_PERIOD;
   TIM_TimeBaseStructure.TIM_Prescaler = PrescalerValue;
@@ -65,6 +66,7 @@ void setup_pwm(void) {
   TIM_TimeBaseInit(TIM3, &TIM_TimeBaseStructure);//same as timer4
   /* PWM1 Mode configuration: Channel2 */
   TIM_OC2Init(TIM3, &TIM_OCInitStructure);
+
   TIM_OC2PreloadConfig(TIM3, TIM_OCPreload_Enable);
 
   /* TIM3 enable counter */
@@ -72,6 +74,7 @@ void setup_pwm(void) {
   TIM_Cmd(TIM3, ENABLE);
 
   /*Now setup timer1 as motor control */
+  PrescalerValue = 0;//no prescaler
   TIM_TimeBaseStructure.TIM_Period = 2048;//gives a slower frequency - 35KHz, meeting Rohm BD6231F spec, and giving 11 bits of res each way
   TIM_OCInitStructure.TIM_OutputNState = TIM_OutputNState_Disable;//These settings need to be applied on timers 1 and 8                 
   TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High; 

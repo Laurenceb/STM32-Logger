@@ -5,7 +5,7 @@ void Add_To_Buffer(uint32_t data,buff_type* buffer) {
 	buffer->data[buffer->head++]=data;//Put data in and increment
 	buffer->head%=buffer->size;
 	if(buffer->head==buffer->tail)	//Buffer wraparound due to filling
-		buffer->tail=(++buffer->tail)%buffer->size;
+		buffer->tail=(buffer->tail+1)%buffer->size;
 }
 
 uint8_t Get_From_Buffer(uint32_t* data,buff_type* buffer) {
