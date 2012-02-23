@@ -91,9 +91,9 @@ void DMA_ISR_Config(void) {
   * @retval None
   */
 void SysTick_Configuration(void) {
-	RCC_HCLKConfig(RCC_SYSCLK_Div1);			//CLK the periferal
-	SysTick_CLKSourceConfig(SysTick_CLKSource_HCLK_Div8);	//SYSTICK AHB1/8
+	RCC_HCLKConfig(RCC_SYSCLK_Div1);			//CLK the periferal - configure the AHB clk
 	SysTick_Config(90000);					//SYSTICK at 100Hz - this function also enables the interrupt
+	SysTick_CLKSourceConfig(SysTick_CLKSource_HCLK_Div8);   //SYSTICK AHB1/8
 }
 
 /**

@@ -53,6 +53,7 @@ int main(void)
 		USB_Init();
 		while (bDeviceState != CONFIGURED);	//Wait for USB config
 		USB_Configured_LED();
+		EXTI_ONOFF_EN();			//Enable the off interrupt - allow some time for debouncing
 		while(1) {				//If running off USB (mounted as mass storage), stay in this loop - dont turn on anything
 			if(Millis%1000>500)		//1Hz on/off flashing
 				switch_leds_on();	//Flash the LED(s)
@@ -122,7 +123,7 @@ int main(void)
 	Set_PWM_1(10);
 	Set_PWM_2(10);
 	rtc_gettime(&RTC_time);				//Get the RTC time and put a timestamp on the start of the file
-	printf("%d\%d\%d :, %d:%d:%d\n",RTC_time.mday,RTC_time.month,RTC_time.year,RTC_time.hour,RTC_time.min,RTC_time.sec);
+	printf("%d-%d-%dT%d:%d:%d\n",RTC_time.year,RTC_time.month,RTC_time.mday,RTC_time.hour,RTC_time.min,RTC_time.sec);//ISO 8601 timestamp header
 	if(file_opened) {
 		f_puts(print_string,&FATFS_logfile);
 		print_string[0]=0x00;			//Set string length to 0
@@ -131,7 +132,7 @@ int main(void)
 	while (1) {
 		while(!bytes_in_buff(&Buff));		//Wait for some PPG data
 		Get_From_Buffer(&ppg,&Buff);		//Retraive one sample of PPG
-		printf("%f,%f,%lu\n",(float)Millis/10.0,reported_pressure,ppg);//Print both data samples after a time stamp
+		printf("%3f,%f,%lu\n",(float)Millis/1000.0,reported_pressure,ppg);//Print both data samples after a time stamp
 		if(file_opened) {
 			f_puts(print_string,&FATFS_logfile);
 			print_string[0]=0x00;		//Set string length to 0

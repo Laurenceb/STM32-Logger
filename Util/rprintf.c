@@ -212,13 +212,16 @@ void rprintfFloat(char numDigits, float x) {
                         place *= 10.0;
         }
         // print digits
-        for(i=0; i<numDigits || sig; i++) {
+        for(i=0; i<=numDigits; ) {
                 digit = (unsigned char)(x/place);
                 rprintfChar(digit+0x30);
                 if(place == 1.0){
-                        if((i+1)<numDigits)rprintfChar('.');
+                        if(numDigits)rprintfChar('.');
                         sig=FALSE;
                 }
+		// if we have passed the decimal place, count digits 
+		if(!sig)
+			i++;
                 x -= (digit*place);
                 place /= 10.0;
         }
