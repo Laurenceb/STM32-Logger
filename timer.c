@@ -63,6 +63,7 @@ void setup_pwm(void) {
 
 
   /*Now setup timer3 as PWM0*/
+  TIM_TimeBaseStructure.TIM_Period = PWM_PERIOD3;
   TIM_TimeBaseInit(TIM3, &TIM_TimeBaseStructure);//same as timer4
   /* PWM1 Mode configuration: Channel2 */
   TIM_OC2Init(TIM3, &TIM_OCInitStructure);
@@ -88,6 +89,24 @@ void setup_pwm(void) {
   TIM_ARRPreloadConfig(TIM1, ENABLE);
   TIM_Cmd(TIM1, ENABLE); 
   Set_PWM_Motor(0);			//Make sure motor off
+}
+
+/**
+  * @brief Try to correct the timer phase by adjusting the reload register for one pwm cycle
+  * @param Pointer to unsigned 32 bit integer bitmask for the timers to be corrected
+  * @retval none
+  * Note: this could be improved, atm it just uses some macros and is hardcoded for timer3 only
+  * (need to use different timers for each output) 
+  */
+void Tryfudge(uint32_t* Fudgemask) {
+	if(*Fudgemask&(uint32_t)1 && TIM3->CNT<PWM_FUDGE3) {//If the first bit is set, adjust the first timer in the list if it is safe to do so
+		TIM_ARRPreloadConfig(TIM1, DISABLE);//Disable reload buffering so we can load directly
+		TIM_SetAutoreload(TIM3, PWM_FUDGE3);//Load reload register directly
+		TIM_ARRPreloadConfig(TIM1, ENABLE);//Enable buffering so we load buffered register
+		TIM_SetAutoreload(TIM3, PWM_PERIOD3);//Load the buffer, so the pwm period returns to normal after 1 period
+		*Fudgemask&~(uint32_t)1;//Clear the bit
+	}
+	//Other timers could go here at some point
 }
 
 /**

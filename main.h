@@ -2,6 +2,7 @@
 #pragma once
 #include "Util/fat_fs/inc/ff.h"
 #include "Util/buffer.h"
+#include "Sensors/ppg.h"
 #include "timer.h"
 
 //externs for all the globals
@@ -29,7 +30,7 @@ do {							\
 void __fat_print_char(char c);
 void __str_print_char(char c);
 //globals
-extern volatile buff_type Buff;
+extern volatile buff_type Buff[PPG_CHANNELS];
 //fatfs globals
 extern volatile uint8_t file_opened;
 extern FIL FATFS_logfile;

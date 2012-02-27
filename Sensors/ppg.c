@@ -16,9 +16,10 @@
   * This will be called at 13.393KHz
   */
 void PPG_LO_Filter(uint16_t* buff) {
-	int32_t I=0,Q=0;	//I and Q integration bins
+	int32_t I=0,Q=0,a;	//I and Q integration bins, general purpose variable
 	static uint8_t bindex;	//Baseband decimation index
-	static int32_t Frequency_Bin[1][2];//Only one frequency in use atm - consisting of and I and Q component
+	static int32_t Frequency_Bin[2][2];//Only two frequencies in use atm - consisting of and I and Q component
+	static uint32_t Fudgemask;
 	for(uint16_t n=0;n<ADC_BUFF_SIZE/4;) {//buffer size/4 must be a multiple of 4
 		I+=buff[n++];
 		Q+=buff[n++];
@@ -26,15 +27,24 @@ void PPG_LO_Filter(uint16_t* buff) {
 		Q-=buff[n++];
 	}
 	//Now run the "baseband" decimating filter(s)
+	//No positive frequencies at the moment - they would go here
 	Frequency_Bin[0][0]+=I;Frequency_Bin[0][1]+=Q;//Add the I and Q directly into the zero frequency bin
-	//Other Bins for +ive or -ive frequencies go here - use a lookup table for the sin/cos samples
+	//Negative frequencie(s) go here, need to get to 0hz, so multiply by a +ive complex exponential
+	Frequency_Bin[1][0]+=I;Frequency_Bin[1][1]+=Q;//I,Q is real,imaginary
+	a=Frequency_Bin[1][0];Frequency_Bin[1][0]=Frequency_Bin[1][0]*1774+Frequency_Bin[1][1]*1024;//Rotate the phasor in the bin - real here
+	Frequency_Bin[1][1]=Frequency_Bin[1][1]*1773+a*-1024;//-complex here
+	Frequency_Bin[1][1]>>=11;Frequency_Bin[1][0]>>=11;//divide by 2048
+	//End of decimating filters
 	I=0;Q=0;//Zero the quadrature sampling decimation bins
 	if(++bindex==12) {//Decimation factor of 12 - 62.004Hz data output
-		Add_To_Buffer((uint32_t)sqrt(pow((int64_t)Frequency_Bin[0][0],2)+pow((int64_t)Frequency_Bin[0][1],2)),&Buff);
-		//Other frequencies corresponding to different LEDs could go here - use different buffers maybe?
+		Add_To_Buffer((uint32_t)sqrt(pow((int64_t)Frequency_Bin[0][0],2)+pow((int64_t)Frequency_Bin[0][1],2)),&(Buff[0]));
+		Add_To_Buffer((uint32_t)sqrt(pow((int64_t)Frequency_Bin[1][0],2)+pow((int64_t)Frequency_Bin[1][1],2)),&(Buff[1]));
+		//Other frequencies corresponding to different LEDs could go here - use the array of buffers?
 		memset(Frequency_Bin,0,sizeof(Frequency_Bin));//Zero everything
-		bindex=0;//reset this
+		bindex=0;//Reset this
+		Fudgemask|=1;//Sets a TIM3 fudge as requested
 	}
+	Tryfudge(&Fudgemask);
 }
 
 /**

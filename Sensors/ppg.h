@@ -1,5 +1,7 @@
 #include "stm32f10x.h"
 
+#define PPG_CHANNELS 2
+
 #define TARGET_ADC 1376256/2	/*Target 50% of ADC range used by the pwm led signal*/
 #define PPG_BUFFER_SIZE 1024
 
