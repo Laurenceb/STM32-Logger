@@ -115,14 +115,14 @@ int main(void)
 		}
 	}
 	ADC_Configuration();				//We leave this a bit later to allow stabilisation
-	//delay();
+	delay();					//Sensor+inst amplifier takes about 200ms to stabilise after power on
 	calibrate_sensor();				//Calibrate the offset on the diff pressure sensor
 	EXTI_ONOFF_EN();				//Enable the off interrupt - allow some time for debouncing
 	Pressure_control=1;				//Enable active pressure control
 	pressure_setpoint=0;				//Not applied pressure, should cause motor and solenoid to go to idle state
-	Set_PWM_0(10);					//Fixed brightness for the time being
-	Set_PWM_1(10);
-	Set_PWM_2(10);
+	Set_PWM_0(40);					//Fixed brightness for the time being
+	Set_PWM_1(40);
+	Set_PWM_2(40);
 	rtc_gettime(&RTC_time);				//Get the RTC time and put a timestamp on the start of the file
 	printf("%d-%d-%dT%d:%d:%d\n",RTC_time.year,RTC_time.month,RTC_time.mday,RTC_time.hour,RTC_time.min,RTC_time.sec);//ISO 8601 timestamp header
 	if(file_opened) {

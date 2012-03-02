@@ -27,7 +27,7 @@ void PPG_LO_Filter(uint16_t* buff) {
 		Q-=buff[n++];
 	}
 	//Now run the "baseband" decimating filter(s)
-	//No positive frequencies at the moment - they would go here
+	//No positive frequencies at the moment - they would go here TODO
 	Frequency_Bin[0][0]+=I;Frequency_Bin[0][1]+=Q;//Add the I and Q directly into the zero frequency bin
 	//Negative frequencie(s) go here, need to get to 0hz, so multiply by a +ive complex exponential
 	Frequency_Bin[1][0]+=I;Frequency_Bin[1][1]+=Q;//I,Q is real,imaginary

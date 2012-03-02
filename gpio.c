@@ -57,11 +57,13 @@ void setup_gpio(void)
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
 	GPIO_Init( GPIOB, &GPIO_InitStructure );
 	//Configure the PWM outputs
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;//reduced slew rate to reduce interference on the board
 	GPIO_PinRemapConfig( GPIO_PartialRemap_TIM3, ENABLE );//to B.5
 	GPIO_InitStructure.GPIO_Pin = PWM0|PWM1|PWM2;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
 	GPIO_Init( GPIOB, &GPIO_InitStructure );
 	//Configure the pump Motor PWM
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;//faster slew rate for the motor so mosfet spends more time fully on/off
 	GPIO_InitStructure.GPIO_Pin = PWM_MOTOR;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
 	GPIO_Init( GPIOA, &GPIO_InitStructure );
