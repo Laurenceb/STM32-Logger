@@ -30,12 +30,11 @@ void PPG_LO_Filter(uint16_t* buff) {
 	//No positive frequencies at the moment - they would go here TODO
 	Frequency_Bin[0][0]+=I;Frequency_Bin[0][1]+=Q;//Add the I and Q directly into the zero frequency bin
 	//Negative frequencie(s) go here, need to get to 0hz, so multiply by a +ive complex exponential
-	Frequency_Bin[1][0]+=I;Frequency_Bin[1][1]+=Q;//I,Q is real,imaginary
-	a=Frequency_Bin[1][0];Frequency_Bin[1][0]=Frequency_Bin[1][0]*1774+Frequency_Bin[1][1]*1024;//Rotate the phasor in the bin - real here
-	Frequency_Bin[1][1]=Frequency_Bin[1][1]*1773+a*-1024;//-complex here
+	a=Frequency_Bin[1][0];Frequency_Bin[1][0]=Frequency_Bin[1][0]*1774-Frequency_Bin[1][1]*1024;//Rotate the phasor in the bin - real here
+	Frequency_Bin[1][1]=Frequency_Bin[1][1]*1773+a*1024;//complex here
 	Frequency_Bin[1][1]>>=11;Frequency_Bin[1][0]>>=11;//divide by 2048
+	Frequency_Bin[1][0]+=I;Frequency_Bin[1][1]+=Q;//I,Q is real,imaginary
 	//End of decimating filters
-	I=0;Q=0;//Zero the quadrature sampling decimation bins
 	if(++bindex==12) {//Decimation factor of 12 - 62.004Hz data output
 		Add_To_Buffer((uint32_t)sqrt(pow((int64_t)Frequency_Bin[0][0],2)+pow((int64_t)Frequency_Bin[0][1],2)),&(Buff[0]));
 		Add_To_Buffer((uint32_t)sqrt(pow((int64_t)Frequency_Bin[1][0],2)+pow((int64_t)Frequency_Bin[1][1],2)),&(Buff[1]));

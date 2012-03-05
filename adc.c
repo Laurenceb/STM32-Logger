@@ -112,7 +112,7 @@ void ADC_Configuration(void)
   */
 uint16_t readADC2(uint8_t channel)
 {
-  ADC_RegularChannelConfig(ADC2, channel, 1, ADC_SampleTime_1Cycles5);
+  ADC_RegularChannelConfig(ADC2, channel, 1, ADC_SampleTime_239Cycles5);
   // Start the conversion
   ADC_SoftwareStartConvCmd(ADC2, ENABLE);
   // Wait until conversion completion
@@ -128,7 +128,7 @@ uint16_t readADC2(uint8_t channel)
   */
 void setADC2(uint8_t channel)
 {
-  ADC_RegularChannelConfig(ADC2, channel, 1, ADC_SampleTime_1Cycles5);
+  ADC_RegularChannelConfig(ADC2, channel, 1, ADC_SampleTime_239Cycles5);
   // Start the conversion
   ADC_SoftwareStartConvCmd(ADC2, ENABLE);
 }

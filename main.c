@@ -36,8 +36,6 @@ int main(void)
 {
 	uint8_t a=0;
 	uint32_t ppg[2];				//two PPG channels
-	init_buffer(&(Buff[0]),PPG_BUFFER_SIZE);	//Enough for ~0.25S of data
-	init_buffer(&(Buff[1]),PPG_BUFFER_SIZE);
 	RTC_t RTC_time;
 	SystemInit();					//Sets up the clk
 	setup_gpio();					//Initialised pins, and detects boot source
@@ -113,9 +111,11 @@ int main(void)
 			delay();
 			shutdown();			//Abort after a single red flash
 		}
+		init_buffer(&(Buff[0]),PPG_BUFFER_SIZE);//Enough for ~0.25S of data
+		init_buffer(&(Buff[1]),PPG_BUFFER_SIZE);
 	}
-	ADC_Configuration();				//We leave this a bit later to allow stabilisation
 	delay();					//Sensor+inst amplifier takes about 200ms to stabilise after power on
+	ADC_Configuration();				//We leave this a bit later to allow stabilisation
 	calibrate_sensor();				//Calibrate the offset on the diff pressure sensor
 	EXTI_ONOFF_EN();				//Enable the off interrupt - allow some time for debouncing
 	Pressure_control=1;				//Enable active pressure control

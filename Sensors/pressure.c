@@ -12,7 +12,7 @@ static float pressure_offset;			//zero offset - calibrated at power on
   */
 void calibrate_sensor(void) {
 	uint32_t pressoff=0;
-	register l;
+	volatile uint32_t l;
 	for(uint8_t n=1;n;n++) {		//take 256 samples from the pressure sensor
 		pressoff+=readADC2(1);
 		for(l=10000;l;l--);		//~1ms between samples

@@ -14,7 +14,7 @@ STARTUP_FILE = stm32f10x_md
 HSE_VALUE = 12000000UL
 
 # Enable debug compilation
-#DEBUG = 1
+DEBUG = 1
 
 # [OPTIONAL] Set the serial details for bootloading
 STM32LDR_PORT = /dev/rfcomm3
