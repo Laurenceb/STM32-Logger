@@ -4,7 +4,7 @@
 #define PWM_RES MAX_DUTY/*motor pwm resolution*/
 
 //The idea here is that there are 192 cycles of first pwm output (at quadrature) and 191 of second pwm (just below quadrature)
-//191*378=72576 timer clocks 
+//192*378=72576 timer clocks 
 #define PWM_PERIOD 377	/* 377+1=378 gives 11.905khz pwm with 72/16=4.5mhz clk - for quadrature sampling */
 
 #define PWM_PERIOD3 379	/* 379+1=380 These two values are used to generate an orthogonal frequency for second LED channel */

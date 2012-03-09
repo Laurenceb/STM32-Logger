@@ -120,9 +120,9 @@ int main(void)
 	EXTI_ONOFF_EN();				//Enable the off interrupt - allow some time for debouncing
 	Pressure_control=1;				//Enable active pressure control
 	pressure_setpoint=0;				//Not applied pressure, should cause motor and solenoid to go to idle state
-	Set_PWM_0(40);					//Fixed brightness for the time being
-	Set_PWM_1(40);
-	Set_PWM_2(40);
+	Set_PWM_0(5);					//Fixed brightness for the time being
+	Set_PWM_1(5);
+	Set_PWM_2(5);
 	rtc_gettime(&RTC_time);				//Get the RTC time and put a timestamp on the start of the file
 	printf("%d-%d-%dT%d:%d:%d\n",RTC_time.year,RTC_time.month,RTC_time.mday,RTC_time.hour,RTC_time.min,RTC_time.sec);//ISO 8601 timestamp header
 	if(file_opened) {
