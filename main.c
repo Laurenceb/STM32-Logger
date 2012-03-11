@@ -22,10 +22,12 @@ extern uint16_t MAL_Init (uint8_t lun);			//For the USB filesystem driver
 volatile uint8_t file_opened=0;				//So we know to close any opened files before turning off
 uint8_t print_string[256];				//For printf data
 UINT a;							//File bytes counter
-volatile buff_type Buff[PPG_CHANNELS];				//Shared with ISR
+volatile buff_type Buff[PPG_CHANNELS];			//Shared with ISR
 volatile uint8_t Pressure_control;			//Enables the pressure control PI
 volatile float pressure_setpoint;			//Target differential pressure for the pump
 volatile float reported_pressure;			//Pressure as measured by the sensor
+volatile uint32_t Millis;				//System uptime (rollover after 50 days)
+volatile float Device_Temperature;			//Die temperature sensor converted to centigrade
 //FatFs filesystem globals go here
 FRESULT f_err_code;
 static FATFS FATFS_Obj;
@@ -132,9 +134,9 @@ int main(void)
 	Millis=0;					//Reset system uptime, we have 50 days before overflow
 	while (1) {
 		while(!bytes_in_buff(&(Buff[0])));	//Wait for some PPG data
-		Get_From_Buffer(&(ppg[0]),&(Buff[0]));	//Retraive one sample of PPG
+		Get_From_Buffer(&(ppg[0]),&(Buff[0]));	//Retrive one sample of PPG
 		Get_From_Buffer(&(ppg[1]),&(Buff[1]));
-		printf("%3f,%f,%lu,%lu\n",(float)Millis/1000.0,reported_pressure,ppg[0],ppg[1]);//Print both data samples after a time stamp
+		printf("%3f,%f,%lu,%lu,%1f\n",(float)Millis/1000.0,reported_pressure,ppg[0],ppg[1],Device_Temperature);//Print both data samples after a time stamp
 		if(file_opened) {
 			f_puts(print_string,&FATFS_logfile);
 			print_string[0]=0x00;		//Set string length to 0

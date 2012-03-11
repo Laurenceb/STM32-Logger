@@ -10,6 +10,10 @@ extern volatile uint8_t Pressure_control;
 extern volatile float pressure_setpoint;
 extern volatile float reported_pressure;
 
+extern volatile uint32_t Millis;
+
+extern volatile float Device_Temperature;
+
 #define PRE_SIZE 1000000ul	/*Preallocate size*/
 
 //Pressure controller constants - a PI controller

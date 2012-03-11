@@ -17,10 +17,10 @@ void setup_pwm(void) {
 
     The TIM4 is running at 11.905KHz: TIM4 Frequency = TIM4 counter clock/(ARR + 1)
                                                   = 4.5 MHz / 378
-    (with 1.5clk adc -> 14adc clk/sample, and 12mhz adc clk this gives quadrature
+    (with 239.5clk adc sampling -> 252adc clk/sample, and 12mhz adc clk this gives quadrature
     sampling)
-    TIM3 Channel3 duty cycle = (TIM3_CCR3/ TIM3_ARR)* 100 = 25%
-    TIM3 Channel4 duty cycle = (TIM3_CCR4/ TIM3_ARR)* 100 = 12.5%
+    TIM3 Channel3 duty cycle = (TIM3_CCR3/ TIM3_ARR)* 100 = 2.6%
+    TIM3 Channel4 duty cycle = (TIM3_CCR4/ TIM3_ARR)* 100 = 2.6%
   ----------------------------------------------------------------------- */
   TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
   TIM_OCInitTypeDef  TIM_OCInitStructure;
@@ -105,7 +105,7 @@ void Tryfudge(uint32_t* Fudgemask) {
 		TIM_SetAutoreload(TIM3, PWM_FUDGE3);//Load reload register directly
 		TIM_ARRPreloadConfig(TIM3, ENABLE);//Enable buffering so we load buffered register
 		TIM_SetAutoreload(TIM3, PWM_PERIOD3);//Load the buffer, so the pwm period returns to normal after 1 period
-		*Fudgemask&~(uint32_t)1;//Clear the bit
+		*Fudgemask&=~(uint32_t)1;//Clear the bit
 	}
 	//Other timers could go here at some point
 }

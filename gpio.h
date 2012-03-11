@@ -35,4 +35,5 @@ extern uint8_t bootsource;
 void setup_gpio(void);
 void switch_leds_on(void);
 void switch_leds_off(void);
+void red_flash(void);
 uint8_t get_wkup(void);

@@ -4,7 +4,6 @@
 
 uint16_t * ADC1_Convertion_buff;	//malloc this to a different size depending on free ram - before adc init
 
-
 void ADC_Configuration(void)
 {
   ADC1_Convertion_buff=malloc(ADC_BUFF_SIZE);	//64 samples * 2 for interleaving, * 2bytes/sample==256
@@ -24,9 +23,10 @@ void ADC_Configuration(void)
   ADC_DeInit(ADC2);
 
   /* ADC2 Configuration ------------------------------------------------------*/
+
   /* ADC1 and ADC2 operate independently */
   ADC_InitStructure.ADC_Mode = ADC_Mode_Independent;
-  /* Disable the scan conversion so we do one at a time */
+  /* Enable the scan conversion so we do three at a time */
   ADC_InitStructure.ADC_ScanConvMode = DISABLE;
   /* Don't do contimuous conversions - do them on demand */
   ADC_InitStructure.ADC_ContinuousConvMode = DISABLE;
@@ -39,6 +39,24 @@ void ADC_Configuration(void)
 
   /* Now do the setup */
   ADC_Init(ADC2, &ADC_InitStructure);
+
+  /* ADC2 injected channel configuration */
+  ADC_InjectedChannelConfig(ADC2, PRESSURE_ADC_CHAN, 1, ADC_SampleTime_239Cycles5);
+  ADC_InjectedChannelConfig(ADC2, BATTERY_ADC_CHAN, 1, ADC_SampleTime_239Cycles5);
+  ADC_InjectedChannelConfig(ADC2, 16, 1, ADC_SampleTime_239Cycles5);//on die temperature sensor
+  ADC_InjectedSequencerLengthConfig(ADC2, 3);//three conversions
+  ADC_ExternalTrigInjectedConvConfig(ADC2, ADC_ExternalTrigInjecConv_None);//set sw injected channels
+
+
+  /* Set the analogue watchdog on the battery voltage conversion*/
+  ADC_AnalogWatchdogCmd(ADC2,ADC_AnalogWatchdog_SingleInjecEnable);
+  ADC_AnalogWatchdogThresholdsConfig(ADC2,0xFFFF,(uint16_t)((float)SAMPLING_FACTOR*MINIMUM_VOLTAGE));//watchdog fires on low voltage
+  ADC_AnalogWatchdogSingleChannelConfig(ADC2, BATTERY_ADC_CHAN);//set the watchdog to the battery voltage channel
+  ADC_ITConfig(ADC2, ADC_IT_AWD, ENABLE);//enable the analogue watchdog interrupt
+
+  /* Enable the die temperature sensing and vref internal inputs to adc*/
+  ADC_TempSensorVrefintCmd(ENABLE);
+
   /* Enable ADC2 */
   ADC_Cmd(ADC2, ENABLE);
 
@@ -105,11 +123,12 @@ void ADC_Configuration(void)
   DMA_ISR_Config();
 }
 
+
 /**
-  * @brief  This function returns a conversion from ADC2 (blocking)
-  * @param  Channel number to convert
-  * @retval unsigned 16 bit integer - adc is 12bit
-  */
+* @brief This function returns a conversion from ADC2 (blocking)
+* @param Channel number to convert
+* @retval unsigned 16 bit integer - adc is 12bit
+*/
 uint16_t readADC2(uint8_t channel)
 {
   ADC_RegularChannelConfig(ADC2, channel, 1, ADC_SampleTime_239Cycles5);
@@ -122,10 +141,10 @@ uint16_t readADC2(uint8_t channel)
 }
 
 /**
-  * @brief  This function sets up a conversion from ADC2 (non blocking)
-  * @param  Channel number to convert
-  * @retval None
-  */
+* @brief This function sets up a conversion from ADC2 (non blocking)
+* @param Channel number to convert
+* @retval None
+*/
 void setADC2(uint8_t channel)
 {
   ADC_RegularChannelConfig(ADC2, channel, 1, ADC_SampleTime_239Cycles5);
@@ -134,16 +153,17 @@ void setADC2(uint8_t channel)
 }
 
 /**
-  * @brief  This function gets a conversion from ADC2 (non blocking)
-  * @param  None
-  * @retval Read value (-1 means adc not ready)
-  */
-int16_t getADC2(void)
+* @brief This function gets a conversion from ADC2 (non blocking)
+* @param None
+* @retval Read value (-1 means adc not ready)
+*/
+uint16_t getADC2(void)
 {
   // Make sure we have conversion completion
   if(ADC_GetFlagStatus(ADC2, ADC_FLAG_EOC) == RESET)
-	return -1;
+    return -1;
   // Get the conversion value
   return ADC_GetConversionValue(ADC2);
 }
+
 

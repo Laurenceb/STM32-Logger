@@ -9,13 +9,12 @@
 #include "Util/fat_fs/inc/ff.h"
 #include "Sensors/pressure.h"
 #include "Sensors/ppg.h"
+#include "Sensors/temperature.h"
 #include "core_cm3.h"
 #if defined(STM32F10X_HD) || defined(STM32F10X_XL) 
  #include "stm32_eval_sdio_sd.h"
 #endif /* STM32F10X_HD | STM32F10X_XL*/
 
-//System uptime
-volatile uint32_t Millis;
 
 /**
   * @brief  Configure all interrupts accept on/off pin
@@ -27,13 +26,18 @@ void ISR_Config(void) {
 	NVIC_InitTypeDef   NVIC_InitStructure;
 	/* Set the Vector Table base location at 0x08000000 */    
 	NVIC_SetVectorTable(NVIC_VectTab_FLASH, 0x0);      
-	//First we configure the Kalman ISR
+	//First we configure the systick ISR
 	/* Configure one bit for preemption priority */   
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
 	/* Enable and set SYSTICK Interrupt to the fifth priority */
 	NVIC_InitStructure.NVIC_IRQChannel = SysTick_IRQn;	//The 100hz timer triggered interrupt	
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x00;//Higher pre-emption priority - can nest inside USB/SD
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x00;//Pre-emption priority
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x05;	//5th subpriority
+	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&NVIC_InitStructure);
+	NVIC_InitStructure.NVIC_IRQChannel = ADC1_2_IRQn;	//The 100hz timer triggered interrupt	
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x00;//Pre-emption priority
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x06;	//6th subpriority
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
 }
@@ -108,14 +112,19 @@ void EXTI0_IRQHandler(void) {
 		/*Called Code goes here*/
 		delay();					//Debouncing delay
 		if(file_opened) {
+			char c[]="\r\nLogger turned off\r\n";
+			uint8_t a;
+			f_write(&FATFS_logfile,&c,1,&a);	//Write the error to the file
 			f_sync(&FATFS_logfile);			//Flush buffers
 			f_truncate(&FATFS_logfile);		//Truncate the lenght - fix pre allocation
 			f_close(&FATFS_logfile);		//Close any opened file
 		}
 		if(GET_CHRG_STATE)				//Interrupt due to USB insertion - reset to usb mode
 			NVIC_SystemReset();			//Software reset of the system - USB inserted whilst running
-		else
+		else {
+			red_flash();				//Flash red led
 			shutdown();				//Shuts down - only wakes up on power pin i.e. WKUP
+		}
 	}
 }
 
@@ -129,8 +138,34 @@ void DMAChannel1_IRQHandler(void) {
 		PPG_LO_Filter(ADC1_Convertion_buff);		//Process lower half
 	else
 		PPG_LO_Filter(&ADC1_Convertion_buff[ADC_BUFF_SIZE/4]);//Transfer complete, process upper half - indexed as 16bit words
-	DMA_ClearFlag(DMA1_FLAG_TC1|DMA1_FLAG_HT1);  //make sure flags are clear
+	DMA_ClearFlag(DMA1_FLAG_TC1|DMA1_FLAG_HT1);  		//make sure flags are clear
 }
+
+/**
+  * @brief  This function handles ADC1-2 interrupt requests.- Should only be from the analogu watchdog
+  * @param  None
+  * @retval None
+  */
+void ADC1_2_IRQHandler(void) {
+	if(ADC_GetITStatus(ADC2, ADC_IT_AWD)) {			//Analogue watchdog was triggered
+		if(file_opened) {
+			char c[]="\r\nLow Battery\r\n";
+			uint8_t a;
+			f_write(&FATFS_logfile,&c,1,&a);	//Write the error to the file
+			f_sync(&FATFS_logfile);			//Flush buffers
+			f_truncate(&FATFS_logfile);		//Truncate the lenght - fix pre allocation
+			f_close(&FATFS_logfile);		//Close any opened file
+		}
+		red_flash();					//Flash red led
+		shutdown();					//Shutdown to save battery
+	}
+	ADC_ClearITPendingBit(ADC2, ADC_IT_EOC);
+	ADC_ClearITPendingBit(ADC2, ADC_IT_JEOC);
+	ADC_ClearITPendingBit(ADC1, ADC_IT_EOC);
+	ADC_ClearITPendingBit(ADC1, ADC_IT_JEOC);		//None of these should ever happen, but best to be safe
+	ADC_ClearITPendingBit(ADC1, ADC_IT_AWD);		//make sure flags are clear
+}
+
 
 /*******************************************************************************
 * Function Name  : SysTickHandler
@@ -146,15 +181,16 @@ void SysTickHandler(void)
 	disk_timerproc();
 	//Incr the system uptime
 	Millis+=10;
-	//Now handle the pressure controller
-	if(Pressure_control) {//If active pressure control is enabled
-		int16_t a=getADC2();
-		if(a>=0) {//ADC2 returned ok - run a PI controller on the air pump motor
+	if(ADC_GetSoftwareStartInjectedConvCmdStatus(ADC2)) {//We have adc2 converted data from the injected channels
+  		uint16_t a=ADC_GetInjectedConversionValue(ADC2, 1);//get first injected channel
+		//Now handle the pressure controller
+		if(Pressure_control) {//If active pressure control is enabled
+			//run a PI controller on the air pump motor
 			reported_pressure=conv_diff(a);		//Global, holds our pressure as measured
 			if(pressure_setpoint>0) {		//A negative setpoint forces a dump of air
 				float error=pressure_setpoint-reported_pressure;//pressure_setpoint is a global containing the target diff press
-				I+=error*PRESSURE_I_CONST;		//constants defined in main.h
-				if(I>PRESSURE_I_LIM)			//enforce limits
+				I+=error*PRESSURE_I_CONST;	//constants defined in main.h
+				if(I>PRESSURE_I_LIM)		//enforce limits
 					I=PRESSURE_I_LIM;
 				if(I<-PRESSURE_I_LIM)
 					I=-PRESSURE_I_LIM;
@@ -166,11 +202,14 @@ void SysTickHandler(void)
 				else
 					Set_Motor(0);
 			}
-		}						//setADC needs to be outside if braces to ensure adc is started
-		setADC2(1);					//TODO: this shouldnt been hardcoded to channels
+		}						//setADC needs to be outside if braces to ensure adc is started;			
+		else
+			Set_Motor(0);				//Sets the Rohm motor controller to idle (low current shutdown) state
+		//Check the die temperature
+		Device_Temperature=convert_die_temp(ADC_GetInjectedConversionValue(ADC2, 2));//The on die temperature sensor
+		//Could process some more sensor data here
+		ADC_SoftwareStartInjectedConvCmd(ADC2, ENABLE);	//Trigger the injected channel group
 	}
-	else
-		Set_Motor(0);					//Sets the Rohm motor controller to idle (low current shutdown) state
 }
 
 //Included interrupts from ST um0424 mass storage example

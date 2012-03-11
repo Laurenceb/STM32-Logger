@@ -1,5 +1,6 @@
 #include "gpio.h"
 #include "pwr.h"
+#include "main.h"
 
 uint8_t bootsource;
 
@@ -88,6 +89,13 @@ void switch_leds_off(void)
 		GPIO_WriteBit(GPIOB,RED,Bit_RESET);
 	else
 		GPIO_WriteBit(GPIOB,GREEN,Bit_RESET);
+}
+
+void red_flash(void)
+{
+	GPIO_WriteBit(GPIOB,RED,Bit_SET);
+	delay();
+	GPIO_WriteBit(GPIOB,RED,Bit_RESET);
 }
 
 uint8_t get_wkup()
