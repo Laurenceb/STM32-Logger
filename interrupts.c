@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "interrupts.h"
 #include "main.h"
 #include "adc.h"
@@ -36,7 +37,7 @@ void ISR_Config(void) {
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
 	NVIC_InitStructure.NVIC_IRQChannel = ADC1_2_IRQn;	//The 100hz timer triggered interrupt	
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x00;//Pre-emption priority
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x01;//Low Pre-emption priority
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x06;	//6th subpriority
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
@@ -122,7 +123,7 @@ void EXTI0_IRQHandler(void) {
 		if(GET_CHRG_STATE)				//Interrupt due to USB insertion - reset to usb mode
 			NVIC_SystemReset();			//Software reset of the system - USB inserted whilst running
 		else {
-			red_flash();				//Flash red led
+			//red_flash();				//Flash red led
 			shutdown();				//Shuts down - only wakes up on power pin i.e. WKUP
 		}
 	}
