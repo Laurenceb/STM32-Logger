@@ -115,7 +115,7 @@ void EXTI0_IRQHandler(void) {
 		if(file_opened) {
 			char c[]="\r\nLogger turned off\r\n";
 			uint8_t a;
-			f_write(&FATFS_logfile,&c,1,&a);	//Write the error to the file
+			f_write(&FATFS_logfile,c,sizeof(c),&a);	//Write the error to the file
 			f_sync(&FATFS_logfile);			//Flush buffers
 			f_truncate(&FATFS_logfile);		//Truncate the lenght - fix pre allocation
 			f_close(&FATFS_logfile);		//Close any opened file
@@ -152,7 +152,7 @@ void ADC1_2_IRQHandler(void) {
 		if(file_opened) {
 			char c[]="\r\nLow Battery\r\n";
 			uint8_t a;
-			f_write(&FATFS_logfile,&c,1,&a);	//Write the error to the file
+			f_write(&FATFS_logfile,c,sizeof(c),&a);	//Write the error to the file
 			f_sync(&FATFS_logfile);			//Flush buffers
 			f_truncate(&FATFS_logfile);		//Truncate the lenght - fix pre allocation
 			f_close(&FATFS_logfile);		//Close any opened file
