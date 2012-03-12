@@ -184,7 +184,7 @@ void SysTickHandler(void)
 	Millis+=10;
 	if(ADC_GetFlagStatus(ADC2, ADC_FLAG_JEOC)) {//We have adc2 converted data from the injected channels
 		ADC_ClearFlag(ADC2, ADC_FLAG_JEOC);		//clear the flag
-  		uint16_t a=ADC_GetInjectedConversionValue(ADC2, ADC_InjectedChannel_2);//get first injected channel
+  		uint16_t a=ADC_GetInjectedConversionValue(ADC2, ADC_InjectedChannel_3);//get first injected channel
 		//Now handle the pressure controller
 		if(Pressure_control) {//If active pressure control is enabled
 			//run a PI controller on the air pump motor
@@ -207,8 +207,8 @@ void SysTickHandler(void)
 		}						//setADC needs to be outside if braces to ensure adc is started;			
 		else
 			Set_Motor(0);				//Sets the Rohm motor controller to idle (low current shutdown) state
-		//Check the die temperature
-		Device_Temperature=convert_die_temp(ADC_GetInjectedConversionValue(ADC2, ADC_InjectedChannel_3));//The on die temperature sensor
+		//Check the die temperature - not possible on adc1 :-(
+		//Device_Temperature=convert_die_temp(ADC_GetInjectedConversionValue(ADC2, ADC_InjectedChannel_3));//The on die temperature sensor
 		//Could process some more sensor data here
 	}
 	ADC_SoftwareStartInjectedConvCmd(ADC2, ENABLE);	//Trigger the injected channel group

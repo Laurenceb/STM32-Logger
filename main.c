@@ -136,7 +136,7 @@ int main(void)
 		while(!bytes_in_buff(&(Buff[0])));	//Wait for some PPG data
 		Get_From_Buffer(&(ppg[0]),&(Buff[0]));	//Retrive one sample of PPG
 		Get_From_Buffer(&(ppg[1]),&(Buff[1]));
-		printf("%3f,%f,%lu,%lu,%1f\n",(float)Millis/1000.0,reported_pressure,ppg[0],ppg[1],Device_Temperature);//Print both data samples after a time stamp
+		printf("%3f,%f,%lu,%lu\n",(float)Millis/1000.0,reported_pressure,ppg[0],ppg[1]);//,Device_Temperature);//Print data after a time stamp
 		if(file_opened) {
 			f_puts(print_string,&FATFS_logfile);
 			print_string[0]=0x00;		//Set string length to 0

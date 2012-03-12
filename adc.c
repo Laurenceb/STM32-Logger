@@ -41,10 +41,10 @@ void ADC_Configuration(void)
   ADC_Init(ADC2, &ADC_InitStructure);
 
   /* ADC2 injected channel configuration */
-  ADC_InjectedChannelConfig(ADC2, PRESSURE_ADC_CHAN, 2, ADC_SampleTime_239Cycles5);
-  ADC_InjectedChannelConfig(ADC2, 16, 3, ADC_SampleTime_239Cycles5);//on die temperature sensor
-  ADC_InjectedChannelConfig(ADC2, BATTERY_ADC_CHAN, 4, ADC_SampleTime_239Cycles5);
-  ADC_InjectedSequencerLengthConfig(ADC2, 3);//three conversions
+  ADC_InjectedSequencerLengthConfig(ADC2, 2);//two conversions
+  ADC_InjectedChannelConfig(ADC2, PRESSURE_ADC_CHAN, 1, ADC_SampleTime_239Cycles5);
+  //ADC_InjectedChannelConfig(ADC2, 16, 2, ADC_SampleTime_239Cycles5);//on die temperature sensor - only on adc1 :-(
+  ADC_InjectedChannelConfig(ADC2, BATTERY_ADC_CHAN, 2, ADC_SampleTime_239Cycles5);
   ADC_ExternalTrigInjectedConvConfig(ADC2, ADC_ExternalTrigInjecConv_None);//set sw injected channels
 
 
@@ -54,8 +54,8 @@ void ADC_Configuration(void)
   ADC_AnalogWatchdogSingleChannelConfig(ADC2, BATTERY_ADC_CHAN);//set the watchdog to the battery voltage channel
   ADC_ITConfig(ADC2, ADC_IT_AWD, ENABLE);//enable the analogue watchdog interrupt
 
-  /* Enable the die temperature sensing and vref internal inputs to adc*/
-  ADC_TempSensorVrefintCmd(ENABLE);
+  /* Enable the die temperature sensing and vref internal inputs to adc1*/
+  //ADC_TempSensorVrefintCmd(ENABLE);
 
   /* Enable ADC2 */
   ADC_Cmd(ADC2, ENABLE);
