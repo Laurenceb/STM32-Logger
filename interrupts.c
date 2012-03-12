@@ -184,7 +184,7 @@ void SysTickHandler(void)
 	Millis+=10;
 	if(ADC_GetFlagStatus(ADC2, ADC_FLAG_JEOC)) {//We have adc2 converted data from the injected channels
 		ADC_ClearFlag(ADC2, ADC_FLAG_JEOC);		//clear the flag
-  		uint16_t a=ADC_GetInjectedConversionValue(ADC2, ADC_InjectedChannel_3);//get first injected channel
+  		uint16_t a=ADC_GetInjectedConversionValue(ADC2, ADC_InjectedChannel_1);//get first injected channel
 		//Now handle the pressure controller
 		if(Pressure_control) {//If active pressure control is enabled
 			//run a PI controller on the air pump motor

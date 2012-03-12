@@ -17,7 +17,7 @@ void calibrate_sensor(void) {
 		pressoff+=readADC2(1);
 		for(l=10000;l;l--);		//~1ms between samples
 	}
-	pressure_offset=(float)pressoff/(float)256.0;
+	pressure_offset=(float)pressoff/(float)255.0;
 }
 
 /**
