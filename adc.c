@@ -27,7 +27,7 @@ void ADC_Configuration(void)
   /* ADC1 and ADC2 operate independently */
   ADC_InitStructure.ADC_Mode = ADC_Mode_Independent;
   /* Enable the scan conversion so we do three at a time */
-  ADC_InitStructure.ADC_ScanConvMode = DISABLE;
+  ADC_InitStructure.ADC_ScanConvMode = ENABLE;
   /* Don't do contimuous conversions - do them on demand */
   ADC_InitStructure.ADC_ContinuousConvMode = DISABLE;
   /* Start conversin by software, not an external trigger */
@@ -41,9 +41,9 @@ void ADC_Configuration(void)
   ADC_Init(ADC2, &ADC_InitStructure);
 
   /* ADC2 injected channel configuration */
-  ADC_InjectedChannelConfig(ADC2, PRESSURE_ADC_CHAN, 1, ADC_SampleTime_239Cycles5);
-  ADC_InjectedChannelConfig(ADC2, 16, 2, ADC_SampleTime_239Cycles5);//on die temperature sensor
-  ADC_InjectedChannelConfig(ADC2, BATTERY_ADC_CHAN, 3, ADC_SampleTime_239Cycles5);
+  ADC_InjectedChannelConfig(ADC2, PRESSURE_ADC_CHAN, 2, ADC_SampleTime_239Cycles5);
+  ADC_InjectedChannelConfig(ADC2, 16, 3, ADC_SampleTime_239Cycles5);//on die temperature sensor
+  ADC_InjectedChannelConfig(ADC2, BATTERY_ADC_CHAN, 4, ADC_SampleTime_239Cycles5);
   ADC_InjectedSequencerLengthConfig(ADC2, 3);//three conversions
   ADC_ExternalTrigInjectedConvConfig(ADC2, ADC_ExternalTrigInjecConv_None);//set sw injected channels
 
