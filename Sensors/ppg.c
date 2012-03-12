@@ -20,6 +20,7 @@ void PPG_LO_Filter(uint16_t* buff) {
 	static uint8_t bindex;	//Baseband decimation index
 	static int32_t Frequency_Bin[2][2];//Only two frequencies in use atm - consisting of and I and Q component
 	static uint32_t Fudgemask;
+	Tryfudge(&Fudgemask);	//Try to correct timer phase here
 	for(uint16_t n=0;n<ADC_BUFF_SIZE/4;) {//buffer size/4 must be a multiple of 4
 		I+=buff[n++];
 		Q+=buff[n++];
@@ -43,7 +44,6 @@ void PPG_LO_Filter(uint16_t* buff) {
 		bindex=0;//Reset this
 		Fudgemask|=1;//Sets a TIM3 fudge as requested
 	}
-	Tryfudge(&Fudgemask);
 }
 
 /**

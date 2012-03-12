@@ -42,8 +42,8 @@ void ADC_Configuration(void)
 
   /* ADC2 injected channel configuration */
   ADC_InjectedChannelConfig(ADC2, PRESSURE_ADC_CHAN, 1, ADC_SampleTime_239Cycles5);
-  ADC_InjectedChannelConfig(ADC2, BATTERY_ADC_CHAN, 1, ADC_SampleTime_239Cycles5);
-  ADC_InjectedChannelConfig(ADC2, 16, 1, ADC_SampleTime_239Cycles5);//on die temperature sensor
+  ADC_InjectedChannelConfig(ADC2, 16, 2, ADC_SampleTime_239Cycles5);//on die temperature sensor
+  ADC_InjectedChannelConfig(ADC2, BATTERY_ADC_CHAN, 3, ADC_SampleTime_239Cycles5);
   ADC_InjectedSequencerLengthConfig(ADC2, 3);//three conversions
   ADC_ExternalTrigInjectedConvConfig(ADC2, ADC_ExternalTrigInjecConv_None);//set sw injected channels
 
@@ -136,6 +136,8 @@ uint16_t readADC2(uint8_t channel)
   ADC_SoftwareStartConvCmd(ADC2, ENABLE);
   // Wait until conversion completion
   while(ADC_GetFlagStatus(ADC2, ADC_FLAG_EOC) == RESET);
+  // Reset the flag
+  ADC_ClearFlag(ADC2, ADC_FLAG_EOC);
   // Get the conversion value
   return ADC_GetConversionValue(ADC2);
 }
@@ -162,6 +164,8 @@ uint16_t getADC2(void)
   // Make sure we have conversion completion
   if(ADC_GetFlagStatus(ADC2, ADC_FLAG_EOC) == RESET)
     return -1;
+  // Reset the flag
+  ADC_ClearFlag(ADC2, ADC_FLAG_EOC);
   // Get the conversion value
   return ADC_GetConversionValue(ADC2);
 }
