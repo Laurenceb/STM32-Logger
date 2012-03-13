@@ -177,7 +177,7 @@ void ADC1_2_IRQHandler(void) {
 *******************************************************************************/
 void SysTickHandler(void)
 {
-	static float I;
+	static float I,old_pressure;
 	//FatFS timer function
 	disk_timerproc();
 	//Incr the system uptime
@@ -195,7 +195,7 @@ void SysTickHandler(void)
 					I=PRESSURE_I_LIM;
 				if(I<-PRESSURE_I_LIM)
 					I=-PRESSURE_I_LIM;
-				Set_Motor((int16_t)(PRESSURE_P_CONST*error+I));//Set the motor gpio dir and pwm duty cycle
+				Set_Motor((int16_t)(PRESSURE_P_CONST*error+I+PRESSURE_D_CONST*(reported_pressure-old_pressure)));//Set the motor gpio dir & pwm duty
 			}
 			else {
 				if(abs(reported_pressure)>PRESSURE_MARGIN)
@@ -209,8 +209,9 @@ void SysTickHandler(void)
 		//Check the die temperature - not possible on adc1 :-(
 		//Device_Temperature=convert_die_temp(ADC_GetInjectedConversionValue(ADC2, ADC_InjectedChannel_3));//The on die temperature sensor
 		//Could process some more sensor data here
+		old_pressure=reported_pressure;			//Set the old pressure record here for use in the D term
 	}
-	ADC_SoftwareStartInjectedConvCmd(ADC2, ENABLE);	//Trigger the injected channel group
+	ADC_SoftwareStartInjectedConvCmd(ADC2, ENABLE);		//Trigger the injected channel group
 }
 
 //Included interrupts from ST um0424 mass storage example
