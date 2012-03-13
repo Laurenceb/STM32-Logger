@@ -184,11 +184,10 @@ void SysTickHandler(void)
 	Millis+=10;
 	if(ADC_GetFlagStatus(ADC2, ADC_FLAG_JEOC)) {//We have adc2 converted data from the injected channels
 		ADC_ClearFlag(ADC2, ADC_FLAG_JEOC);		//clear the flag
-  		uint16_t a=ADC_GetInjectedConversionValue(ADC2, ADC_InjectedChannel_1);//get first injected channel
+		reported_pressure=filterloop(conv_diff(ADC_GetInjectedConversionValue(ADC2, ADC_InjectedChannel_1)));//get first injected channel, convert
 		//Now handle the pressure controller
 		if(Pressure_control) {//If active pressure control is enabled
 			//run a PI controller on the air pump motor
-			reported_pressure=conv_diff(a);		//Global, holds our pressure as measured
 			if(pressure_setpoint>0) {		//A negative setpoint forces a dump of air
 				float error=pressure_setpoint-reported_pressure;//pressure_setpoint is a global containing the target diff press
 				I+=error*PRESSURE_I_CONST;	//constants defined in main.h

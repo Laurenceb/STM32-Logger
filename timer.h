@@ -1,6 +1,6 @@
 #include "stm32f10x.h"
 
-#define MAX_DUTY 2047/2	/*max duty cycle for the motor - dont want to risk going to 100% as it will overrev motor*/
+#define MAX_DUTY 2047*3/4	/*max duty cycle for the motor - dont want to risk going to 100% as it will overrev motor*/
 #define PWM_RES MAX_DUTY/*motor pwm resolution*/
 
 //The idea here is that there are 192 cycles of first pwm output (at quadrature) and 191 of second pwm (just below quadrature)

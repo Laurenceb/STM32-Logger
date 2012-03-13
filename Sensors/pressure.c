@@ -38,3 +38,27 @@ float conv_adc_diff(void) {
 float conv_diff(uint16_t diff) {
 	return 	(DIFF_GAIN)*((float)diff-pressure_offset);
 }
+
+
+/* Digital filter designed by mkfilter/mkshape/gencode   A.J. Fisher
+   Command line: /www/usr/fisher/helpers/mkfilter -Be -Lp -o 8 -a 5.0000000000e-02 0.0000000000e+00 -l */
+
+#define NZEROS 8
+#define NPOLES 8
+#define GAIN   7.329895182e+04
+
+static float xv[NZEROS+1], yv[NPOLES+1];
+
+float filterloop(float input)
+{
+	xv[0] = xv[1]; xv[1] = xv[2]; xv[2] = xv[3]; xv[3] = xv[4]; xv[4] = xv[5]; xv[5] = xv[6]; xv[6] = xv[7]; xv[7] = xv[8]; 
+        xv[8] = input / GAIN;
+        yv[0] = yv[1]; yv[1] = yv[2]; yv[2] = yv[3]; yv[3] = yv[4]; yv[4] = yv[5]; yv[5] = yv[6]; yv[6] = yv[7]; yv[7] = yv[8]; 
+        yv[8] =   (xv[0] + xv[8]) + 8 * (xv[1] + xv[7]) + 28 * (xv[2] + xv[6])
+                     + 56 * (xv[3] + xv[5]) + 70 * xv[4]
+                     + ( -0.0290335003 * yv[0]) + (  0.3368060458 * yv[1])
+                     + ( -1.7373365436 * yv[2]) + (  5.2128930990 * yv[3])
+                     + ( -9.9697035249 * yv[4]) + ( 12.4721871960 * yv[5])
+                     + ( -9.9931759242 * yv[6]) + (  4.7038706060 * yv[7]);
+        return yv[8];
+}
