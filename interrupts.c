@@ -195,7 +195,10 @@ void SysTickHandler(void)
 					I=PRESSURE_I_LIM;
 				if(I<-PRESSURE_I_LIM)
 					I=-PRESSURE_I_LIM;
-				Set_Motor((int16_t)(PRESSURE_P_CONST*error+I+PRESSURE_D_CONST*(reported_pressure-old_pressure)));//Set the motor gpio dir & pwm duty
+				uint16_t a=PRESSURE_P_CONST*error+I+PRESSURE_D_CONST*(reported_pressure-old_pressure);
+				if(a<0)
+					a=0;			//prevent valve firing
+				Set_Motor((int16_t)a);		//Set the motor gpio dir & pwm duty
 			}
 			else {
 				if(abs(reported_pressure)>PRESSURE_MARGIN)
