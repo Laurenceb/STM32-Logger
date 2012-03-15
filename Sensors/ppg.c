@@ -69,5 +69,5 @@ uint16_t PPG_correct_brightness(uint32_t Decimated_value, uint16_t PWM_value) {
   * @retval A linearised value as a float in the range 0 to 1
   */
 float PWM_Linear(uint16_t PWM_value) {
-	return sin((float)(PWM_value/PWM_PERIOD)*M_PI/2.0);//returns the effecive sinusoidal amplitude in range 0-1
+	return sinf((float)(PWM_value/PWM_PERIOD)*M_PI/2.0);//returns the effecive sinusoidal amplitude in range 0-1
 }

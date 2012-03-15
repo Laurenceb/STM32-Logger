@@ -3,7 +3,7 @@
 
 #define DIFF_GAIN 1.0/(float)113.23		/*pressure sensor 23mv/10v at 5psi, +60.1x inst amp gain, +12bit adc*/
 
-static float pressure_offset;			//zero offset - calibrated at power on
+volatile float pressure_offset;			//zero offset - calibrated at power on
 
 /**
   * @brief  This function calibrates the adc offset on the pressure sensor
