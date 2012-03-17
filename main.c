@@ -145,7 +145,7 @@ int main(void)
 			switch_leds_on();		//Flash the LED(s)
 		else
 			switch_leds_off();
-		if(Millis%10000>4000)			//10 second cycle of pressure control - 6s dump, 4s pump to 1psi
+		if(Millis%15000>4000)			//15 second cycle of pressure control - 11s dump, 4s pump to 3psi
 			pressure_setpoint=-1;
 		else
 			pressure_setpoint=3;
