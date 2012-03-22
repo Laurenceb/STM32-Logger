@@ -18,10 +18,10 @@ extern volatile float Device_Temperature;
 
 //Pressure controller constants - a PI controller
 #define ITERATION_RATE 100
-#define PRESSURE_I_CONST 0.2*(float)(PWM_RES/ITERATION_RATE)/*means an error of 1PSI for 1 second will case a 20% duty cycle shift*/
+#define PRESSURE_I_CONST 0.15*(float)(PWM_RES/ITERATION_RATE)/*means an error of 1PSI for 1 second will case a 15% duty cycle shift*/
 #define PRESSURE_I_LIM 0.8*(float)PWM_RES		/*means integral term can never cause more than 80% shift in duty cycle*/
-#define PRESSURE_P_CONST 0.04*(float)PWM_RES		/*means a 1PSI error gives 4% duty cycle pwm to the motor*/
-#define PRESSURE_D_CONST -0.005*(float)(PWM_RES*ITERATION_RATE)/*means a change of 1PSI/second will decrease pwm duty by 0.5%*/
+#define PRESSURE_P_CONST 0.01*(float)PWM_RES		/*means a 1PSI error gives 1% duty cycle pwm to the motor*/
+#define PRESSURE_D_CONST -0.004*(float)(PWM_RES*ITERATION_RATE)/*means a change of 1PSI/second will decrease pwm duty by 0.4%*/
 #define PRESSURE_MARGIN 0.3				/*means a pressure within 0.3PSI of zero will turn off the dump valve if setpoint -ive*/
 
 #define delay()						\
