@@ -178,7 +178,7 @@ void ADC1_2_IRQHandler(void) {
 void SysTickHandler(void)
 {
 	static float I,old_pressure;
-	static uint16_t filtered_pwm_duty;
+	static uint16_t Enabled_iterations;			//Note, this is going to break if we spend long periods with +ive pressure set
 	//FatFS timer function
 	disk_timerproc();
 	//Incr the system uptime
@@ -192,18 +192,19 @@ void SysTickHandler(void)
 			//run a PI controller on the air pump motor
 			if(pressure_setpoint>0) {		//A negative setpoint forces a dump of air
 				float error=pressure_setpoint-reported_pressure;//pressure_setpoint is a global containing the target diff press
-				I+=error*PRESSURE_I_CONST;	//Constants defined in main.h
-				if(I>PRESSURE_I_LIM)		//Enforce limits
-					I=PRESSURE_I_LIM;
-				if(I<-PRESSURE_I_LIM)
-					I=-PRESSURE_I_LIM;
+				if(Enabled_iterations++>I_HOLDOFF) {
+					I+=error*PRESSURE_I_CONST;//Constants defined in main.h
+					if(I>PRESSURE_I_LIM)	//Enforce limits
+						I=PRESSURE_I_LIM;
+					if(I<-PRESSURE_I_LIM)
+						I=-PRESSURE_I_LIM;
+				}
 				int16_t a=PRESSURE_P_CONST*error+I+PRESSURE_D_CONST*(reported_pressure-old_pressure);
-				filtered_pwm_duty-=(filtered_pwm_duty>>3);//tau of 1/8 per iteration
-				filtered_pwm_duty+=a;
-				Set_Motor((int16_t)filtered_pwm_duty>>3);//Set the motor gpio dir & pwm duty
+				if(a>0)				//Make sure we are actually turning the motor on
+					Set_Motor((int16_t)a);	//Set the motor gpio dir & pwm duty
 			}
 			else {
-				filtered_pwm_duty=0;		//Reset this during a dump, so that the low pass filtered pwm duty restarts from zero
+				Enabled_iterations=0;		//Make sure this is reset
 				if(abs(reported_pressure)>PRESSURE_MARGIN)
 					Set_Motor(-1);		//Set a dump to rapidly drop to zero pressure
 				else

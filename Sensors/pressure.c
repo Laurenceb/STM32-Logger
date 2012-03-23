@@ -67,6 +67,8 @@ float filterloop(float input)
       }
   }
 
+
+//float filterloop(float x) {return x;}
 /* Digital filter designed by mkfilter/mkshape/gencode   A.J. Fisher
    Command line: /www/usr/fisher/helpers/mkfilter -Be -Lp -o 8 -a 5.0000000000e-02 0.0000000000e+00 -l */
 /*
