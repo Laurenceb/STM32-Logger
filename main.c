@@ -23,6 +23,7 @@ volatile uint8_t file_opened=0;				//So we know to close any opened files before
 uint8_t print_string[256];				//For printf data
 UINT a;							//File bytes counter
 volatile buff_type Buff[PPG_CHANNELS];			//Shared with ISR
+volatile buff_type Button_Buffer;			//Used to pass back time stamped control button pressed
 volatile uint8_t Pressure_control;			//Enables the pressure control PI
 volatile float pressure_setpoint;			//Target differential pressure for the pump
 volatile float reported_pressure;			//Pressure as measured by the sensor
@@ -38,6 +39,7 @@ int main(void)
 {
 	uint8_t a=0;
 	uint32_t ppg[2];				//two PPG channels
+	uint32_t button_press;				//button press timestamp
 	RTC_t RTC_time;
 	SystemInit();					//Sets up the clk
 	setup_gpio();					//Initialised pins, and detects boot source
@@ -110,21 +112,20 @@ int main(void)
 		a|=f_err_code;
 		if(a) {					//There was an init error
 			RED_LED_ON;
-			delay();
+			delay(5000000);
 			shutdown();			//Abort after a single red flash
 		}
 		init_buffer(&(Buff[0]),PPG_BUFFER_SIZE);//Enough for ~0.25S of data
 		init_buffer(&(Buff[1]),PPG_BUFFER_SIZE);
+		init_buffer(&Button_Buffer,12);		//3 button presses
 	}
-	delay();					//Sensor+inst amplifier takes about 200ms to stabilise after power on
+	delay(10000000);				//Sensor+inst amplifier takes about 200ms to stabilise after power on
 	ADC_Configuration();				//We leave this a bit later to allow stabilisation
 	calibrate_sensor();				//Calibrate the offset on the diff pressure sensor
 	EXTI_ONOFF_EN();				//Enable the off interrupt - allow some time for debouncing
 	Pressure_control=1;				//Enable active pressure control
 	pressure_setpoint=0;				//Not applied pressure, should cause motor and solenoid to go to idle state
-	Set_PWM_0(25);					//Fixed brightness for the time being
-	Set_PWM_1(25);
-	Set_PWM_2(25);
+	PPG_Automatic_Brightness_Control();		//Run the automatic brightness setting on power on
 	rtc_gettime(&RTC_time);				//Get the RTC time and put a timestamp on the start of the file
 	printf("%d-%d-%dT%d:%d:%d\n",RTC_time.year,RTC_time.month,RTC_time.mday,RTC_time.hour,RTC_time.min,RTC_time.sec);//ISO 8601 timestamp header
 	if(file_opened) {
@@ -149,6 +150,10 @@ int main(void)
 			pressure_setpoint=-1;
 		else
 			pressure_setpoint=3;
+		if(bytes_in_buff(&Button_Buffer)) {	//A "control" button press
+			Get_From_Buffer(&button_press,&Button_Buffer);//Dump the button press timestamp
+			PPG_Automatic_Brightness_Control();
+		}
 	}
 }
 

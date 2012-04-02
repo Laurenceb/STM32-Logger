@@ -25,18 +25,19 @@ extern volatile float Device_Temperature;
 #define PRESSURE_D_CONST -0.001*(float)(PWM_RES*ITERATION_RATE)/*means a change of 1PSI/second will decrease pwm duty by 0.1%*/
 #define PRESSURE_MARGIN 0.3				/*means a pressure within 0.3PSI of zero will turn off the dump valve if setpoint -ive*/
 
-#define delay()						\
+#define delay(x)					\
 do {							\
   register unsigned int i;				\
-  for (i = 0; i < 10000000; ++i)			\
+  for (i = 0; i < x; ++i)			\
     __asm__ __volatile__ ("nop\n\t":::"memory");	\
 } while (0)
 
 //function prototypes
 void __fat_print_char(char c);
 void __str_print_char(char c);
-//globals
+//buffer globals
 extern volatile buff_type Buff[PPG_CHANNELS];
+extern volatile buff_type Button_Buffer;
 //fatfs globals
 extern volatile uint8_t file_opened;
 extern FIL FATFS_logfile;

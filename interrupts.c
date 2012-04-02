@@ -111,7 +111,15 @@ void EXTI0_IRQHandler(void) {
 		/* Clear the  EXTI line 0 pending bit */
 		EXTI_ClearITPendingBit(EXTI_Line0);
 		/*Called Code goes here*/
-		delay();					//Debouncing delay
+		if(USB_SOURCE!=bootsource) {			//If in logging mode
+			for(uint8_t n=0;n<200;n+=20) {		//Its not very nice to have these delays inside the isr, TODO move this to systick
+				delay(1000000);			//Debouncing delay - button has to be pressed for approx 1s to turn off
+				if(!GPIO_ReadInputDataBit(GPIOA,WKUP)) {//Check the pin state - releasing button triggers a function
+					Add_To_Buffer(Millis,&Button_Buffer);//Timestamp the button press
+					return;			//Exit the interrupt here without shutting down
+				}
+			}
+		}
 		if(file_opened) {
 			char c[]="\r\nLogger turned off\r\n";
 			uint8_t a;

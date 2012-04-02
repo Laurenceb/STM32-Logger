@@ -94,7 +94,7 @@ void switch_leds_off(void)
 void red_flash(void)
 {
 	GPIO_WriteBit(GPIOB,RED,Bit_SET);
-	delay();
+	delay(5000000);
 	GPIO_WriteBit(GPIOB,RED,Bit_RESET);
 }
 
