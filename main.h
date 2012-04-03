@@ -14,7 +14,11 @@ extern volatile uint32_t Millis;
 
 extern volatile float Device_Temperature;
 
+extern volatile uint8_t System_state_Global;
+
 #define PRE_SIZE 1000000ul	/*Preallocate size*/
+
+#define SYSTEM_STATES 1		/*Number of different control states- atm just brightness control implimented*/
 
 //Pressure controller constants - a PI controller
 #define ITERATION_RATE 100
@@ -37,7 +41,6 @@ void __fat_print_char(char c);
 void __str_print_char(char c);
 //buffer globals
 extern volatile buff_type Buff[PPG_CHANNELS];
-extern volatile buff_type Button_Buffer;
 //fatfs globals
 extern volatile uint8_t file_opened;
 extern FIL FATFS_logfile;

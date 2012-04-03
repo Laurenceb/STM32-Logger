@@ -23,12 +23,12 @@ volatile uint8_t file_opened=0;				//So we know to close any opened files before
 uint8_t print_string[256];				//For printf data
 UINT a;							//File bytes counter
 volatile buff_type Buff[PPG_CHANNELS];			//Shared with ISR
-volatile buff_type Button_Buffer;			//Used to pass back time stamped control button pressed
 volatile uint8_t Pressure_control;			//Enables the pressure control PI
 volatile float pressure_setpoint;			//Target differential pressure for the pump
 volatile float reported_pressure;			//Pressure as measured by the sensor
 volatile uint32_t Millis;				//System uptime (rollover after 50 days)
 volatile float Device_Temperature;			//Die temperature sensor converted to centigrade
+volatile uint8_t System_state_Global;			//Stores the system state, controlled by the button, most significant bit is a flag
 //FatFs filesystem globals go here
 FRESULT f_err_code;
 static FATFS FATFS_Obj;
@@ -117,7 +117,6 @@ int main(void)
 		}
 		init_buffer(&(Buff[0]),PPG_BUFFER_SIZE);//Enough for ~0.25S of data
 		init_buffer(&(Buff[1]),PPG_BUFFER_SIZE);
-		init_buffer(&Button_Buffer,12);		//3 button presses
 	}
 	delay(10000000);				//Sensor+inst amplifier takes about 200ms to stabilise after power on
 	ADC_Configuration();				//We leave this a bit later to allow stabilisation
@@ -150,9 +149,9 @@ int main(void)
 			pressure_setpoint=-1;
 		else
 			pressure_setpoint=3;
-		if(bytes_in_buff(&Button_Buffer)) {	//A "control" button press
-			Get_From_Buffer(&button_press,&Button_Buffer);//Dump the button press timestamp
-			PPG_Automatic_Brightness_Control();
+		if(System_state_Global&0x80) {		//A "control" button press
+			System_state_Global&=~0x80;	//Wipe the flag bit to show this has been processed
+			PPG_Automatic_Brightness_Control();//At the moment this is the only function implimented
 		}
 	}
 }

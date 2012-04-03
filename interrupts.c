@@ -1,21 +1,7 @@
 #include <stdlib.h>
 #include "interrupts.h"
-#include "main.h"
-#include "adc.h"
-#include "timer.h"
-#include "usb_lib.h"
-#include "usb_istr.h"
-#include "usb_pwr.h"
-#include "Util/fat_fs/inc/diskio.h"
-#include "Util/fat_fs/inc/ff.h"
-#include "Sensors/pressure.h"
-#include "Sensors/ppg.h"
-#include "Sensors/temperature.h"
-#include "core_cm3.h"
-#if defined(STM32F10X_HD) || defined(STM32F10X_XL) 
- #include "stm32_eval_sdio_sd.h"
-#endif /* STM32F10X_HD | STM32F10X_XL*/
 
+volatile uint8_t Button_hold_tim;				//Timer for On/Off/Control button functionality
 
 /**
   * @brief  Configure all interrupts accept on/off pin
@@ -111,26 +97,15 @@ void EXTI0_IRQHandler(void) {
 		/* Clear the  EXTI line 0 pending bit */
 		EXTI_ClearITPendingBit(EXTI_Line0);
 		/*Called Code goes here*/
-		if(USB_SOURCE!=bootsource) {			//If in logging mode
-			for(uint8_t n=0;n<200;n+=20) {		//Its not very nice to have these delays inside the isr, TODO move this to systick
-				delay(1000000);			//Debouncing delay - button has to be pressed for approx 1s to turn off
-				if(!GPIO_ReadInputDataBit(GPIOA,WKUP)) {//Check the pin state - releasing button triggers a function
-					Add_To_Buffer(Millis,&Button_Buffer);//Timestamp the button press
-					return;			//Exit the interrupt here without shutting down
-				}
-			}
-		}
-		if(file_opened) {
-			char c[]="\r\nLogger turned off\r\n";
-			uint8_t a;
-			f_write(&FATFS_logfile,c,sizeof(c),&a);	//Write the error to the file
-			f_sync(&FATFS_logfile);			//Flush buffers
-			f_truncate(&FATFS_logfile);		//Truncate the lenght - fix pre allocation
-			f_close(&FATFS_logfile);		//Close any opened file
-		}
-		if(GET_CHRG_STATE)				//Interrupt due to USB insertion - reset to usb mode
+		Button_hold_tim=BUTTON_TURNOFF_TIME;
+		if(GET_CHRG_STATE) {				//Interrupt due to USB insertion - reset to usb mode
+			if(file_opened)
+				shutdown_filesystem();
 			NVIC_SystemReset();			//Software reset of the system - USB inserted whilst running
-		else {
+		}
+		if(USB_SOURCE==bootsource) {
+			if(file_opened) 
+				shutdown_filesystem();
 			//red_flash();				//Flash red led
 			shutdown();				//Shuts down - only wakes up on power pin i.e. WKUP
 		}
@@ -187,6 +162,8 @@ void SysTickHandler(void)
 {
 	static float I,old_pressure;
 	static uint16_t Enabled_iterations;			//Note, this is going to break if we spend long periods with +ive pressure set
+	static uint32_t Last_Button_Press;			//Holds the timestamp for the previous button press
+	static uint8_t System_state_counter;			//Holds the system state counter
 	//FatFS timer function
 	disk_timerproc();
 	//Incr the system uptime
@@ -227,6 +204,29 @@ void SysTickHandler(void)
 		old_pressure=reported_pressure;			//Set the old pressure record here for use in the D term
 	}
 	ADC_SoftwareStartInjectedConvCmd(ADC2, ENABLE);		//Trigger the injected channel group
+	//Now process the control button functions
+	if(Button_hold_tim ) {					//If a button press generated timer has been triggered
+		if(GPIO_ReadInputDataBit(GPIOA,WKUP)) {		//Button hold turns off the device
+			if(!--Button_hold_tim) {
+				shutdown_filesystem();
+				shutdown();			//Turn off the logger after closing any open files
+			}
+		}
+		else {						//Button released - this can only ever run once per press
+			if(Button_hold_tim<BUTTON_DEBOUNCE) {	//The button has to be held down for longer than the debounce period
+				Last_Button_Press=Millis;
+				if(++System_state_counter>=SYSTEM_STATES)
+					System_state_counter=0;//The system can only have a limited number of states
+			}
+			Button_hold_tim=0;			//Reset the timer here
+		}
+	}
+	if(Last_Button_Press&&(Millis-Last_Button_Press>BUTTON_MULTIPRESS_TIMEOUT)&&!Button_hold_tim) {//Last press timed out and button is not pressed
+		if(!(System_state_Global&0x80))			//The main code has unlocked the global using the bit flag - as it has processed
+			System_state_Global=0x80|System_state_counter;//The previous state update
+		System_state_counter=0;				//Reset state counter here
+		Last_Button_Press=0;				//Reset the last button press timestamp, as the is no button press in play
+	}
 }
 
 //Included interrupts from ST um0424 mass storage example
