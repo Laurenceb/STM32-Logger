@@ -37,7 +37,7 @@ FILINFO FATFS_info;
 
 int main(void)
 {
-	uint8_t a=0;
+	uint8_t a=0,sensors=0;
 	uint32_t ppg[2];				//two PPG channels
 	uint32_t button_press;				//button press timestamp
 	RTC_t RTC_time;
@@ -122,7 +122,8 @@ int main(void)
 	ADC_Configuration();				//We leave this a bit later to allow stabilisation
 	calibrate_sensor();				//Calibrate the offset on the diff pressure sensor
 	EXTI_ONOFF_EN();				//Enable the off interrupt - allow some time for debouncing
-	Pressure_control=1;				//Enable active pressure control
+	sensors=detect_sensors();			//Search for connected sensors
+	Pressure_control=sensors&PRESSURE_HOSE;		//Enable active pressure control if a hose is connected
 	pressure_setpoint=0;				//Not applied pressure, should cause motor and solenoid to go to idle state
 	PPG_Automatic_Brightness_Control();		//Run the automatic brightness setting on power on
 	rtc_gettime(&RTC_time);				//Get the RTC time and put a timestamp on the start of the file
@@ -174,4 +175,25 @@ void __str_print_char(char c) {
 	uint8_t a=strlen(print_string)%255;		//Make sure we cant overwrite ram
 	print_string[a]=c;				//Append string
 	print_string[a+1]=0x00;				//Null terminate
+}
+
+/**
+  * @brief  Detects which sensors are plugged in
+  * @param  None
+  * @retval Bitmask of detected sensors
+  */
+uint8_t detect_sensors(void) {
+	uint32_t millis=Millis;				//Store the time on entry
+	uint8_t sensors=0;
+	//Detect if there is an air hose connected
+	Set_Motor((int16_t)MAX_DUTY/3);			//Set the motor to 33% duty cycle
+	while(Millis<millis+250) {			//Wait 250ms
+		if(reported_pressure>PRESSURE_MARGIN) {	//We got some sane pressure increase
+			sensors|=(1<<PRESSURE_HOSE);
+			break;				//Exit loop at this point
+		}
+	}
+	Set_Motor((int16_t)0);				//Set the motor and solenoid off
+	//Other sensors, e.g. Temperature sensor/sensors on the I2C bus go here
+	return sensors;
 }
