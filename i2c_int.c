@@ -220,6 +220,8 @@ void I2C1_Setup_Job(uint8_t job_, volatile uint8_t* data) {
   */
 void I2C_Config() {			//Configure I2C1 for the sensor bus
 	I2C_DeInit(I2C1);		//Deinit and reset the I2C to avoid it locking up
+	/*Enable the I2C1 clk*/
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C1, ENABLE);
 	I2C_SoftwareResetCmd(I2C1, ENABLE);
 	I2C_SoftwareResetCmd(I2C1, DISABLE);
 	I2C_InitTypeDef I2C_InitStructure;
@@ -228,7 +230,7 @@ void I2C_Config() {			//Configure I2C1 for the sensor bus
 	I2C_InitStructure.I2C_OwnAddress1 = 0xAD;//0xAM --> ADAM
 	I2C_InitStructure.I2C_Ack = I2C_Ack_Enable;
 	I2C_InitStructure.I2C_AcknowledgedAddress= I2C_AcknowledgedAddress_7bit;
-	I2C_InitStructure.I2C_ClockSpeed = 400000;
+	I2C_InitStructure.I2C_ClockSpeed = 100000;
 	//Setup the pointers to the read data
 	I2C1_Setup_Job(TMP102_READ, (volatile uint8_t*)TMP102_Data_Buffer);//Temperature data buffer
 	//Assert the bus
