@@ -30,6 +30,10 @@
 
 #define GET_PWR_STATE	GPIO_ReadInputDataBit(GPIOA,WKUP)
 
+//I2C1 on pins 8 and 9 - configured in i2c_int.h
+#define I2C1_SCL	GPIO_Pin_6
+#define I2C1_SDA	GPIO_Pin_7
+
 extern uint8_t bootsource;
 
 void setup_gpio(void);

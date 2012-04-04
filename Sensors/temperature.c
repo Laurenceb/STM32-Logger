@@ -1,6 +1,15 @@
 #include "temperature.h"
 
+volatile uint8_t TMP102_Data_Buffer[2];
 
 float convert_die_temp(uint16_t adcval) {
 	return ((float)adcval*TEMPERATURE_GAIN)-TEMPERATURE_OFFSET;
+}
+
+float convert_tmp102_temp(uint16_t adcval) {
+	Flipbytes(adcval);			//Fix the endianess
+	adcval>>=3;				//Move to right aligned
+	if(adcval&1<<12)			//If this bit is set, its negative
+		return ((float)adcval*-0.0625);
+	return ((float)adcval*0.0625);		//TMP102 is 0.0625C/LSB
 }

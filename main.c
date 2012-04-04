@@ -7,6 +7,7 @@
 #include "interrupts.h"
 #include "timer.h"
 #include "Util/rprintf.h"
+#include "Util/delay.h"
 #include "Sensors/pressure.h"
 #include "Sensors/ppg.h"
 #include "usb_lib.h"
@@ -29,6 +30,10 @@ volatile float reported_pressure;			//Pressure as measured by the sensor
 volatile uint32_t Millis;				//System uptime (rollover after 50 days)
 volatile float Device_Temperature;			//Die temperature sensor converted to centigrade
 volatile uint8_t System_state_Global;			//Stores the system state, controlled by the button, most significant bit is a flag
+volatile uint8_t Sensors;				//Global holding a mask of the sensors found by automatic sensor discovery
+//Sensor buffers to pass data back to logger
+volatile buff_type Temperatures_Buffer;			//Data from temperature sensor
+volatile buff_type Pressures_Buffer;
 //FatFs filesystem globals go here
 FRESULT f_err_code;
 static FATFS FATFS_Obj;
@@ -37,9 +42,10 @@ FILINFO FATFS_info;
 
 int main(void)
 {
-	uint8_t a=0,sensors=0;
+	uint8_t a=0;
 	uint32_t ppg[2];				//two PPG channels
-	uint32_t button_press;				//button press timestamp
+	uint32_t data_counter;				//used as data timestamp
+	float sensor_data;				//used for handling data passed back from sensors
 	RTC_t RTC_time;
 	SystemInit();					//Sets up the clk
 	setup_gpio();					//Initialised pins, and detects boot source
@@ -112,18 +118,19 @@ int main(void)
 		a|=f_err_code;
 		if(a) {					//There was an init error
 			RED_LED_ON;
-			delay(5000000);
+			Delay(400000);
 			shutdown();			//Abort after a single red flash
 		}
 		init_buffer(&(Buff[0]),PPG_BUFFER_SIZE);//Enough for ~0.25S of data
 		init_buffer(&(Buff[1]),PPG_BUFFER_SIZE);
 	}
-	delay(10000000);				//Sensor+inst amplifier takes about 200ms to stabilise after power on
+	Delay(100000);					//Sensor+inst amplifier takes about 100ms to stabilise after power on
 	ADC_Configuration();				//We leave this a bit later to allow stabilisation
 	calibrate_sensor();				//Calibrate the offset on the diff pressure sensor
 	EXTI_ONOFF_EN();				//Enable the off interrupt - allow some time for debouncing
-	sensors=detect_sensors();			//Search for connected sensors
-	Pressure_control=sensors&PRESSURE_HOSE;		//Enable active pressure control if a hose is connected
+	I2C_Config();					//Setup the I2C bus
+	Sensors=detect_sensors();			//Search for connected sensors
+	Pressure_control=Sensors&PRESSURE_HOSE;		//Enable active pressure control if a hose is connected
 	pressure_setpoint=0;				//Not applied pressure, should cause motor and solenoid to go to idle state
 	PPG_Automatic_Brightness_Control();		//Run the automatic brightness setting on power on
 	rtc_gettime(&RTC_time);				//Get the RTC time and put a timestamp on the start of the file
@@ -136,8 +143,22 @@ int main(void)
 	while (1) {
 		while(!bytes_in_buff(&(Buff[0])));	//Wait for some PPG data
 		Get_From_Buffer(&(ppg[0]),&(Buff[0]));	//Retrive one sample of PPG
-		Get_From_Buffer(&(ppg[1]),&(Buff[1]));
-		printf("%3f,%f,%lu,%lu\n",(float)Millis/1000.0,reported_pressure,ppg[0],ppg[1]);//,Device_Temperature);//Print data after a time stamp
+		Get_From_Buffer(&(ppg[1]),&(Buff[1]));	
+		printf("%3f,%lu,%lu",(float)(data_counter++)/PPG_SAMPLE_RATE,ppg[0],ppg[1]);//Print data after a time stamp (not Millis)
+		if(Sensors&(1<<PRESSURE_HOSE)) {	//Air hose connected
+			do {
+				Get_From_Buffer(&sensor_data,&Pressures_Buffer);
+			} while(bytes_in_buff(&Pressures_Buffer));//The aquisition will often be running faster than this loop, so dump the unused data
+			printf(",%f",sensor_data);	//print the retreived data
+		}
+		if(Sensors&(1<<TEMPERATURE_SENSOR)) {	//If there is a temperature sensor present
+			do {
+				Get_From_Buffer(&sensor_data,&Temperatures_Buffer);
+			} while(bytes_in_buff(&Temperatures_Buffer));//The aquisition will often be running faster than this loop, so dump the unused data
+			printf(",%f",sensor_data);	//print the retreived data
+		}
+		//Other sensors etc can go here
+		printf('\n');				//Terminating newline
 		if(file_opened) {
 			f_puts(print_string,&FATFS_logfile);
 			print_string[0]=0x00;		//Set string length to 0
@@ -178,22 +199,31 @@ void __str_print_char(char c) {
 }
 
 /**
-  * @brief  Detects which sensors are plugged in
+  * @brief  Detects which sensors are plugged in, inits buffers for attached peripheral sensors
   * @param  None
   * @retval Bitmask of detected sensors
   */
 uint8_t detect_sensors(void) {
 	uint32_t millis=Millis;				//Store the time on entry
 	uint8_t sensors=0;
+	SCHEDULE_CONFIG;				//Run the I2C devices config
 	//Detect if there is an air hose connected
-	Set_Motor((int16_t)MAX_DUTY/3);			//Set the motor to 33% duty cycle
-	while(Millis<millis+250) {			//Wait 250ms
+	Pressure_control|=0x80;				//Set msb - indicates motor is free to run
+	Set_Motor((int16_t)(MAX_DUTY*2)/3);		//Set the motor to 50% duty cycle
+	while(Millis<(millis+500)) {			//Wait 250ms
 		if(reported_pressure>PRESSURE_MARGIN) {	//We got some sane pressure increase
 			sensors|=(1<<PRESSURE_HOSE);
+			init_buffer(&Pressures_Buffer,TMP102_BUFFER_SIZE);//reuse the TMP102 buffer size - as we want the same amount of buffering
+			Pressure_control=0;
 			break;				//Exit loop at this point
 		}
 	}
+	Pressure_control=0;
 	Set_Motor((int16_t)0);				//Set the motor and solenoid off
+	//Detect if there is a temperature sensor connected
+	if(Completed_Jobs&(1<<TMP102_CONFIG))
+		sensors|=(1<<TEMPERATURE_SENSOR);	//The I2C job completion means the sensor must be working
+	init_buffer(&Temperatures_Buffer,TMP102_BUFFER_SIZE);
 	//Other sensors, e.g. Temperature sensor/sensors on the I2C bus go here
 	return sensors;
 }

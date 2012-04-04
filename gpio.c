@@ -1,6 +1,7 @@
 #include "gpio.h"
 #include "pwr.h"
 #include "main.h"
+#include "Util/delay.h"
 
 uint8_t bootsource;
 
@@ -94,7 +95,7 @@ void switch_leds_off(void)
 void red_flash(void)
 {
 	GPIO_WriteBit(GPIOB,RED,Bit_SET);
-	delay(5000000);
+	Delay(5000000);
 	GPIO_WriteBit(GPIOB,RED,Bit_RESET);
 }
 

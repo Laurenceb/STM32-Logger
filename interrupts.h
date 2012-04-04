@@ -3,6 +3,7 @@
 #include "main.h"
 #include "adc.h"
 #include "timer.h"
+#include "i2c_int.h"
 #include "usb_lib.h"
 #include "usb_istr.h"
 #include "usb_pwr.h"

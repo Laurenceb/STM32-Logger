@@ -27,6 +27,18 @@ void ISR_Config(void) {
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x06;	//6th subpriority
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
+	//Now we configure the I2C Event ISR
+	NVIC_InitStructure.NVIC_IRQChannel = I2C1_EV_IRQn;	//The I2C1 triggered interrupt	
+	//NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x01;//Low Pre-emption priority
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x01;	//Second to highest group priority
+	//NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&NVIC_InitStructure);
+	//Now we configure the I2C Error ISR
+	NVIC_InitStructure.NVIC_IRQChannel = I2C1_ER_IRQn;	//The I2C1 triggered interrupt	
+	//NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x01;//Low Pre-emption priority
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x00;	//Highest group priority
+	//NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&NVIC_InitStructure);
 }
 
 /**
@@ -170,10 +182,13 @@ void SysTickHandler(void)
 	Millis+=10;
 	if(ADC_GetFlagStatus(ADC2, ADC_FLAG_JEOC)) {		//We have adc2 converted data from the injected channels
 		ADC_ClearFlag(ADC2, ADC_FLAG_JEOC);		//Clear the flag
-		if(pressure_offset)				//Only run the filter when we are sure the sensor is calibrated
+		if(pressure_offset) {				//Only run the filter when we are sure the sensor is calibrated
 			reported_pressure=filterloop(conv_diff(ADC_GetInjectedConversionValue(ADC2, ADC_InjectedChannel_1)));//convert injected channel 1
+			if(Sensors&(1<<PRESSURE_HOSE))		//Only pass data once hose is connected
+				Add_To_Buffer(reported_pressure,&Pressures_Buffer);//Pass the pressure data via a buffer to avoid issues with lag
+		}
 		//Now handle the pressure controller
-		if(Pressure_control) {//If active pressure control is enabled
+		if(Pressure_control&0x7F) {//If active pressure control is enabled
 			//run a PI controller on the air pump motor
 			if(pressure_setpoint>0) {		//A negative setpoint forces a dump of air
 				float error=pressure_setpoint-reported_pressure;//pressure_setpoint is a global containing the target diff press
@@ -196,7 +211,7 @@ void SysTickHandler(void)
 					Set_Motor(0);
 			}
 		}			
-		else
+		else if(!Pressure_control)			//If the most significant bit isnt set
 			Set_Motor(0);				//Sets the Rohm motor controller to idle (low current shutdown) state
 		//Check the die temperature - not possible on adc1 :-(
 		//Device_Temperature=convert_die_temp(ADC_GetInjectedConversionValue(ADC2, ADC_InjectedChannel_3));//The on die temperature sensor
@@ -204,6 +219,11 @@ void SysTickHandler(void)
 		old_pressure=reported_pressure;			//Set the old pressure record here for use in the D term
 	}
 	ADC_SoftwareStartInjectedConvCmd(ADC2, ENABLE);		//Trigger the injected channel group
+	//Read any I2C bus sensors here (100Hz)
+	if(Sensors&(1<<TEMPERATURE_SENSOR)) {
+		I2C1_Request_Job(TMP102_READ);			//Request a TMP102 read if there is one present
+		Add_To_Buffer(GET_TMP_TEMPERATURE,&Temperatures_Buffer);//Add data to the ring buffer
+	}
 	//Now process the control button functions
 	if(Button_hold_tim ) {					//If a button press generated timer has been triggered
 		if(GPIO_ReadInputDataBit(GPIOA,WKUP)) {		//Button hold turns off the device

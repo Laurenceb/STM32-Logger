@@ -2,6 +2,7 @@
 #pragma once
 #include "Util/fat_fs/inc/ff.h"
 #include "Util/buffer.h"
+#include "Util/delay.h"
 #include "Sensors/ppg.h"
 #include "timer.h"
 
@@ -15,6 +16,7 @@ extern volatile uint32_t Millis;
 extern volatile float Device_Temperature;
 
 extern volatile uint8_t System_state_Global;
+extern volatile uint8_t Sensors;
 
 #define PRE_SIZE 1000000ul	/*Preallocate size*/
 
@@ -30,14 +32,7 @@ extern volatile uint8_t System_state_Global;
 #define PRESSURE_MARGIN 0.3				/*means a pressure within 0.3PSI of zero will turn off the dump valve if setpoint -ive*/
 
 //Sensors
-enum {PRESSURE_HOSE=0};
-
-#define delay(x)					\
-do {							\
-  register unsigned int i;				\
-  for (i = 0; i < x; ++i)			\
-    __asm__ __volatile__ ("nop\n\t":::"memory");	\
-} while (0)
+enum {PRESSURE_HOSE=0,TEMPERATURE_SENSOR};
 
 //function prototypes
 void __fat_print_char(char c);
@@ -45,6 +40,8 @@ void __str_print_char(char c);
 uint8_t detect_sensors(void);
 //buffer globals
 extern volatile buff_type Buff[PPG_CHANNELS];
+extern volatile buff_type Pressures_Buffer;		//Data from pressure sensor
+extern volatile buff_type Temperatures_Buffer;		//Data from temperature sensor
 //fatfs globals
 extern volatile uint8_t file_opened;
 extern FIL FATFS_logfile;
