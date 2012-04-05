@@ -176,6 +176,7 @@ void SysTickHandler(void)
 	static uint16_t Enabled_iterations;			//Note, this is going to break if we spend long periods with +ive pressure set
 	static uint32_t Last_Button_Press;			//Holds the timestamp for the previous button press
 	static uint8_t System_state_counter;			//Holds the system state counter
+	static uint8_t tmpindex;				//Temp sensor decimator
 	//FatFS timer function
 	disk_timerproc();
 	//Incr the system uptime
@@ -221,8 +222,12 @@ void SysTickHandler(void)
 	ADC_SoftwareStartInjectedConvCmd(ADC2, ENABLE);		//Trigger the injected channel group
 	//Read any I2C bus sensors here (100Hz)
 	if(Sensors&(1<<TEMPERATURE_SENSOR)) {
-		I2C1_Request_Job(TMP102_READ);			//Request a TMP102 read if there is one present
-		Add_To_Buffer(GET_TMP_TEMPERATURE,&Temperatures_Buffer);//Add data to the ring buffer
+		float tmp=GET_TMP_TEMPERATURE;
+		Add_To_Buffer(*(uint32_t*)(&tmp),&Temperatures_Buffer);//Add data to the ring buffer
+		if(!tmpindex--) {				//Every 30ms
+			tmpindex=3;
+			I2C1_Request_Job(TMP102_READ);		//Request a TMP102 read if there is one present
+		}
 	}
 	//Now process the control button functions
 	if(Button_hold_tim ) {					//If a button press generated timer has been triggered

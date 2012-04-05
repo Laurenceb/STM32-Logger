@@ -22,8 +22,8 @@ void setup_pwm(void) {
     TIM3 Channel3 duty cycle = (TIM3_CCR3/ TIM3_ARR)* 100 = 2.6%
     TIM3 Channel4 duty cycle = (TIM3_CCR4/ TIM3_ARR)* 100 = 2.6%
   ----------------------------------------------------------------------- */
-  TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
-  TIM_OCInitTypeDef  TIM_OCInitStructure;
+  TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure={};
+  TIM_OCInitTypeDef  TIM_OCInitStructure={};
   /*Enable the Tim3 clk*/
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
   /*Enable the Tim4 clk*/
@@ -46,7 +46,7 @@ void setup_pwm(void) {
 
   /*Setup the initstructure*/
   TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
-  TIM_OCInitStructure.TIM_Pulse = 10;
+  TIM_OCInitStructure.TIM_Pulse = 1;
   TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1; 
 
   /* PWM1 Mode configuration: Channel3 */
@@ -100,7 +100,7 @@ void setup_pwm(void) {
   */
 void Tryfudge(uint32_t* Fudgemask) {
 	if((*Fudgemask)&(uint32_t)1 /*&& TIM3->CNT<PWM_FUDGE3*/) {//If the first bit is set, adjust the first timer in the list if it is safe to do so
-		while(TIM3->CNT>=PWM_FUDGE3-1);
+		while(TIM3->CNT>=(PWM_FUDGE3-1));
 		TIM_ARRPreloadConfig(TIM3, DISABLE);//Disable reload buffering so we can load directly
 		TIM_SetAutoreload(TIM3, PWM_FUDGE3);//Load reload register directly
 		TIM_ARRPreloadConfig(TIM3, ENABLE);//Enable buffering so we load buffered register

@@ -132,7 +132,7 @@ int main(void)
 	Sensors=detect_sensors();			//Search for connected sensors
 	Pressure_control=Sensors&PRESSURE_HOSE;		//Enable active pressure control if a hose is connected
 	pressure_setpoint=0;				//Not applied pressure, should cause motor and solenoid to go to idle state
-	PPG_Automatic_Brightness_Control();		//Run the automatic brightness setting on power on
+	//PPG_Automatic_Brightness_Control();		//Run the automatic brightness setting on power on
 	rtc_gettime(&RTC_time);				//Get the RTC time and put a timestamp on the start of the file
 	printf("%d-%d-%dT%d:%d:%d\n",RTC_time.year,RTC_time.month,RTC_time.mday,RTC_time.hour,RTC_time.min,RTC_time.sec);//ISO 8601 timestamp header
 	if(file_opened) {
@@ -149,16 +149,16 @@ int main(void)
 			do {
 				Get_From_Buffer(&sensor_data,&Pressures_Buffer);
 			} while(bytes_in_buff(&Pressures_Buffer));//The aquisition will often be running faster than this loop, so dump the unused data
-			printf(",%f",sensor_data);	//print the retreived data
+			printf(",%2f",sensor_data);	//print the retreived data
 		}
 		if(Sensors&(1<<TEMPERATURE_SENSOR)) {	//If there is a temperature sensor present
 			do {
 				Get_From_Buffer(&sensor_data,&Temperatures_Buffer);
 			} while(bytes_in_buff(&Temperatures_Buffer));//The aquisition will often be running faster than this loop, so dump the unused data
-			printf(",%f",sensor_data);	//print the retreived data
+			printf(",%2f",sensor_data);	//print the retreived data
 		}
 		//Other sensors etc can go here
-		printf('\n');				//Terminating newline
+		printf("\n");				//Terminating newline
 		if(file_opened) {
 			f_puts(print_string,&FATFS_logfile);
 			print_string[0]=0x00;		//Set string length to 0
@@ -209,8 +209,8 @@ uint8_t detect_sensors(void) {
 	SCHEDULE_CONFIG;				//Run the I2C devices config
 	//Detect if there is an air hose connected
 	Pressure_control|=0x80;				//Set msb - indicates motor is free to run
-	Set_Motor((int16_t)(MAX_DUTY*2)/3);		//Set the motor to 50% duty cycle
-	while(Millis<(millis+500)) {			//Wait 250ms
+	Set_Motor((int16_t)(MAX_DUTY)/2);		//Set the motor to 50% max duty cycle
+	while(Millis<(millis+300)) {			//Wait 300ms
 		if(reported_pressure>PRESSURE_MARGIN) {	//We got some sane pressure increase
 			sensors|=(1<<PRESSURE_HOSE);
 			init_buffer(&Pressures_Buffer,TMP102_BUFFER_SIZE);//reuse the TMP102 buffer size - as we want the same amount of buffering

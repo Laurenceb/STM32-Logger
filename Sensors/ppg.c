@@ -69,16 +69,14 @@ void PPG_Automatic_Brightness_Control(void) {
 			else if(channel==2)
 				pwm=Get_PWM_2();//Retreives the set pwm for this channel
 			vals[channel]=PPG_correct_brightness(Last_PPG_Values[channel], pwm);
-			if(channel==2)		//Apply the pwm duty correction here
-				Set_PWM_2(vals[channel]);
-			else if(channel==1)
-				Set_PWM_1(vals[channel]);
-			else
-				Set_PWM_0(vals[channel]);
-			uint32_t time=Millis;	//Store the system time here
-			time+=(uint32_t)(2000.0/PPG_SAMPLE_RATE);//two samples
-			while(Millis<time);	//Delay for a couple of PPG samples to set the analogue stabilise	
 		}
+		//Apply the pwm duty correction here
+		Set_PWM_2(vals[2]);
+		Set_PWM_1(vals[1]);
+		Set_PWM_0(vals[0]);
+		uint32_t time=Millis;	//Store the system time here
+		time+=(uint32_t)(4000.0/PPG_SAMPLE_RATE);//four samples
+		while(Millis<time);	//Delay for a couple of PPG samples to set the analogue stabilise	
 	}while((abs(vals[0]-old_vals[0])>PWM_STEP_LIM)||(abs(vals[1]-old_vals[1])>PWM_STEP_LIM)||(abs(vals[2]-old_vals[2])>PWM_STEP_LIM));
 }
 
@@ -97,7 +95,7 @@ uint16_t PPG_correct_brightness(uint32_t Decimated_value, uint16_t PWM_value) {
 	//2^adc_bits*samples_in_half_buffer/4*baseband_decimator
 	//(2^12)*(64/4)*21 == 1376256 == 2*target_decimated_value TODO impliment this with macros full - atm just TARGET_ADC
 	float corrected_pwm=PWM_Linear(PWM_value);
-	corrected_pwm*=(float)TARGET_ADC/(float)Decimated_value;//This is the linearised pwm value required to get target amplitude
+	corrected_pwm*=(float)(TARGET_ADC)/(float)Decimated_value;//This is the linearised pwm value required to get target amplitude
 	corrected_pwm=(corrected_pwm>1.0)?1.0:corrected_pwm;//Enforce limit on range to 100%
 	return ((asinf(corrected_pwm)/M_PI)*PWM_PERIOD);//Convert back to a PWM period value
 }

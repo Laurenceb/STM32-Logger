@@ -232,7 +232,7 @@ void I2C_Config() {			//Configure I2C1 for the sensor bus
 	I2C_InitStructure.I2C_AcknowledgedAddress= I2C_AcknowledgedAddress_7bit;
 	I2C_InitStructure.I2C_ClockSpeed = 100000;
 	//Setup the pointers to the read data
-	I2C1_Setup_Job(TMP102_READ, (volatile uint8_t*)TMP102_Data_Buffer);//Temperature data buffer
+	I2C1_Setup_Job(TMP102_READ, (volatile uint8_t*)&TMP102_Data_Buffer);//Temperature data buffer
 	//Assert the bus
 	GPIO_InitTypeDef	GPIO_InitStructure;
 	GPIO_InitStructure.GPIO_Pin = I2C1_SCL|I2C1_SDA;

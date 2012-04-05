@@ -11,7 +11,7 @@
 float convert_die_temp(uint16_t adcval);
 
 float convert_tmp102_temp(uint16_t adcval);
-extern volatile uint8_t TMP102_Data_Buffer[2];
-#define GET_TMP_TEMPERATURE convert_tmp102_temp((uint16_t)*TMP102_Data_Buffer)
+extern volatile uint16_t TMP102_Data_Buffer;
+#define GET_TMP_TEMPERATURE convert_tmp102_temp(TMP102_Data_Buffer)
 
 #define TMP102_BUFFER_SIZE 256		/*enough for 64 samples or 640ms*/
