@@ -22,6 +22,8 @@ extern volatile uint8_t Sensors;
 
 #define SYSTEM_STATES 1		/*Number of different control states- atm just brightness control implimented*/
 
+#define WATCHDOG_TIMEOUT 4000	/*4 second timeout - enough for the uSD card to block its max time and a bit*/
+
 //Pressure controller constants - a PI controller
 #define ITERATION_RATE 100
 #define I_HOLDOFF ITERATION_RATE/2			/*means that there is 500ms allowed for the pump to turn on and stabilise before I enabled*/

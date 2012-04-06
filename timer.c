@@ -12,27 +12,26 @@ void setup_pwm(void) {
     TIM4 Configuration: generate 2 PWM signals with 2 different duty cycles:
     The TIM4CLK frequency is set to SystemCoreClock (Hz), to get TIM4 counter
     clock at 72 MHz the Prescaler is computed as following:
-     - Prescaler = (TIM3CLK / TIM3 counter clock) - 1
+     - Prescaler = (TIM4CLK / TIM4 counter clock) - 1
     SystemCoreClock is set to 72 MHz
 
     The TIM4 is running at 11.905KHz: TIM4 Frequency = TIM4 counter clock/(ARR + 1)
                                                   = 4.5 MHz / 378
     (with 239.5clk adc sampling -> 252adc clk/sample, and 12mhz adc clk this gives quadrature
     sampling)
-    TIM3 Channel3 duty cycle = (TIM3_CCR3/ TIM3_ARR)* 100 = 2.6%
-    TIM3 Channel4 duty cycle = (TIM3_CCR4/ TIM3_ARR)* 100 = 2.6%
+
   ----------------------------------------------------------------------- */
   TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure={};
   TIM_OCInitTypeDef  TIM_OCInitStructure={};
-  /*Enable the Tim3 clk*/
-  RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
+  /*Enable the Tim2 clk*/
+  RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
   /*Enable the Tim4 clk*/
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
   /*Enable the Tim1 clk*/
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, ENABLE);
 
   TIM_DeInit(TIM1);
-  TIM_DeInit(TIM3);
+  TIM_DeInit(TIM2);
   TIM_DeInit(TIM4);
   /* Prescaler of 16 times*/
   uint16_t PrescalerValue = 15;
@@ -46,7 +45,7 @@ void setup_pwm(void) {
 
   /*Setup the initstructure*/
   TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
-  TIM_OCInitStructure.TIM_Pulse = 1;
+  TIM_OCInitStructure.TIM_Pulse = 4;
   TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1; 
 
   /* PWM1 Mode configuration: Channel3 */
@@ -62,17 +61,17 @@ void setup_pwm(void) {
   TIM_Cmd(TIM4, ENABLE);
 
 
-  /*Now setup timer3 as PWM0*/
-  TIM_TimeBaseStructure.TIM_Period = PWM_PERIOD3;
-  TIM_TimeBaseInit(TIM3, &TIM_TimeBaseStructure);//same as timer4
-  /* PWM1 Mode configuration: Channel2 */
-  TIM_OC2Init(TIM3, &TIM_OCInitStructure);
+  /*Now setup timer2 as PWM0*/
+  TIM_TimeBaseStructure.TIM_Period = PWM_PERIOD2;
+  TIM_TimeBaseInit(TIM2, &TIM_TimeBaseStructure);//same as timer4
+  /* PWM1 Mode configuration: Channel3 */
+  TIM_OC3Init(TIM2, &TIM_OCInitStructure);
 
-  TIM_OC2PreloadConfig(TIM3, TIM_OCPreload_Enable);
+  TIM_OC3PreloadConfig(TIM2, TIM_OCPreload_Enable);
 
-  /* TIM3 enable counter */
-  TIM_ARRPreloadConfig(TIM3, ENABLE);
-  TIM_Cmd(TIM3, ENABLE);
+  /* TIM2 enable counter */
+  TIM_ARRPreloadConfig(TIM2, ENABLE);
+  TIM_Cmd(TIM2, ENABLE);
 
   /*Now setup timer1 as motor control */
   PrescalerValue = 0;//no prescaler
@@ -99,12 +98,12 @@ void setup_pwm(void) {
   * (need to use different timers for each output) 
   */
 void Tryfudge(uint32_t* Fudgemask) {
-	if((*Fudgemask)&(uint32_t)1 /*&& TIM3->CNT<PWM_FUDGE3*/) {//If the first bit is set, adjust the first timer in the list if it is safe to do so
-		while(TIM3->CNT>=(PWM_FUDGE3-1));
-		TIM_ARRPreloadConfig(TIM3, DISABLE);//Disable reload buffering so we can load directly
-		TIM_SetAutoreload(TIM3, PWM_FUDGE3);//Load reload register directly
-		TIM_ARRPreloadConfig(TIM3, ENABLE);//Enable buffering so we load buffered register
-		TIM_SetAutoreload(TIM3, PWM_PERIOD3);//Load the buffer, so the pwm period returns to normal after 1 period
+	if((*Fudgemask)&(uint32_t)1 /*&& TIM2->CNT<PWM_FUDGE3*/) {//If the first bit is set, adjust the first timer in the list if it is safe to do so
+		while(TIM2->CNT>=(PWM_FUDGE2-1));
+		TIM_ARRPreloadConfig(TIM2, DISABLE);//Disable reload buffering so we can load directly
+		TIM_SetAutoreload(TIM2, PWM_FUDGE2);//Load reload register directly
+		TIM_ARRPreloadConfig(TIM2, ENABLE);//Enable buffering so we load buffered register
+		TIM_SetAutoreload(TIM2, PWM_PERIOD2);//Load the buffer, so the pwm period returns to normal after 1 period
 		*Fudgemask&=~(uint32_t)1;//Clear the bit
 	}
 	//Other timers could go here at some point

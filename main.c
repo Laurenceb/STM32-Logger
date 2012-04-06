@@ -6,6 +6,7 @@
 #include "usart.h"
 #include "interrupts.h"
 #include "timer.h"
+#include "watchdog.h"
 #include "Util/rprintf.h"
 #include "Util/delay.h"
 #include "Sensors/pressure.h"
@@ -49,6 +50,7 @@ int main(void)
 	RTC_t RTC_time;
 	SystemInit();					//Sets up the clk
 	setup_gpio();					//Initialised pins, and detects boot source
+	Watchdog_Config(WATCHDOG_TIMEOUT);		//Set the watchdog
 	SysTick_Configuration();			//Start up system timer at 100Hz for uSD card functionality
 	rtc_init();					//Real time clock initialise - (keeps time unchanged if set)
 	Usarts_Init();
@@ -60,7 +62,11 @@ int main(void)
 		Set_USBClock();
 		USB_Interrupts_Config();
 		USB_Init();
-		while (bDeviceState != CONFIGURED);	//Wait for USB config
+		while (bDeviceState != CONFIGURED) {	//Wait for USB config - timeout causes shutdown
+			if(Millis>10000 || !GET_CHRG_STATE)//No USB cable - shutdown (Charger pin will be set to open drain, cant be disabled without usb)
+				shutdown();
+			Watchdog_Reset();		//Reset watchdog here, if we are stalled here the Millis timeout should catch us
+		}
 		USB_Configured_LED();
 		EXTI_ONOFF_EN();			//Enable the off interrupt - allow some time for debouncing
 		while(1) {				//If running off USB (mounted as mass storage), stay in this loop - dont turn on anything
@@ -68,6 +74,7 @@ int main(void)
 				switch_leds_on();	//Flash the LED(s)
 			else
 				switch_leds_off();
+			Watchdog_Reset();
 		}
 	}
 	else {
@@ -132,7 +139,7 @@ int main(void)
 	Sensors=detect_sensors();			//Search for connected sensors
 	Pressure_control=Sensors&PRESSURE_HOSE;		//Enable active pressure control if a hose is connected
 	pressure_setpoint=0;				//Not applied pressure, should cause motor and solenoid to go to idle state
-	//PPG_Automatic_Brightness_Control();		//Run the automatic brightness setting on power on
+	PPG_Automatic_Brightness_Control();		//Run the automatic brightness setting on power on
 	rtc_gettime(&RTC_time);				//Get the RTC time and put a timestamp on the start of the file
 	printf("%d-%d-%dT%d:%d:%d\n",RTC_time.year,RTC_time.month,RTC_time.mday,RTC_time.hour,RTC_time.min,RTC_time.sec);//ISO 8601 timestamp header
 	if(file_opened) {
@@ -141,6 +148,7 @@ int main(void)
 	}
 	Millis=0;					//Reset system uptime, we have 50 days before overflow
 	while (1) {
+		Watchdog_Reset();			//Reset the watchdog each main loop iteration
 		while(!bytes_in_buff(&(Buff[0])));	//Wait for some PPG data
 		Get_From_Buffer(&(ppg[0]),&(Buff[0]));	//Retrive one sample of PPG
 		Get_From_Buffer(&(ppg[1]),&(Buff[1]));	

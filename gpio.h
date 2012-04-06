@@ -16,12 +16,12 @@
 #define RED_LED_ON	GPIO_WriteBit(GPIOB,RED,Bit_SET)
 #define RED_LED_OFF	GPIO_WriteBit(GPIOB,RED,Bit_RESET)
 
-#define GET_CHRG_STATE GPIO_ReadInputDataBit(GPIOB,CHARGER_EN)
+#define GET_CHRG_STATE  GPIO_ReadInputDataBit(GPIOB,CHARGER_EN)
 #define CHRG_ON		GPIO_WriteBit(GPIOB,CHARGER_EN,Bit_SET)
 #define CHRG_OFF	GPIO_WriteBit(GPIOB,CHARGER_EN,Bit_RESET)
 
-#define PWM0		GPIO_Pin_5
-#define PWM1		GPIO_Pin_8
+#define PWM0		GPIO_Pin_8
+#define PWM1		GPIO_Pin_10
 #define PWM2		GPIO_Pin_9
 #define PWM_MOTOR	GPIO_Pin_8
 

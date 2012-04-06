@@ -110,6 +110,7 @@ void EXTI0_IRQHandler(void) {
 		EXTI_ClearITPendingBit(EXTI_Line0);
 		/*Called Code goes here*/
 		Button_hold_tim=BUTTON_TURNOFF_TIME;
+		RED_LED_ON;					//Red LED is used to indicate successful button press to the user
 		if(GET_CHRG_STATE) {				//Interrupt due to USB insertion - reset to usb mode
 			if(file_opened)
 				shutdown_filesystem();
@@ -118,7 +119,7 @@ void EXTI0_IRQHandler(void) {
 		if(USB_SOURCE==bootsource) {
 			if(file_opened) 
 				shutdown_filesystem();
-			//red_flash();				//Flash red led
+			red_flash();				//Flash red led - provides some debouncing on jack removal
 			shutdown();				//Shuts down - only wakes up on power pin i.e. WKUP
 		}
 	}
@@ -238,6 +239,7 @@ void SysTickHandler(void)
 			}
 		}
 		else {						//Button released - this can only ever run once per press
+			RED_LED_OFF;				//Turn off the red LED - used to indicate button press to user
 			if(Button_hold_tim<BUTTON_DEBOUNCE) {	//The button has to be held down for longer than the debounce period
 				Last_Button_Press=Millis;
 				if(++System_state_counter>=SYSTEM_STATES)
