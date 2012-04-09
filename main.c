@@ -41,6 +41,7 @@ static FATFS FATFS_Obj;
 FIL FATFS_logfile;
 FILINFO FATFS_info;
 
+
 int main(void)
 {
 	uint8_t a=0;
@@ -50,6 +51,7 @@ int main(void)
 	RTC_t RTC_time;
 	SystemInit();					//Sets up the clk
 	setup_gpio();					//Initialised pins, and detects boot source
+	DBGMCU_Config(DBGMCU_IWDG_STOP, ENABLE);	//Watchdog stopped during JTAG halt
 	Watchdog_Config(WATCHDOG_TIMEOUT);		//Set the watchdog
 	SysTick_Configuration();			//Start up system timer at 100Hz for uSD card functionality
 	rtc_init();					//Real time clock initialise - (keeps time unchanged if set)

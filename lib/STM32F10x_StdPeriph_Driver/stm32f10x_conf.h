@@ -30,7 +30,7 @@
 // #include "stm32f10x_can.h"
 // #include "stm32f10x_crc.h"
 // #include "stm32f10x_dac.h"
-// #include "stm32f10x_dbgmcu.h"
+#include "stm32f10x_dbgmcu.h"
 #include "stm32f10x_dma.h"
 #include "stm32f10x_exti.h"
 // #include "stm32f10x_flash.h"
