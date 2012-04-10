@@ -146,12 +146,12 @@ SECTIONS
     . = ALIGN (8);
     _end = .;
     __end = .;
-  } >ram AT>rom
+  } >ram
   .noinit :
   {
     *(.noinit)
     . = ALIGN (8);
-  } >ram AT>rom
+  } >ram
   /* __cs3_region_end_ram is deprecated */
   __cs3_region_end_ram = __cs3_region_start_ram + LENGTH(ram);
   __cs3_region_size_ram = LENGTH(ram);

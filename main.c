@@ -40,11 +40,10 @@ FRESULT f_err_code;
 static FATFS FATFS_Obj;
 FIL FATFS_logfile;
 FILINFO FATFS_info;
-volatile int bar[3] __attribute__ ((section (".noinit"))) ;//= 0xaa
+//volatile int bar[3] __attribute__ ((section (".noinit"))) ;//= 0xaa
 
 int main(void)
 {
-	//printf("%d",bar);
 	uint8_t a=0;
 	uint32_t ppg[2];				//two PPG channels
 	uint32_t data_counter;				//used as data timestamp
@@ -53,7 +52,6 @@ int main(void)
 	SystemInit();					//Sets up the clk
 	setup_gpio();					//Initialised pins, and detects boot source
 	DBGMCU_Config(DBGMCU_IWDG_STOP, ENABLE);	//Watchdog stopped during JTAG halt
-	Watchdog_Config(WATCHDOG_TIMEOUT);		//Set the watchdog
 	SysTick_Configuration();			//Start up system timer at 100Hz for uSD card functionality
 	rtc_init();					//Real time clock initialise - (keeps time unchanged if set)
 	Usarts_Init();
@@ -61,6 +59,7 @@ int main(void)
 	ISR_Config();
 	rprintfInit(__usart_send_char);			//Printf over the bluetooth
 	if(USB_SOURCE==bootsource) {
+		Watchdog_Config(WATCHDOG_TIMEOUT);	//Set the watchdog
 		Set_System();				//This actually just inits the storage layer
 		Set_USBClock();
 		USB_Interrupts_Config();
@@ -83,6 +82,7 @@ int main(void)
 	else {
 		if(!GET_PWR_STATE)			//Check here to make sure the power button is still pressed, if not, sleep
 			shutdown();			//This means a glitch on the supply line, or a power glitch results in sleep
+		Watchdog_Config(WATCHDOG_TIMEOUT);	//Set the watchdog - do this here as watchdog is only turned off by reset
 		a=Set_System();				//This actually just inits the storage layer - returns 0 for success
 		//a|=init_function();			//Other init functions
 		if((f_err_code = f_mount(0, &FATFS_Obj)))Usart_Send_Str((char*)"FatFs mount error\r\n");//This should only error if internal error
@@ -145,7 +145,6 @@ int main(void)
 	PPG_Automatic_Brightness_Control();		//Run the automatic brightness setting on power on
 	rtc_gettime(&RTC_time);				//Get the RTC time and put a timestamp on the start of the file
 	printf("%d-%d-%dT%d:%d:%d\n",RTC_time.year,RTC_time.month,RTC_time.mday,RTC_time.hour,RTC_time.min,RTC_time.sec);//ISO 8601 timestamp header
-	printf("%d",bar[0]);
 	if(file_opened) {
 		f_puts(print_string,&FATFS_logfile);
 		print_string[0]=0x00;			//Set string length to 0
