@@ -40,10 +40,11 @@ FRESULT f_err_code;
 static FATFS FATFS_Obj;
 FIL FATFS_logfile;
 FILINFO FATFS_info;
-
+volatile int bar[3] __attribute__ ((section (".noinit"))) ;//= 0xaa
 
 int main(void)
 {
+	printf("%d",bar);
 	uint8_t a=0;
 	uint32_t ppg[2];				//two PPG channels
 	uint32_t data_counter;				//used as data timestamp

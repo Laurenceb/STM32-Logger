@@ -144,6 +144,11 @@ SECTIONS
     *(COMMON)
     *(.ram.b)
     . = ALIGN (8);
+  } >ram AT>rom
+  .noinit :
+  {
+    *(.noinit)
+    . = ALIGN (8);
     _end = .;
     __end = .;
   } >ram AT>rom
