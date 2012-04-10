@@ -144,13 +144,13 @@ SECTIONS
     *(COMMON)
     *(.ram.b)
     . = ALIGN (8);
+    _end = .;
+    __end = .;
   } >ram AT>rom
   .noinit :
   {
     *(.noinit)
     . = ALIGN (8);
-    _end = .;
-    __end = .;
   } >ram AT>rom
   /* __cs3_region_end_ram is deprecated */
   __cs3_region_end_ram = __cs3_region_start_ram + LENGTH(ram);
