@@ -98,12 +98,12 @@ void setup_pwm(void) {
   * (need to use different timers for each output) 
   */
 void Tryfudge(uint32_t* Fudgemask) {
-	if((*Fudgemask)&(uint32_t)1 /*&& TIM2->CNT<PWM_FUDGE3*/) {//If the first bit is set, adjust the first timer in the list if it is safe to do so
-		while(TIM2->CNT>=(PWM_FUDGE2-1));
-		TIM_ARRPreloadConfig(TIM2, DISABLE);//Disable reload buffering so we can load directly
-		TIM_SetAutoreload(TIM2, PWM_FUDGE2);//Load reload register directly
-		TIM_ARRPreloadConfig(TIM2, ENABLE);//Enable buffering so we load buffered register
-		TIM_SetAutoreload(TIM2, PWM_PERIOD2);//Load the buffer, so the pwm period returns to normal after 1 period
+	if((*Fudgemask)&(uint32_t)1 /*&& TIM2->CNT<PWM_FUDGE2*/) {//If the first bit is set, adjust the first timer in the list if it is safe to do so
+		while(TIM2->CNT>=(PWM_FUDGE2-2));
+		TIM2->CR1 &= ~TIM_CR1_ARPE;//Disable reload buffering so we can load directly
+		TIM2->ARR = PWM_FUDGE2;//Load reload register directly
+		TIM2->CR1 |= TIM_CR1_ARPE;//Enable buffering so we load buffered register
+		TIM2->ARR = PWM_PERIOD2;//Load the buffer, so the pwm period returns to normal after 1 period
 		*Fudgemask&=~(uint32_t)1;//Clear the bit
 	}
 	//Other timers could go here at some point
