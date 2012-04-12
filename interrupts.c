@@ -82,8 +82,8 @@ void DMA_ISR_Config(void) {
 	NVIC_InitTypeDef   NVIC_InitStructure;
 	/* Enable and set DMA1 Interrupt to the sixth priority */
 	NVIC_InitStructure.NVIC_IRQChannel = DMA1_Channel1_IRQn;//The DMA complete/half complete triggered interrupt	
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x00;//Higher pre-emption priority - can nest inside USB/SD
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x06;	//6th subpriority
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x01;//Higher pre-emption priority - can nest inside USB/SD
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x04;	//6th subpriority
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
 }
@@ -131,7 +131,7 @@ void EXTI0_IRQHandler(void) {
   * @retval None
   */
 void DMAChannel1_IRQHandler(void) {
-	if ( DMA_GetITStatus(DMA1_IT_HT1) )			//Half transfer completed
+	if(DMA_GetITStatus(DMA1_IT_HT1) )
 		PPG_LO_Filter(ADC1_Convertion_buff);		//Process lower half
 	else
 		PPG_LO_Filter(&ADC1_Convertion_buff[ADC_BUFF_SIZE/4]);//Transfer complete, process upper half - indexed as 16bit words

@@ -18,11 +18,14 @@ volatile uint32_t Last_PPG_Values[3];
   * @retval None
   * This will be called at 13.393KHz
   */
+volatile uint8_t a_;
+
 void PPG_LO_Filter(uint16_t* buff) {
+	static uint16_t record[768];
 	int32_t I=0,Q=0,a;			//I and Q integration bins, general purpose variable
 	static uint8_t bindex;			//Baseband decimation index
 	static int32_t Frequency_Bin[2][2];	//Only two frequencies in use atm - consisting of and I and Q component
-	static uint32_t Fudgemask;
+	static uint32_t Fudgemask,store;
 	Tryfudge(&Fudgemask);			//Try to correct timer phase here
 	for(uint16_t n=0;n<ADC_BUFF_SIZE/4;) {	//buffer size/4 must be a multiple of 4
 		I+=buff[n++];
@@ -30,6 +33,7 @@ void PPG_LO_Filter(uint16_t* buff) {
 		I-=buff[n++];
 		Q-=buff[n++];
 	}
+	memcpy(&record[(uint16_t)bindex*64],buff,128);
 	//Now run the "baseband" decimating filter(s)
 	//No positive frequencies at the moment - they would go here TODO
 	Frequency_Bin[0][0]+=I;Frequency_Bin[0][1]+=Q;//Add the I and Q directly into the zero frequency bin
@@ -48,6 +52,10 @@ void PPG_LO_Filter(uint16_t* buff) {
 		memset(Frequency_Bin,0,sizeof(Frequency_Bin));//Zero everything
 		bindex=0;			//Reset this
 		Fudgemask|=1;			//Sets a TIM3 fudge as requested
+		if((Last_PPG_Values[1]+10000)<store) {
+			a_=1;
+		}
+		store=Last_PPG_Values[1];
 	}
 }
 

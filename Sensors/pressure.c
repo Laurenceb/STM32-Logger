@@ -57,14 +57,13 @@ static const float xcoeffs[] =
   };
 
 float filterloop(float input)
-  { for (;;)
-      { float sum; uint8_t i;
+  {
+	float sum; uint8_t i;
         for (i = 0; i < NZEROS; i++) xv[i] = xv[i+1];
         xv[NZEROS] = input / GAIN;
         sum = 0.0;
         for (i = 0; i <= NZEROS; i++) sum += (xcoeffs[i] * xv[i]);
         return sum;
-      }
   }
 
 
