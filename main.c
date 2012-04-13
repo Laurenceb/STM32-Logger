@@ -51,15 +51,19 @@ int main(void)
 	RTC_t RTC_time;
 	SystemInit();					//Sets up the clk
 	setup_gpio();					//Initialised pins, and detects boot source
+	if(RCC->CSR&RCC_CSR_IWDGRSTF) {			//Watchdog reset, turn off
+		RCC->CSR|=RCC_CSR_RMVF;			//Reset the reset flags
+		shutdown();
+	}
 	DBGMCU_Config(DBGMCU_IWDG_STOP, ENABLE);	//Watchdog stopped during JTAG halt
 	SysTick_Configuration();			//Start up system timer at 100Hz for uSD card functionality
+	Watchdog_Config(WATCHDOG_TIMEOUT);		//Set the watchdog
 	rtc_init();					//Real time clock initialise - (keeps time unchanged if set)
 	Usarts_Init();
 	setup_pwm();					//Enable the PWM outputs on all three channels
 	ISR_Config();
 	rprintfInit(__usart_send_char);			//Printf over the bluetooth
 	if(USB_SOURCE==bootsource) {
-		Watchdog_Config(WATCHDOG_TIMEOUT);	//Set the watchdog
 		Set_System();				//This actually just inits the storage layer
 		Set_USBClock();
 		USB_Interrupts_Config();
@@ -82,7 +86,6 @@ int main(void)
 	else {
 		if(!GET_PWR_STATE)			//Check here to make sure the power button is still pressed, if not, sleep
 			shutdown();			//This means a glitch on the supply line, or a power glitch results in sleep
-		Watchdog_Config(WATCHDOG_TIMEOUT);	//Set the watchdog - do this here as watchdog is only turned off by reset
 		a=Set_System();				//This actually just inits the storage layer - returns 0 for success
 		//a|=init_function();			//Other init functions
 		if((f_err_code = f_mount(0, &FATFS_Obj)))Usart_Send_Str((char*)"FatFs mount error\r\n");//This should only error if internal error
@@ -173,6 +176,12 @@ int main(void)
 		if(file_opened) {
 			f_puts(print_string,&FATFS_logfile);
 			print_string[0]=0x00;		//Set string length to 0
+		}
+		//Deal with file size - may need to preallocate some more
+		if(f_tell(&FATFS_logfile)%PRE_SIZE>(PRE_SIZE/2)) {//More than half way through the pre-allocated area
+			DWORD size=f_tell(&FATFS_logfile);
+			f_lseek(&FATFS_logfile, f_size(&FATFS_logfile)+PRE_SIZE);//preallocate another PRE_SIZE
+			f_lseek(&FATFS_logfile, size);	//Seek back to where we were before
 		}
 		if(Millis%1000>500)			//1Hz on/off flashing
 			switch_leds_on();		//Flash the LED(s)
