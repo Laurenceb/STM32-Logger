@@ -178,7 +178,7 @@ int main(void)
 			print_string[0]=0x00;		//Set string length to 0
 		}
 		//Deal with file size - may need to preallocate some more
-		if(f_tell(&FATFS_logfile)%PRE_SIZE>(PRE_SIZE/2)) {//More than half way through the pre-allocated area
+		if(f_size(&FATFS_logfile)-f_tell(&FATFS_logfile)<(PRE_SIZE/2)) {//More than half way through the pre-allocated area
 			DWORD size=f_tell(&FATFS_logfile);
 			f_lseek(&FATFS_logfile, f_size(&FATFS_logfile)+PRE_SIZE);//preallocate another PRE_SIZE
 			f_lseek(&FATFS_logfile, size);	//Seek back to where we were before
