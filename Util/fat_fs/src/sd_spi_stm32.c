@@ -39,7 +39,7 @@
 #include "../../../gpio.h"
 
 // demo uses a command line option to define this (see Makefile):
-//#define STM32_SD_USE_DMA
+#define STM32_SD_USE_DMA
 #define MULTI_SPI		/*Allows spi setup to take place here, even if there is no card*/
 
 #ifdef STM32_SD_USE_DMA
