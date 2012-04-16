@@ -131,11 +131,14 @@ void EXTI0_IRQHandler(void) {
   * @retval None
   */
 void DMAChannel1_IRQHandler(void) {
-	if(DMA_GetITStatus(DMA1_IT_HT1) )
+	if(DMA_GetITStatus(DMA1_IT_HT1)) {
+		DMA_ClearITPendingBit(DMA1_IT_GL1);		//clear all the interrupts
 		PPG_LO_Filter(ADC1_Convertion_buff);		//Process lower half
-	else if (DMA_GetITStatus(DMA1_IT_TC1) )
+	}
+	else if (DMA_GetITStatus(DMA1_IT_TC1)) {
+		DMA_ClearITPendingBit(DMA1_IT_GL1);		//clear all the interrupts
 		PPG_LO_Filter(&ADC1_Convertion_buff[ADC_BUFF_SIZE/4]);//Transfer complete, process upper half - indexed as 16bit words
-	DMA_ClearITPendingBit(DMA1_IT_GL1);			//clear all the interrupts
+	}
 	DMA_ClearFlag(DMA1_FLAG_TC1|DMA1_FLAG_HT1);  		//make sure flags are clear
 }
 
