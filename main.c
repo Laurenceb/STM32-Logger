@@ -51,11 +51,11 @@ int main(void)
 	RTC_t RTC_time;
 	SystemInit();					//Sets up the clk
 	setup_gpio();					//Initialised pins, and detects boot source
-	//if(RCC->CSR&RCC_CSR_IWDGRSTF) {			//Watchdog reset, turn off
-	//	RCC->CSR|=RCC_CSR_RMVF;			//Reset the reset flags
-	//	shutdown();
-	//}
 	DBGMCU_Config(DBGMCU_IWDG_STOP, ENABLE);	//Watchdog stopped during JTAG halt
+	if(RCC->CSR&RCC_CSR_IWDGRSTF) {			//Watchdog reset, turn off
+		RCC->CSR|=RCC_CSR_RMVF;			//Reset the reset flags
+		shutdown();
+	}
 	SysTick_Configuration();			//Start up system timer at 100Hz for uSD card functionality
 	Watchdog_Config(WATCHDOG_TIMEOUT);		//Set the watchdog
 	rtc_init();					//Real time clock initialise - (keeps time unchanged if set)
