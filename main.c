@@ -58,6 +58,7 @@ int main(void)
 	}
 	SysTick_Configuration();			//Start up system timer at 100Hz for uSD card functionality
 	Watchdog_Config(WATCHDOG_TIMEOUT);		//Set the watchdog
+	Watchdog_Reset();				//Reset watchdog as soon as possible incase it is still running at power on
 	rtc_init();					//Real time clock initialise - (keeps time unchanged if set)
 	Usarts_Init();
 	setup_pwm();					//Enable the PWM outputs on all three channels
@@ -68,9 +69,13 @@ int main(void)
 		Set_USBClock();
 		USB_Interrupts_Config();
 		USB_Init();
+		uint16_t nojack=0xFFFF;			//Countdown timer - a few ms of 0v on jack detect forces a shutdown
 		while (bDeviceState != CONFIGURED) {	//Wait for USB config - timeout causes shutdown
-			if(Millis>10000 || !GET_CHRG_STATE)//No USB cable - shutdown (Charger pin will be set to open drain, cant be disabled without usb)
+			if(Millis>10000 || !nojack)	//No USB cable - shutdown (Charger pin will be set to open drain, cant be disabled without usb)
 				shutdown();
+			if(GET_CHRG_STATE)		//Jack detect resets the countdown
+				nojack=0xFFFF;
+			nojack--;
 			Watchdog_Reset();		//Reset watchdog here, if we are stalled here the Millis timeout should catch us
 		}
 		USB_Configured_LED();
@@ -143,7 +148,7 @@ int main(void)
 	EXTI_ONOFF_EN();				//Enable the off interrupt - allow some time for debouncing
 	I2C_Config();					//Setup the I2C bus
 	Sensors=detect_sensors();			//Search for connected sensors
-	Pressure_control=Sensors&PRESSURE_HOSE;		//Enable active pressure control if a hose is connected
+	Pressure_control=Sensors&(1<<PRESSURE_HOSE);	//Enable active pressure control if a hose is connected
 	pressure_setpoint=0;				//Not applied pressure, should cause motor and solenoid to go to idle state
 	PPG_Automatic_Brightness_Control();		//Run the automatic brightness setting on power on
 	rtc_gettime(&RTC_time);				//Get the RTC time and put a timestamp on the start of the file
@@ -190,7 +195,7 @@ int main(void)
 		if(Millis%15000>4000)			//15 second cycle of pressure control - 11s dump, 4s pump to 3psi
 			pressure_setpoint=-1;
 		else
-			pressure_setpoint=3;
+			pressure_setpoint=3;		//3PSI setpoint
 		if(System_state_Global&0x80) {		//A "control" button press
 			System_state_Global&=~0x80;	//Wipe the flag bit to show this has been processed
 			PPG_Automatic_Brightness_Control();//At the moment this is the only function implimented
@@ -231,14 +236,13 @@ uint8_t detect_sensors(void) {
 	Pressure_control|=0x80;				//Set msb - indicates motor is free to run
 	Set_Motor((int16_t)(MAX_DUTY)/2);		//Set the motor to 50% max duty cycle
 	while(Millis<(millis+300)) {			//Wait 300ms
-		if(reported_pressure>PRESSURE_MARGIN) {	//We got some sane pressure increase
+		if(reported_pressure>(PRESSURE_MARGIN*2)) {//We got some sane pressure increase
 			sensors|=(1<<PRESSURE_HOSE);
 			init_buffer(&Pressures_Buffer,TMP102_BUFFER_SIZE);//reuse the TMP102 buffer size - as we want the same amount of buffering
-			Pressure_control=0;
 			break;				//Exit loop at this point
 		}
 	}
-	Pressure_control=0;
+	Pressure_control&=~0x80;			//Clear the Pressure_control msb so that motor is disabled in control off mode
 	Set_Motor((int16_t)0);				//Set the motor and solenoid off
 	//Detect if there is a temperature sensor connected
 	if(Completed_Jobs&(1<<TMP102_CONFIG))
