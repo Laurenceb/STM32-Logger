@@ -245,9 +245,12 @@ uint8_t detect_sensors(void) {
 	Pressure_control&=~0x80;			//Clear the Pressure_control msb so that motor is disabled in control off mode
 	Set_Motor((int16_t)0);				//Set the motor and solenoid off
 	//Detect if there is a temperature sensor connected
-	if(Completed_Jobs&(1<<TMP102_CONFIG))
+	if(Completed_Jobs&(1<<TMP102_CONFIG)) {
 		sensors|=(1<<TEMPERATURE_SENSOR);	//The I2C job completion means the sensor must be working
-	init_buffer(&Temperatures_Buffer,TMP102_BUFFER_SIZE);
+		init_buffer(&Temperatures_Buffer,TMP102_BUFFER_SIZE);
+	}
 	//Other sensors, e.g. Temperature sensor/sensors on the I2C bus go here
+	//At the moment we assume PPG is always present, TODO make this detectable
+	sensors|=(1<<PPG_SENSOR);
 	return sensors;
 }
