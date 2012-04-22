@@ -26,8 +26,7 @@ uint8_t print_string[256];				//For printf data
 UINT a;							//File bytes counter
 volatile buff_type Buff[PPG_CHANNELS];			//Shared with ISR
 volatile uint8_t Pressure_control;			//Enables the pressure control PI
-volatile float pressure_setpoint;			//Target differential pressure for the pump
-volatile float reported_pressure;			//Pressure as measured by the sensor
+volatile float Pressure_Setpoint;			//Target differential pressure for the pump
 volatile uint32_t Millis;				//System uptime (rollover after 50 days)
 volatile float Device_Temperature;			//Die temperature sensor converted to centigrade
 volatile uint8_t System_state_Global;			//Stores the system state, controlled by the button, most significant bit is a flag
@@ -149,7 +148,7 @@ int main(void)
 	I2C_Config();					//Setup the I2C bus
 	Sensors=detect_sensors();			//Search for connected sensors
 	Pressure_control=Sensors&(1<<PRESSURE_HOSE);	//Enable active pressure control if a hose is connected
-	pressure_setpoint=0;				//Not applied pressure, should cause motor and solenoid to go to idle state
+	Pressure_Setpoint=0;				//Not applied pressure, should cause motor and solenoid to go to idle state
 	PPG_Automatic_Brightness_Control();		//Run the automatic brightness setting on power on
 	rtc_gettime(&RTC_time);				//Get the RTC time and put a timestamp on the start of the file
 	printf("%d-%d-%dT%d:%d:%d\n",RTC_time.year,RTC_time.month,RTC_time.mday,RTC_time.hour,RTC_time.min,RTC_time.sec);//ISO 8601 timestamp header
@@ -165,15 +164,11 @@ int main(void)
 		Get_From_Buffer(&(ppg[1]),&(Buff[1]));	
 		printf("%3f,%lu,%lu",(float)(data_counter++)/PPG_SAMPLE_RATE,ppg[0],ppg[1]);//Print data after a time stamp (not Millis)
 		if(Sensors&(1<<PRESSURE_HOSE)) {	//Air hose connected
-			do {
-				Get_From_Buffer(&sensor_data,&Pressures_Buffer);
-			} while(bytes_in_buff(&Pressures_Buffer));//The aquisition will often be running faster than this loop, so dump the unused data
+			Get_From_Buffer(&sensor_data,&Pressures_Buffer);//This is syncronised with PPG data in PPG ISR using a global defined in the sensor header
 			printf(",%2f",sensor_data);	//print the retreived data
 		}
 		if(Sensors&(1<<TEMPERATURE_SENSOR)) {	//If there is a temperature sensor present
-			do {
-				Get_From_Buffer(&sensor_data,&Temperatures_Buffer);
-			} while(bytes_in_buff(&Temperatures_Buffer));//The aquisition will often be running faster than this loop, so dump the unused data
+			Get_From_Buffer(&sensor_data,&Temperatures_Buffer);
 			printf(",%2f",sensor_data);	//print the retreived data
 		}
 		//Other sensors etc can go here
@@ -193,9 +188,9 @@ int main(void)
 		else
 			switch_leds_off();
 		if(Millis%15000>4000)			//15 second cycle of pressure control - 11s dump, 4s pump to 3psi
-			pressure_setpoint=-1;
+			Pressure_Setpoint=-1;
 		else
-			pressure_setpoint=3;		//3PSI setpoint
+			Pressure_Setpoint=3;		//3PSI setpoint
 		if(System_state_Global&0x80) {		//A "control" button press
 			System_state_Global&=~0x80;	//Wipe the flag bit to show this has been processed
 			PPG_Automatic_Brightness_Control();//At the moment this is the only function implimented
@@ -236,7 +231,7 @@ uint8_t detect_sensors(void) {
 	Pressure_control|=0x80;				//Set msb - indicates motor is free to run
 	Set_Motor((int16_t)(MAX_DUTY)/2);		//Set the motor to 50% max duty cycle
 	while(Millis<(millis+300)) {			//Wait 300ms
-		if(reported_pressure>(PRESSURE_MARGIN*2)) {//We got some sane pressure increase
+		if(Reported_Pressure>(PRESSURE_MARGIN*2)) {//We got some sane pressure increase
 			sensors|=(1<<PRESSURE_HOSE);
 			init_buffer(&Pressures_Buffer,TMP102_BUFFER_SIZE);//reuse the TMP102 buffer size - as we want the same amount of buffering
 			break;				//Exit loop at this point

@@ -8,12 +8,9 @@
 
 //externs for all the globals
 extern volatile uint8_t Pressure_control;
-extern volatile float pressure_setpoint;
-extern volatile float reported_pressure;
+extern volatile float Pressure_Setpoint;
 
 extern volatile uint32_t Millis;
-
-extern volatile float Device_Temperature;
 
 extern volatile uint8_t System_state_Global;
 extern volatile uint8_t Sensors;

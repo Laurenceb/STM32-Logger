@@ -43,7 +43,7 @@ void PPG_LO_Filter(uint16_t* buff) {
 	Frequency_Bin[1][1]>>=11;Frequency_Bin[1][0]>>=11;//divide by 2048
 	Frequency_Bin[1][0]+=I;Frequency_Bin[1][1]+=Q;//I,Q is real,imaginary
 	//End of decimating filters
-	if(++bindex==12) {			//Decimation factor of 12 - 62.004Hz data output
+	if(++bindex==PPG_NO_SUBSAMPLES) {	//Decimation factor of 12 - 62.004Hz data output
 		Last_PPG_Values[0]=(uint32_t)sqrt(pow((int64_t)Frequency_Bin[0][0],2)+pow((int64_t)Frequency_Bin[0][1],2));
 		Last_PPG_Values[1]=(uint32_t)sqrt(pow((int64_t)Frequency_Bin[1][0],2)+pow((int64_t)Frequency_Bin[1][1],2));
 		Add_To_Buffer(Last_PPG_Values[0],&(Buff[0]));

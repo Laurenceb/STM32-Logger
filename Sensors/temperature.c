@@ -1,6 +1,8 @@
 #include "temperature.h"
 
 volatile uint16_t TMP102_Data_Buffer;
+volatile float Device_Temperature;
+volatile float TMP102_Reported_Temperature;
 
 float convert_die_temp(uint16_t adcval) {
 	return ((float)adcval*TEMPERATURE_GAIN)-TEMPERATURE_OFFSET;

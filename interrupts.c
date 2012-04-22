@@ -131,6 +131,7 @@ void EXTI0_IRQHandler(void) {
   * @retval None
   */
 void DMAChannel1_IRQHandler(void) {
+	static uint8_t decimation_counter;
 	if(DMA_GetITStatus(DMA1_IT_HT1)) {
 		DMA_ClearITPendingBit(DMA1_IT_GL1);		//clear all the interrupts
 		if(Sensors&(1<<PPG_SENSOR))			//PPG enabled
@@ -142,6 +143,15 @@ void DMAChannel1_IRQHandler(void) {
 			PPG_LO_Filter(&ADC1_Convertion_buff[ADC_BUFF_SIZE/4]);//Transfer complete, process upper half - indexed as 16bit words
 	}
 	DMA_ClearFlag(DMA1_FLAG_TC1|DMA1_FLAG_HT1);  		//make sure flags are clear
+	//Now we process other sensor data - we do this here so as to have all the sensors syncronised with the PPG data
+	if(++decimation_counter==PPG_NO_SUBSAMPLES) {		//Each time this is true we will have output some PPG samples
+		decimation_counter=0;				//Reset this here
+		//Now process each sensor
+		if(Sensors&(1<<PRESSURE_HOSE))			//Only pass data once hose is connected
+			Add_To_Buffer(*(uint32_t*)(&Reported_Pressure),&Pressures_Buffer);//Pass pressure data via buffer to avoid issues with lag
+		if(Sensors&(1<<TEMPERATURE_SENSOR))		//Only pass data is I2C temp sensor is connected
+			Add_To_Buffer(*(uint32_t*)(&TMP102_Reported_Temperature),&Temperatures_Buffer);//Pass pressure data via buffer to avoid issues with lag	
+	}
 }
 
 /**
@@ -190,16 +200,13 @@ void SysTickHandler(void)
 	Millis+=10;
 	if(ADC_GetFlagStatus(ADC2, ADC_FLAG_JEOC)) {		//We have adc2 converted data from the injected channels
 		ADC_ClearFlag(ADC2, ADC_FLAG_JEOC);		//Clear the flag
-		if(pressure_offset) {				//Only run the filter when we are sure the sensor is calibrated
-			reported_pressure=filterloop(conv_diff(ADC_GetInjectedConversionValue(ADC2, ADC_InjectedChannel_1)));//convert injected channel 1
-			if(Sensors&(1<<PRESSURE_HOSE))		//Only pass data once hose is connected
-				Add_To_Buffer(*(uint32_t*)(&reported_pressure),&Pressures_Buffer);//Pass pressure data via buffer to avoid issues with lag
-		}
+		if(Pressure_Offset)				//Only run the filter when we are sure the sensor is calibrated
+			Reported_Pressure=filterloop(conv_diff(ADC_GetInjectedConversionValue(ADC2, ADC_InjectedChannel_1)));//convert injected channel 1
 		//Now handle the pressure controller
 		if(Pressure_control&0x7F) {//If active pressure control is enabled
 			//run a PI controller on the air pump motor
-			if(pressure_setpoint>0) {		//A negative setpoint forces a dump of air
-				float error=pressure_setpoint-reported_pressure;//pressure_setpoint is a global containing the target diff press
+			if(Pressure_Setpoint>0) {		//A negative setpoint forces a dump of air
+				float error=Pressure_Setpoint-Reported_Pressure;//pressure_setpoint is a global containing the target diff press
 				if(Enabled_iterations++>I_HOLDOFF) {
 					I+=error*PRESSURE_I_CONST;//Constants defined in main.h
 					if(I>PRESSURE_I_LIM)	//Enforce limits
@@ -207,13 +214,13 @@ void SysTickHandler(void)
 					if(I<-PRESSURE_I_LIM)
 						I=-PRESSURE_I_LIM;
 				}
-				int16_t a=PRESSURE_P_CONST*error+I+PRESSURE_D_CONST*(reported_pressure-old_pressure);
+				int16_t a=PRESSURE_P_CONST*error+I+PRESSURE_D_CONST*(Reported_Pressure-old_pressure);
 				if(a>0)				//Make sure we are actually turning the motor on
 					Set_Motor((int16_t)a);	//Set the motor gpio dir & pwm duty
 			}
 			else {
 				Enabled_iterations=0;		//Make sure this is reset
-				if(abs(reported_pressure)>PRESSURE_MARGIN)
+				if(abs(Reported_Pressure)>PRESSURE_MARGIN)
 					Set_Motor(-1);		//Set a dump to rapidly drop to zero pressure
 				else
 					Set_Motor(0);
@@ -224,13 +231,12 @@ void SysTickHandler(void)
 		//Check the die temperature - not possible on adc1 :-(
 		//Device_Temperature=convert_die_temp(ADC_GetInjectedConversionValue(ADC2, ADC_InjectedChannel_3));//The on die temperature sensor
 		//Could process some more sensor data here
-		old_pressure=reported_pressure;			//Set the old pressure record here for use in the D term
+		old_pressure=Reported_Pressure;			//Set the old pressure record here for use in the D term
 	}
 	ADC_SoftwareStartInjectedConvCmd(ADC2, ENABLE);		//Trigger the injected channel group
 	//Read any I2C bus sensors here (100Hz)
 	if(Sensors&(1<<TEMPERATURE_SENSOR)) {
-		float tmp=GET_TMP_TEMPERATURE;
-		Add_To_Buffer(*(uint32_t*)(&tmp),&Temperatures_Buffer);//Add data to the ring buffer
+		TMP102_Reported_Temperature=GET_TMP_TEMPERATURE;
 		if(!tmpindex--) {				//Every 30ms
 			tmpindex=3;
 			I2C1_Request_Job(TMP102_READ);		//Request a TMP102 read if there is one present

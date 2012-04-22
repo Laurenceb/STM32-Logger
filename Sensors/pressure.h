@@ -1,7 +1,8 @@
 #pragma once
 #include "stm32f10x.h"
 
-extern volatile float pressure_offset;
+extern volatile float Pressure_Offset;
+extern volatile float Reported_Pressure;			//Pressure as measured by the sensor
 
 void calibrate_sensor(void);
 float conv_adc_diff(void);

@@ -3,7 +3,8 @@
 
 #define DIFF_GAIN 1.0/(float)113.23		/*pressure sensor 23mv/10v at 5psi, +60.1x inst amp gain, +12bit adc*/
 
-volatile float pressure_offset;			//zero offset - calibrated at power on
+volatile float Pressure_Offset;			//zero offset - calibrated at power on
+volatile float Reported_Pressure;		//Pressure as measured by the sensor
 
 /**
   * @brief  This function calibrates the adc offset on the pressure sensor
@@ -17,7 +18,7 @@ void calibrate_sensor(void) {
 		pressoff+=readADC2(1);
 		for(l=10000;l;l--);		//~1ms between samples
 	}
-	pressure_offset=(float)pressoff/(float)255.0;
+	Pressure_Offset=(float)pressoff/(float)255.0;
 }
 
 /**
@@ -27,7 +28,7 @@ void calibrate_sensor(void) {
   */
 float conv_adc_diff(void) {
 	uint16_t p=readADC2(1);
-	return 	(DIFF_GAIN)*((float)p-pressure_offset);
+	return 	(DIFF_GAIN)*((float)p-Pressure_Offset);
 }
 
 /**
@@ -36,7 +37,7 @@ float conv_adc_diff(void) {
   * @retval Pressure in PSI
   */
 float conv_diff(uint16_t diff) {
-	return 	(DIFF_GAIN)*((float)diff-pressure_offset);
+	return 	(DIFF_GAIN)*((float)diff-Pressure_Offset);
 }
 
 
