@@ -12,6 +12,8 @@
 
 #define PPG_SAMPLE_RATE (float)62.004    /* 72000000/6/(12.5+239.5)/64/12  */
 
+#define 18_STEP_SIN {0,5,10,13,15,15,13,10,5,0,-5,-10,-13,-15,-15,-13,-10,-5}
+
 extern volatile uint32_t Last_PPG_Values[3];//Last values from the PPG decoders, useful for brightness control
 
 void PPG_LO_Filter(uint16_t* buff);
