@@ -16,29 +16,28 @@ volatile uint32_t Last_PPG_Values[3];
   * @brief  Run the baseband LO on the quadrature samples, then integrate and dump the baseband into indivdual LED bins
   * @param  Pointer to the output data buffer
   * @retval None
-  * This will be called at 13.393KHz
+  * This will be called at 744.048Hz
   */
-volatile uint8_t a_;
-
 void PPG_LO_Filter(uint16_t* buff) {
-	static uint16_t record[768];
-	int32_t I=0,Q=0,a;			//I and Q integration bins, general purpose variable
 	static uint8_t bindex;			//Baseband decimation index
 	static int32_t Frequency_Bin[2][2];	//Only two frequencies in use atm - consisting of and I and Q component
-	static uint32_t Fudgemask,store;
+	static uint32_t Fudgemask;
+	static const int8_t sinusoid[72]=STEP_SIN,cosinusoid[72]=STEP_COS;//Lookup tables
+	int32_t I=0,Q=0,a;			//I and Q integration bins, general purpose variables
 	Tryfudge(&Fudgemask);			//Try to correct timer phase here
 	for(uint16_t n=0;n<ADC_BUFF_SIZE/4;) {	//buffer size/4 must be a multiple of 4
-		I+=buff[n]*sinusoid[n%18];
-		Q+=buff[n++]*sinusoid[(n+5)%18];//Should be 4.5 - so we have a 10 degree offset
+		for(uint8_t m=0;m<72;m++) {	//Loop through the 72 sample lookup
+			I+=buff[n]*sinusoid[m];
+			Q+=buff[n++]*cosinusoid[m];
+		}
 	}
-	memcpy(&record[(uint16_t)bindex*64],buff,128);//for debugging raw data - quick hack
 	//Now run the "baseband" decimating filter(s)
 	//No positive frequencies at the moment - they would go here TODO
 	Frequency_Bin[0][0]+=I;Frequency_Bin[0][1]+=Q;//Add the I and Q directly into the zero frequency bin
-	//Negative frequencie(s) go here, need to get to 0hz, so multiply by a +ive complex exponential
-	a=Frequency_Bin[1][0];Frequency_Bin[1][0]=Frequency_Bin[1][0]*1774-Frequency_Bin[1][1]*1024;//Rotate the phasor in the bin - real here
-	Frequency_Bin[1][1]=Frequency_Bin[1][1]*1773+a*1024;//complex here
-	Frequency_Bin[1][1]>>=11;Frequency_Bin[1][0]>>=11;//divide by 2048
+	//Negative frequencie(s) go here, need to get to 0hz, so multiply bin by a +ive complex exponential
+	a=Frequency_Bin[1][0];Frequency_Bin[1][0]=Frequency_Bin[1][0]*7-Frequency_Bin[1][1]*4;//Rotate the phasor in the bin - real here (~30degree rotation)
+	Frequency_Bin[1][1]=Frequency_Bin[1][1]*7+a*4;//complex here
+	Frequency_Bin[1][1]>>=3;Frequency_Bin[1][0]>>=3;//divide by 8
 	Frequency_Bin[1][0]+=I;Frequency_Bin[1][1]+=Q;//I,Q is real,imaginary
 	//End of decimating filters
 	if(++bindex==PPG_NO_SUBSAMPLES) {	//Decimation factor of 12 - 62.004Hz data output
@@ -50,10 +49,6 @@ void PPG_LO_Filter(uint16_t* buff) {
 		memset(Frequency_Bin,0,sizeof(Frequency_Bin));//Zero everything
 		bindex=0;			//Reset this
 		Fudgemask|=1;			//Sets a TIM3 fudge as requested
-		if((Last_PPG_Values[1]+10000)<store) {
-			a_=1;
-		}
-		store=Last_PPG_Values[1];
 	}
 }
 

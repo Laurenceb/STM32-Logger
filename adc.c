@@ -102,7 +102,7 @@ void ADC_Configuration(void)
   ADC_Init(ADC1, &ADC_InitStructure);
 
   /* ADC1 regular channel configuration */ 
-  ADC_RegularChannelConfig(ADC1, CRT_PPG_ADC_CHAN, 1, ADC_SampleTime_239Cycles5);
+  ADC_RegularChannelConfig(ADC1, CRT_PPG_ADC_CHAN, 1, ADC_SampleTime_1Cycles5);/*239Cycles5);*/
 
   /* Enable ADC1 DMA */
   ADC_DMACmd(ADC1, ENABLE);
