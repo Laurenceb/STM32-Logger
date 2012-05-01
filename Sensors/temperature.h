@@ -18,4 +18,4 @@ extern volatile uint16_t TMP102_Data_Buffer;
 extern volatile float TMP102_Reported_Temperature;//Global used to pass compensated data
 #define GET_TMP_TEMPERATURE convert_tmp102_temp(TMP102_Data_Buffer)
 
-#define TMP102_BUFFER_SIZE 256		/*enough for 64 samples or 640ms*/
+#define TMP102_BUFFER_SIZE 128		/*enough for 128 samples or 1280ms*/

@@ -43,7 +43,6 @@ FILINFO FATFS_info;
 
 int main(void)
 {
-	uint8_t a=0;
 	uint32_t ppg[2];				//two PPG channels
 	uint32_t data_counter=0;			//used as data timestamp
 	float sensor_data;				//used for handling data passed back from sensors
@@ -90,8 +89,6 @@ int main(void)
 	else {
 		if(!GET_PWR_STATE)			//Check here to make sure the power button is still pressed, if not, sleep
 			shutdown();			//This means a glitch on the supply line, or a power glitch results in sleep
-		a=Set_System();				//This actually just inits the storage layer - returns 0 for success
-		//a|=init_function();			//Other init functions
 		if((f_err_code = f_mount(0, &FATFS_Obj)))Usart_Send_Str((char*)"FatFs mount error\r\n");//This should only error if internal error
 		else {					//FATFS initialised ok, try init the card, this also sets up the SPI1
 			if(!f_open(&FATFS_logfile,"time.txt",FA_OPEN_EXISTING | FA_READ | FA_WRITE)) {//Try and open a time file to get the system time
@@ -132,8 +129,7 @@ int main(void)
 					file_opened=1;	//So we know to close the file properly on shutdown
 			}
 		}
-		a|=f_err_code;
-		if(a) {					//There was an init error
+		if(f_err_code) {			//There was an init error
 			RED_LED_ON;
 			Delay(400000);
 			shutdown();			//Abort after a single red flash
@@ -150,7 +146,7 @@ int main(void)
 	Pressure_control=Sensors&(1<<PRESSURE_HOSE);	//Enable active pressure control if a hose is connected
 	Pressure_Setpoint=0;				//Not applied pressure, should cause motor and solenoid to go to idle state
 	while(!bytes_in_buff(&(Buff[0])));		//Wait for some PPG data for the auto brightness to work with
-	PPG_Automatic_Brightness_Control();		//Run the automatic brightness setting on power on
+	//PPG_Automatic_Brightness_Control();		//Run the automatic brightness setting on power on
 	rtc_gettime(&RTC_time);				//Get the RTC time and put a timestamp on the start of the file
 	printf("%d-%d-%dT%d:%d:%d\n",RTC_time.year,RTC_time.month,RTC_time.mday,RTC_time.hour,RTC_time.min,RTC_time.sec);//ISO 8601 timestamp header
 	if(file_opened) {

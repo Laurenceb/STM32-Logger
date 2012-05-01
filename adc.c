@@ -2,7 +2,7 @@
 #include "adc.h"
 #include "interrupts.h"
 
-uint16_t * ADC1_Convertion_buff;	//malloc this to a different size depending on free ram - before adc init
+volatile uint16_t * ADC1_Convertion_buff;	//malloc this to a different size depending on free ram - before adc init
 
 void ADC_Configuration(void)
 {

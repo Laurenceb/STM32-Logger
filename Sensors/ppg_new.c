@@ -18,7 +18,7 @@ volatile uint32_t Last_PPG_Values[3];
   * @retval None
   * This will be called at 744.048Hz
   */
-void PPG_LO_Filter(uint16_t* buff) {
+void PPG_LO_Filter(volatile uint16_t* buff) {
 	static uint8_t bindex;			//Baseband decimation index
 	static int32_t Frequency_Bin[2][2];	//Only two frequencies in use atm - consisting of and I and Q component
 	static uint32_t Fudgemask;
@@ -26,9 +26,9 @@ void PPG_LO_Filter(uint16_t* buff) {
 	int32_t I=0,Q=0,a;			//I and Q integration bins, general purpose variables
 	Tryfudge(&Fudgemask);			//Try to correct timer phase here
 	for(uint16_t n=0;n<ADC_BUFF_SIZE/4;) {	//buffer size/4 must be a multiple of 4
-		for(uint8_t m=0;m<72;m++) {	//Loop through the 72 sample lookup
-			I+=buff[n]*sinusoid[m];
-			Q+=buff[n++]*cosinusoid[m];
+		for(uint8_t m=0;m<72;m++,n++) {	//Loop through the 72 sample lookup
+			I+=(int16_t)buff[n]*(int16_t)sinusoid[m];
+			Q+=(int16_t)buff[n]*(int16_t)cosinusoid[m];
 		}
 	}
 	//Now run the "baseband" decimating filter(s)
@@ -41,8 +41,10 @@ void PPG_LO_Filter(uint16_t* buff) {
 	Frequency_Bin[1][0]+=I;Frequency_Bin[1][1]+=Q;//I,Q is real,imaginary
 	//End of decimating filters
 	if(++bindex==PPG_NO_SUBSAMPLES) {	//Decimation factor of 12 - 62.004Hz data output
-		Last_PPG_Values[0]=(uint32_t)sqrt(pow((int64_t)Frequency_Bin[0][0],2)+pow((int64_t)Frequency_Bin[0][1],2));
-		Last_PPG_Values[1]=(uint32_t)sqrt(pow((int64_t)Frequency_Bin[1][0],2)+pow((int64_t)Frequency_Bin[1][1],2));
+		//Last_PPG_Values[0]=(uint32_t)sqrt(((int64_t)Frequency_Bin[0][0]*(int64_t)Frequency_Bin[0][0])+pow((int64_t)Frequency_Bin[0][1],2));
+		//Last_PPG_Values[1]=(uint32_t)sqrt(pow((int64_t)Frequency_Bin[1][0],2)+pow((int64_t)Frequency_Bin[1][1],2));
+		Last_PPG_Values[0]=Frequency_Bin[0][0];
+		Last_PPG_Values[1]=Frequency_Bin[0][1];
 		Add_To_Buffer(Last_PPG_Values[0],&(Buff[0]));
 		Add_To_Buffer(Last_PPG_Values[1],&(Buff[1]));
 		//Other frequencies corresponding to different LEDs could go here - use the array of buffers?
