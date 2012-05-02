@@ -19,7 +19,7 @@
 #define STEP_COS {15,15,15,14,14,14,13,12,11,11,10,9,7,6,5,4,3,1,0,-1,-3,-4,-5,-6,-7,-9,-10,-11,-11,-12,\
 -13,-14,-14,-14,-15,-15,-15,-15,-15,-14,-14,-14,-13,-12,-11,-11,-10,-9,-8,-6,-5,-4,-3,-1,0,1,3,4,5,6,7,9,10,11,11,12,13,14,14,14,15,15}
 
-extern volatile uint32_t Last_PPG_Values[3];//Last values from the PPG decoders, useful for brightness control
+extern volatile float Last_PPG_Values[3];//Last values from the PPG decoders, useful for brightness control
 
 void PPG_LO_Filter(volatile uint16_t* buff);
 uint16_t PPG_correct_brightness(uint32_t Decimated_value, uint16_t PWM_value);

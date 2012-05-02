@@ -7,7 +7,7 @@
 #include "../main.h"
 #include "../timer.h"
 
-volatile uint32_t Last_PPG_Values[3];
+volatile float Last_PPG_Values[3];
 
 //This should really be done with macros, but 64(decimate)*21(decimate)*14(adc clks)*6(adc clkdiv)=112896
 // == 336*336 - so one change in the pwm reload value will give an orthogonal frequency to the baseband decimator 
@@ -41,12 +41,10 @@ void PPG_LO_Filter(volatile uint16_t* buff) {
 	Frequency_Bin[1][0]+=I;Frequency_Bin[1][1]+=Q;//I,Q is real,imaginary
 	//End of decimating filters
 	if(++bindex==PPG_NO_SUBSAMPLES) {	//Decimation factor of 12 - 62.004Hz data output
-		//Last_PPG_Values[0]=(uint32_t)sqrt(((int64_t)Frequency_Bin[0][0]*(int64_t)Frequency_Bin[0][0])+pow((int64_t)Frequency_Bin[0][1],2));
-		//Last_PPG_Values[1]=(uint32_t)sqrt(pow((int64_t)Frequency_Bin[1][0],2)+pow((int64_t)Frequency_Bin[1][1],2));
-		Last_PPG_Values[0]=Frequency_Bin[0][0];
-		Last_PPG_Values[1]=Frequency_Bin[0][1];
-		Add_To_Buffer(Last_PPG_Values[0],&(Buff[0]));
-		Add_To_Buffer(Last_PPG_Values[1],&(Buff[1]));
+		Last_PPG_Values[0]=sqrtf(((float)Frequency_Bin[0][0]*(float)Frequency_Bin[0][0])+((float)Frequency_Bin[0][1]*(float)Frequency_Bin[0][1]));
+		Last_PPG_Values[1]=sqrtf(((float)Frequency_Bin[1][0]*(float)Frequency_Bin[1][0])+((float)Frequency_Bin[1][1]*(float)Frequency_Bin[1][1]));
+		Add_To_Buffer((uint32_t)Last_PPG_Values[0],&(Buff[0]));
+		Add_To_Buffer((uint32_t)Last_PPG_Values[1],&(Buff[1]));
 		//Other frequencies corresponding to different LEDs could go here - use the array of buffers?
 		memset(Frequency_Bin,0,sizeof(Frequency_Bin));//Zero everything
 		bindex=0;			//Reset this

@@ -69,6 +69,7 @@ SECTIONS
     KEEP(*(.init))
 
     . = ALIGN(4);
+    _sidata = .;
     __preinit_array_start = .;
     KEEP (*(.preinit_array))
     __preinit_array_end = .;
@@ -128,6 +129,7 @@ SECTIONS
   .data :
   {
     __cs3_region_start_ram = .;
+    _sdata = .;
     *(.cs3.region-head.ram)
     KEEP(*(.jcr))
     *(.got.plt) *(.got)
@@ -139,18 +141,19 @@ SECTIONS
   } >ram AT>rom
   .bss :
   {
+    _sbss = .;
     *(.shbss)
     *(.bss .bss.* .gnu.linkonce.b.*)
     *(COMMON)
     *(.ram.b)
     . = ALIGN (8);
-    _end = .;
-    __end = .;
+    _ebss = .;
   } >ram
   .noinit :
   {
     *(.noinit)
     . = ALIGN (8);
+    _end = .;
   } >ram
   /* __cs3_region_end_ram is deprecated */
   __cs3_region_end_ram = __cs3_region_start_ram + LENGTH(ram);
