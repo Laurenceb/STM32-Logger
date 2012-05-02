@@ -27,8 +27,8 @@ void PPG_LO_Filter(volatile uint16_t* buff) {
 	Tryfudge(&Fudgemask);			//Try to correct timer phase here
 	for(uint16_t n=0;n<ADC_BUFF_SIZE/4;) {	//buffer size/4 must be a multiple of 4
 		for(uint8_t m=0;m<72;m++,n++) {	//Loop through the 72 sample lookup
-			I+=(int16_t)buff[n]*(int16_t)sinusoid[m];
-			Q+=(int16_t)buff[n]*(int16_t)cosinusoid[m];
+			I+=(int16_t)buff[n]*(int16_t)cosinusoid[m];
+			Q+=(int16_t)buff[n]*(int16_t)sinusoid[m];
 		}
 	}
 	//Now run the "baseband" decimating filter(s)
