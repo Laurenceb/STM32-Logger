@@ -43,8 +43,8 @@ void PPG_LO_Filter(volatile uint16_t* buff) {
 	if(++bindex==PPG_NO_SUBSAMPLES) {	//Decimation factor of 12 - 62.004Hz data output
 		Last_PPG_Values[0]=sqrtf(((float)Frequency_Bin[0][0]*(float)Frequency_Bin[0][0])+((float)Frequency_Bin[0][1]*(float)Frequency_Bin[0][1]));
 		Last_PPG_Values[1]=sqrtf(((float)Frequency_Bin[1][0]*(float)Frequency_Bin[1][0])+((float)Frequency_Bin[1][1]*(float)Frequency_Bin[1][1]));
-		Add_To_Buffer((uint32_t)Last_PPG_Values[0],&(Buff[0]));
-		Add_To_Buffer((uint32_t)Last_PPG_Values[1],&(Buff[1]));
+		Add_To_Buffer(((uint32_t)Last_PPG_Values[0])>>8,&(Buff[0]));//There will always be at least 8 bits on noise, so shift out the mess
+		Add_To_Buffer(((uint32_t)Last_PPG_Values[1])>>8,&(Buff[1]));
 		//Other frequencies corresponding to different LEDs could go here - use the array of buffers?
 		memset(Frequency_Bin,0,sizeof(Frequency_Bin));//Zero everything
 		bindex=0;			//Reset this
@@ -69,7 +69,7 @@ void PPG_Automatic_Brightness_Control(void) {
 				pwm=Get_PWM_1();
 			else if(channel==2)
 				pwm=Get_PWM_2();//Retreives the set pwm for this channel
-			vals[channel]=PPG_correct_brightness(Last_PPG_Values[channel], pwm);
+			vals[channel]=PPG_correct_brightness((uint32_t)Last_PPG_Values[channel], pwm);
 		}
 		//Apply the pwm duty correction here
 		Set_PWM_2(vals[2]);

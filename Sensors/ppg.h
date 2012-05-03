@@ -5,7 +5,7 @@
 
 #define PPG_NO_SUBSAMPLES 12
 //#define TARGET_ADC 1376256/(3*PPG_CHANNELS)/*Target 67% of ADC range used by the pwm led signal*/
-#define TARGET_ADC 269746176*2/(3*PPG_CHANNELS)/*Target 67% of ADC range used by the pwm led signal*/
+#define TARGET_ADC 269746176UL*2/(3*PPG_CHANNELS)/*Target 67% of ADC range used by the pwm led signal*/
 
 #define PPG_BUFFER_SIZE 128
 #define ADC_BUFFER_SIZE 4608

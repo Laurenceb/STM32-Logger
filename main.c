@@ -59,7 +59,6 @@ int main(void)
 	Watchdog_Reset();				//Reset watchdog as soon as possible incase it is still running at power on
 	rtc_init();					//Real time clock initialise - (keeps time unchanged if set)
 	Usarts_Init();
-	setup_pwm();					//Enable the PWM outputs on all three channels
 	ISR_Config();
 	rprintfInit(__usart_send_char);			//Printf over the bluetooth
 	if(USB_SOURCE==bootsource) {
@@ -137,6 +136,7 @@ int main(void)
 		init_buffer(&(Buff[0]),PPG_BUFFER_SIZE);//Enough for ~0.25S of data
 		init_buffer(&(Buff[1]),PPG_BUFFER_SIZE);
 	}
+	setup_pwm();					//Enable the PWM outputs on all three channels
 	Delay(100000);					//Sensor+inst amplifier takes about 100ms to stabilise after power on
 	ADC_Configuration();				//We leave this a bit later to allow stabilisation
 	calibrate_sensor();				//Calibrate the offset on the diff pressure sensor
@@ -146,7 +146,7 @@ int main(void)
 	Pressure_control=Sensors&(1<<PRESSURE_HOSE);	//Enable active pressure control if a hose is connected
 	Pressure_Setpoint=0;				//Not applied pressure, should cause motor and solenoid to go to idle state
 	while(!bytes_in_buff(&(Buff[0])));		//Wait for some PPG data for the auto brightness to work with
-	//PPG_Automatic_Brightness_Control();		//Run the automatic brightness setting on power on
+	PPG_Automatic_Brightness_Control();		//Run the automatic brightness setting on power on
 	rtc_gettime(&RTC_time);				//Get the RTC time and put a timestamp on the start of the file
 	printf("%d-%d-%dT%d:%d:%d\n",RTC_time.year,RTC_time.month,RTC_time.mday,RTC_time.hour,RTC_time.min,RTC_time.sec);//ISO 8601 timestamp header
 	if(file_opened) {
