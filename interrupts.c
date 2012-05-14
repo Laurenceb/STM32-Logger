@@ -240,6 +240,7 @@ void SysTickHandler(void)
 		if(!tmpindex--) {				//Every 30ms
 			tmpindex=3;
 			I2C1_Request_Job(TMP102_READ);		//Request a TMP102 read if there is one present
+			I2C1_Request_Job(TMP102_CONFIG);	//Need to do this to set one shot bit is set high again to start a new single convertion
 		}
 	}
 	//Now process the control button functions
