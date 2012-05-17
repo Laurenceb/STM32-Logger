@@ -131,7 +131,8 @@ void I2C1_EV_IRQHandler(void) {
 		//End of completion tasks
 		Jobs&=~(0x00000001<<job);//tick off current job as complete
 		Completed_Jobs|=(0x00000001<<job);//These can be polled by other tasks to see if a job has been completed or is scheduled 
-		subaddress_sent=0;	//reset this here
+		subaddress_sent=0;	//reset these here
+		job=0;
 		I2C1->CR1&=~0x0800;	//reset the POS bit so NACK applied to the current byte
 		if(Jobs && final_stop) {//there are still jobs left
 			while(I2C1->CR1&0x0200){;}//doesnt seem to be a better way to do this, must wait for stop to clear
