@@ -23,7 +23,7 @@ void I2C1_EV_IRQHandler(void) {
 	static int8_t index;		//index is signed -1==send the subaddress
 	uint8_t SReg_1=I2C1->SR1;	//read the status register here
 	if(!((Jobs>>job)&0x00000001)) {	//if the current job bit is not set
-		for(job=0;!((Jobs>>job)&0x00000001) && job<I2C_NUMBER_JOBS;job++);//find the first uncompleted job, starting at current job zero
+		for(job=0;!((Jobs>>job)&0x00000001) && job<(I2C_NUMBER_JOBS-1);job++);//find the first uncompleted job, starting at current job zero
 		subaddress_sent=0;
 	}
 	if(SReg_1&0x0001) {//we just sent a start - EV5 in ref manual
@@ -60,7 +60,7 @@ void I2C1_EV_IRQHandler(void) {
 				I2C_AcknowledgeConfig(I2C1, DISABLE);//turn off ACK
 				I2C_ITConfig(I2C1, I2C_IT_BUF, DISABLE);//disable TXE to allow the buffer to fill
 			}
-			if(3==I2C_jobs[job].bytes && I2C_Direction_Receiver==I2C_jobs[job].direction && subaddress_sent)//rx 3 bytes
+			else if(3==I2C_jobs[job].bytes && I2C_Direction_Receiver==I2C_jobs[job].direction && subaddress_sent)//rx 3 bytes
 				I2C_ITConfig(I2C1, I2C_IT_BUF, DISABLE);//make sure RXNE disabled so we get a BTF in two bytes time
 			else //receiving greater than three bytes, sending subaddress, or transmitting
 				I2C_ITConfig(I2C1, I2C_IT_BUF, ENABLE);
@@ -134,6 +134,7 @@ void I2C1_EV_IRQHandler(void) {
 		subaddress_sent=0;	//reset these here
 		job=0;
 		I2C1->CR1&=~0x0800;	//reset the POS bit so NACK applied to the current byte
+		I2C_ITConfig(I2C1, I2C_IT_BUF, DISABLE);//make sure the TXNE/RXE is disabled to start off with
 		if(Jobs && final_stop) {//there are still jobs left
 			while(I2C1->CR1&0x0200){;}//doesnt seem to be a better way to do this, must wait for stop to clear
 			I2C_GenerateSTART(I2C1,ENABLE);//program the Start to kick start the new transfer

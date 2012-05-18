@@ -239,9 +239,10 @@ void SysTickHandler(void)
 		TMP102_Reported_Temperature=GET_TMP_TEMPERATURE;
 		if(!tmpindex--) {				//Every 30ms
 			tmpindex=3;
+			Jobs|=1<<TMP102_CONFIG;
 			I2C1_Request_Job(TMP102_READ);		//Request a TMP102 read if there is one present
 			//I2C1_Request_Job(TMP102_CONFIG);	//Need to do this to set one shot bit is set high again to start a new single convertion
-			Jobs|=1<<TMP102_CONFIG;			//Some sort of i2c error here
+			//Some sort of i2c error here
 		}
 	}
 	//Now process the control button functions
