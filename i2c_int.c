@@ -21,10 +21,13 @@ volatile I2C_Job_Type I2C_jobs[]=I2C_JOBS_INITIALISER;//sets up the const jobs
 void I2C1_EV_IRQHandler(void) {
 	static uint8_t subaddress_sent,final_stop;//flag to indicate if subaddess sent, flag to indicate final bus condition
 	static int8_t index;		//index is signed -1==send the subaddress
+	volatile uint32_t debugme;
 	uint8_t SReg_1=I2C1->SR1;	//read the status register here
 	if(!((Jobs>>job)&0x00000001)) {	//if the current job bit is not set
 		for(job=0;!((Jobs>>job)&0x00000001) && job<(I2C_NUMBER_JOBS-1);job++);//find the first uncompleted job, starting at current job zero
 		subaddress_sent=0;
+		if(!Jobs)
+			I2C_GenerateSTOP(I2C1,ENABLE);//program a stop to get out of here
 	}
 	if(SReg_1&0x0001) {//we just sent a start - EV5 in ref manual
 		I2C_AcknowledgeConfig(I2C1, ENABLE);//make sure ACK is on
@@ -76,7 +79,7 @@ void I2C1_EV_IRQHandler(void) {
 				I2C_AcknowledgeConfig(I2C1, DISABLE);//turn off ACK
 				I2C_jobs[job].data_pointer[index++]=I2C_ReceiveData(I2C1);//read data N-2
 				I2C_GenerateSTOP(I2C1,ENABLE);//program the Stop
-				final_stop=1;//reuired to fix hardware
+				final_stop=1;//required to fix hardware
 				I2C_jobs[job].data_pointer[index++]=I2C_ReceiveData(I2C1);//read data N-1
 				I2C_ITConfig(I2C1, I2C_IT_BUF, ENABLE);//enable TXE to allow the final EV7
 			}
@@ -195,7 +198,7 @@ void I2C1_ER_IRQHandler(void) {
 void I2C1_Request_Job(uint8_t job_) {
 	if(job_<32) {			//sanity check
 		Jobs|=1<<job_;		//set the job bit, do it here and use interrupt flag to detect bus inactive in case of I2C interrupting here
-		if(!(I2C1->CR2&I2C_IT_EVT)) {//if we are restarting the driver
+		if(!((I2C1->CR2)&(I2C_IT_EVT))) {//if we are restarting the driver
 			if(!(I2C1->CR1&0x0100)) {// ensure sending a start
 				while(I2C1->CR1&0x0200){;}//wait for any stop to finish sending
 				I2C_GenerateSTART(I2C1,ENABLE);//send the start for the new job

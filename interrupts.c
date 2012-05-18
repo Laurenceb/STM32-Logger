@@ -29,13 +29,13 @@ void ISR_Config(void) {
 	NVIC_Init(&NVIC_InitStructure);
 	//Now we configure the I2C Event ISR
 	NVIC_InitStructure.NVIC_IRQChannel = I2C1_EV_IRQn;	//The I2C1 triggered interrupt	
-	//NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x01;//Low Pre-emption priority
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x00;//High Pre-emption priority
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x01;	//Second to highest group priority
 	//NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
 	//Now we configure the I2C Error ISR
 	NVIC_InitStructure.NVIC_IRQChannel = I2C1_ER_IRQn;	//The I2C1 triggered interrupt	
-	//NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x01;//Low Pre-emption priority
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x00;//High Pre-emption priority
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x00;	//Highest group priority
 	//NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
@@ -239,9 +239,9 @@ void SysTickHandler(void)
 		TMP102_Reported_Temperature=GET_TMP_TEMPERATURE;
 		if(!tmpindex--) {				//Every 30ms
 			tmpindex=3;
-			Jobs|=1<<TMP102_CONFIG;
+			//Jobs|=1<<TMP102_CONFIG;
 			I2C1_Request_Job(TMP102_READ);		//Request a TMP102 read if there is one present
-			//I2C1_Request_Job(TMP102_CONFIG);	//Need to do this to set one shot bit is set high again to start a new single convertion
+			I2C1_Request_Job(TMP102_CONFIG);	//Need to do this to set one shot bit is set high again to start a new single convertion
 			//Some sort of i2c error here
 		}
 	}

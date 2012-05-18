@@ -30,7 +30,7 @@ extern volatile I2C_Error_Type I2C1error;	//used to store error state
 //Number of jobs
 #define I2C_NUMBER_JOBS 2
 //Setup for the core sensors - other sensors have setup in their respective header files - look in /sensors 
-#define TMP102_SETUP {0xF0,0xF0} /*configure the TMP102 sensor for one shot, 13bit output mode*/
+#define TMP102_SETUP {0xE1,0x30} /*configure the TMP102 sensor for one shot, 13bit output mode*/
 //Jobs structure initialiser 
 #define I2C_JOBS_INITIALISER {\
 {TMP102_ADDR,I2C_Direction_Receiver,2,TMP102_DATA,NULL}, /*Read the TMP102 temperature*/\
