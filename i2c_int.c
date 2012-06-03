@@ -34,9 +34,9 @@ void I2C1_EV_IRQHandler(void) {
 		index=0;		//reset the index
 		if(I2C_Direction_Receiver==I2C_jobs[job].direction && (subaddress_sent || 0xFF==I2C_jobs[job].subaddress)) {//we have sent the subaddr
 			subaddress_sent=1;//make sure this is set in case of no subaddress, so following code runs correctly
-			I2C_Send7bitAddress(I2C1,I2C_jobs[job].address,I2C_Direction_Receiver);//send the address and set hardware mode
 			if(2==I2C_jobs[job].bytes)
 				I2C1->CR1|=0x0800;//set the POS bit so NACK applied to the final byte in the two byte read
+			I2C_Send7bitAddress(I2C1,I2C_jobs[job].address,I2C_Direction_Receiver);//send the address and set hardware mode
 		}
 		else {			//direction is Tx, or we havent sent the sub and rep start
 			I2C_Send7bitAddress(I2C1,I2C_jobs[job].address,I2C_Direction_Transmitter);//send the address and set hardware mode
