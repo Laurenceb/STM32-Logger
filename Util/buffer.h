@@ -13,4 +13,5 @@ typedef struct{
 //Functions
 void Add_To_Buffer(uint32_t data,buff_type* buffer);
 uint8_t Get_From_Buffer(uint32_t* data,buff_type* buffer);
+void Empty_Buffer(buff_type* buffer);
 void init_buffer(buff_type* buff, uint16_t size);

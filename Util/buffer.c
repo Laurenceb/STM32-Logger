@@ -19,8 +19,11 @@ uint8_t Get_From_Buffer(uint32_t* data,buff_type* buffer) {
 	}
 }
 
+void Empty_Buffer(buff_type* buffer) {
+	buffer->tail=buffer->head;	//Set the tail to the head, to show there is no usable data present
+}
+
 void init_buffer(buff_type* buff, uint16_t size) {
 	buff->data=(uint32_t*)malloc(size*4);
 	buff->size=size;
 }
-

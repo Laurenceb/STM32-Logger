@@ -142,18 +142,24 @@ int main(void)
 	calibrate_sensor();				//Calibrate the offset on the diff pressure sensor
 	EXTI_ONOFF_EN();				//Enable the off interrupt - allow some time for debouncing
 	I2C_Config();					//Setup the I2C bus
-	Sensors=detect_sensors();			//Search for connected sensors
-	Pressure_control=Sensors&(1<<PRESSURE_HOSE);	//Enable active pressure control if a hose is connected
+	uint8_t sensors_=detect_sensors();		//Search for connected sensors
+	Pressure_control=sensors_&(1<<PRESSURE_HOSE);	//Enable active pressure control if a hose is connected
 	Pressure_Setpoint=0;				//Not applied pressure, should cause motor and solenoid to go to idle state
-	while(!bytes_in_buff(&(Buff[0])));		//Wait for some PPG data for the auto brightness to work with
-	PPG_Automatic_Brightness_Control();		//Run the automatic brightness setting on power on
+	if(sensors_&(1<<PPG_SENSOR)) {
+		Sensors=1<<PPG_SENSOR;			//Set this bit so that the PPG decoder start running
+		while(!bytes_in_buff(&(Buff[0])));	//Wait for some PPG data for the auto brightness to work with
+		PPG_Automatic_Brightness_Control();	//Run the automatic brightness setting on power on
+	}
 	rtc_gettime(&RTC_time);				//Get the RTC time and put a timestamp on the start of the file
 	printf("%d-%d-%dT%d:%d:%d\n",RTC_time.year,RTC_time.month,RTC_time.mday,RTC_time.hour,RTC_time.min,RTC_time.sec);//ISO 8601 timestamp header
 	if(file_opened) {
 		f_puts(print_string,&FATFS_logfile);
 		print_string[0]=0x00;			//Set string length to 0
 	}
+	for(uint8_t n=0;n<PPG_CHANNELS;n++)
+		Empty_Buffer(&Buff[n]);			//Empty all the PPG buffers to sync all the data
 	Millis=0;					//Reset system uptime, we have 50 days before overflow
+	Sensors|=sensors_;				//Set the global sensors variable here to mark the detected sensors as present
 	while (1) {
 		Watchdog_Reset();			//Reset the watchdog each main loop iteration
 		while(!bytes_in_buff(&(Buff[0])));	//Wait for some PPG data
