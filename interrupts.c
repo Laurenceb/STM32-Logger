@@ -104,7 +104,7 @@ void SysTick_Configuration(void) {
   * @param  None
   * @retval None
   */
-void EXTI0_IRQHandler(void) {
+__attribute__((externally_visible)) void EXTI0_IRQHandler(void) {
 	if(EXTI_GetITStatus(EXTI_Line0) != RESET) {
 		/* Clear the  EXTI line 0 pending bit */
 		EXTI_ClearITPendingBit(EXTI_Line0);
@@ -130,7 +130,7 @@ void EXTI0_IRQHandler(void) {
   * @param  None
   * @retval None
   */
-void DMAChannel1_IRQHandler(void) {
+__attribute__((externally_visible)) void DMA1_Channel1_IRQHandler(void) {
 	static uint8_t decimation_counter;
 	if(DMA_GetITStatus(DMA1_IT_HT1)) {
 		DMA_ClearITPendingBit(DMA1_IT_GL1);		//clear all the interrupts
@@ -159,7 +159,7 @@ void DMAChannel1_IRQHandler(void) {
   * @param  None
   * @retval None
   */
-void ADC1_2_IRQHandler(void) {
+__attribute__((externally_visible)) void ADC1_2_IRQHandler(void) {
 	if(ADC_GetITStatus(ADC2, ADC_IT_AWD)) {			//Analogue watchdog was triggered
 		if(file_opened) {
 			char c[]="\r\nLow Battery\r\n";
@@ -187,7 +187,7 @@ void ADC1_2_IRQHandler(void) {
 * Output         : None
 * Return         : None
 *******************************************************************************/
-void SysTickHandler(void)
+__attribute__((externally_visible)) void SysTick_Handler(void)
 {
 	static float I,old_pressure;
 	static uint16_t Enabled_iterations;			//Note, this is going to break if we spend long periods with +ive pressure set
@@ -281,7 +281,7 @@ void SysTickHandler(void)
 * Output         : None
 * Return         : None
 *******************************************************************************/
-void USB_HP_CAN_TX_IRQHandler(void)
+__attribute__((externally_visible)) void USB_HP_CAN1_TX_IRQHandler(void)
 {
   CTR_HP();
 }
@@ -294,7 +294,7 @@ void USB_HP_CAN_TX_IRQHandler(void)
 * Output         : None
 * Return         : None
 *******************************************************************************/
-void USB_LP_CAN_RX0_IRQHandler(void)
+__attribute__((externally_visible)) void USB_LP_CAN1_RX0_IRQHandler(void)
 {
   USB_Istr();
 }
@@ -309,7 +309,7 @@ void USB_LP_CAN_RX0_IRQHandler(void)
 * Output         : None
 * Return         : None
 *******************************************************************************/
-void SDIO_IRQHandler(void)
+__attribute__((externally_visible)) void SDIO_IRQHandler(void)
 { 
   /* Process All SDIO Interrupt Sources */
   SD_ProcessIRQSrc();
@@ -326,7 +326,7 @@ void SDIO_IRQHandler(void)
 * Output         : None
 * Return         : None
 *******************************************************************************/
-void OTG_FS_IRQHandler(void)
+__attribute__((externally_visible)) void OTG_FS_IRQHandler(void)
 {
   STM32_PCD_OTG_ISR_Handler(); 
 }

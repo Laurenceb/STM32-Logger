@@ -19,6 +19,12 @@
 #include "Util/fat_fs/inc/integer.h"
 #include "Util/fat_fs/inc/rtc.h"
 
+
+//newlib reent context
+    struct _reent my_reent;
+     
+
+
 //Global variables - other files (e.g. hardware interface/drivers) may have their own globals
 extern uint16_t MAL_Init (uint8_t lun);			//For the USB filesystem driver
 volatile uint8_t file_opened=0;				//So we know to close any opened files before turning off
@@ -47,6 +53,8 @@ int main(void)
 	uint32_t data_counter=0;			//used as data timestamp
 	float sensor_data;				//used for handling data passed back from sensors
 	RTC_t RTC_time;
+        _REENT_INIT_PTR(&my_reent);
+        _impure_ptr = &my_reent;
 	SystemInit();					//Sets up the clk
 	setup_gpio();					//Initialised pins, and detects boot source
 	DBGMCU_Config(DBGMCU_IWDG_STOP, ENABLE);	//Watchdog stopped during JTAG halt
