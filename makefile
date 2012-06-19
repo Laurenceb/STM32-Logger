@@ -49,7 +49,7 @@ COMPILE_OPTS = $(WARNINGS) $(TARGET_OPTS) $(MESSAGES) $(INCLUDE_DIRS) $(DEFINES)
 WARNINGS = -Wall -W -Wshadow -Wcast-qual -Wwrite-strings -Winline
 
 ifdef DEBUG
- TARGET_OPTS = -Os -g3
+ TARGET_OPTS = -O3 -g3
  DEBUG_MACRO = -DDEBUG
 else	#Changed from O2 - optimisation split between control loop and rest of project, using a seperate makefile
  TARGET_OPTS = $(OPTIMISE) -finline -finline-functions-called-once\
@@ -59,15 +59,15 @@ endif
 CC = arm-none-eabi-gcc
 CXX = arm-none-eabi-g++
 SIZE = arm-none-eabi-size
-CFLAGS = -std=gnu99 $(COMPILE_OPTS) -flto -fuse-linker-plugin 
+CFLAGS = -std=gnu99 $(COMPILE_OPTS)
 CXXFLAGS = $(COMPILE_OPTS)
 
 AS = $(CC) -x assembler-with-cpp -c $(TARGET_ARCH)
 ASFLAGS = $(COMPILE_OPTS)
 
 LD = $(CC)
-LDFLAGS = -Wl,--gc-sections,-Map=$(MAIN_MAP),-cref -T lib/TNT.ld -L lib\
- $(INCLUDE_DIRS) $(LIBRARY_DIRS) $(LIBM) -Os -flto -fuse-linker-plugin -fwhole-program -lnosys #-nostartfiles#-lstdc++
+LDFLAGS = -Wl,--gc-sections,-Map=$(MAIN_MAP),-cref -T lanchon-stm32.ld -L lib\
+ $(INCLUDE_DIRS) $(LIBRARY_DIRS) $(LIBM) #-lstdc++
 
 AR = arm-none-eabi-ar
 ARFLAGS = cr
@@ -180,4 +180,5 @@ clean:
 	-rm -f jtag/flash.elf jtag/flash.bin
 	@cd lib/STM32F10x_StdPeriph_Driver && $(MAKE) clean
 	@cd lib/STM32_USB-FS-Device_Driver && $(MAKE) clean
+
 
