@@ -49,7 +49,7 @@ COMPILE_OPTS = $(WARNINGS) $(TARGET_OPTS) $(MESSAGES) $(INCLUDE_DIRS) $(DEFINES)
 WARNINGS = -Wall -W -Wshadow -Wcast-qual -Wwrite-strings -Winline
 
 ifdef DEBUG
- TARGET_OPTS = -O3 -g3
+ TARGET_OPTS = -Os -g3
  DEBUG_MACRO = -DDEBUG
 else	#Changed from O2 - optimisation split between control loop and rest of project, using a seperate makefile
  TARGET_OPTS = $(OPTIMISE) -finline -finline-functions-called-once\
@@ -59,15 +59,15 @@ endif
 CC = arm-none-eabi-gcc
 CXX = arm-none-eabi-g++
 SIZE = arm-none-eabi-size
-CFLAGS = -std=gnu99 $(COMPILE_OPTS)
+CFLAGS = -std=gnu99 $(COMPILE_OPTS) -flto -fuse-linker-plugin 
 CXXFLAGS = $(COMPILE_OPTS)
 
 AS = $(CC) -x assembler-with-cpp -c $(TARGET_ARCH)
 ASFLAGS = $(COMPILE_OPTS)
 
 LD = $(CC)
-LDFLAGS = -Wl,--gc-sections,-Map=$(MAIN_MAP),-cref -T lanchon-stm32.ld -L lib\
- $(INCLUDE_DIRS) $(LIBRARY_DIRS) $(LIBM) #-lstdc++
+LDFLAGS = -Wl,--gc-sections,-Map=$(MAIN_MAP),-cref -T lib/TNT.ld -L lib\
+ $(INCLUDE_DIRS) $(LIBRARY_DIRS) $(LIBM) -Os -flto -fuse-linker-plugin -fwhole-program -lnosys #-nostartfiles#-lstdc++
 
 AR = arm-none-eabi-ar
 ARFLAGS = cr
