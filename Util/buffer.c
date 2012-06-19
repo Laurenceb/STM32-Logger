@@ -9,8 +9,10 @@ void Add_To_Buffer(uint32_t data,buff_type* buffer) {
 }
 
 uint8_t Get_From_Buffer(uint32_t* data,buff_type* buffer) {
-	if(buffer->tail==buffer->head)
+	if(buffer->tail==buffer->head) {
+		*data=0;		//Data reset if there is nothing to return
 		return 1;		//Error - no data in buffer
+	}
 	else {
 		*data=buffer->data[buffer->tail];//grab a data sample from the buffer
 		buffer->tail++;
