@@ -1,5 +1,6 @@
 #include "timer.h"
 #include "gpio.h"
+#include "Sensors/ppg.h"
 
 /**
   * @brief  Configure the timer channels for PWM out on CRT board
@@ -43,7 +44,11 @@ void setup_pwm(void) {
   /* Prescaler of 16 times*/
   uint16_t PrescalerValue = 15;
   /* Time base configuration */
-  TIM_TimeBaseStructure.TIM_Period = PWM_PERIOD;
+  #if BOARD<3
+  TIM_TimeBaseStructure.TIM_Period = NORMAL_PWM_PERIOD(0);
+  #else
+  TIM_TimeBaseStructure.TIM_Period = NORMAL_PWM_PERIOD(2);
+  #endif
   TIM_TimeBaseStructure.TIM_Prescaler = PrescalerValue;
   TIM_TimeBaseStructure.TIM_ClockDivision = 0;
   TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
@@ -53,11 +58,13 @@ void setup_pwm(void) {
   /*Setup the initstructure*/
   TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
   TIM_OCInitStructure.TIM_Pulse = 4;
-  TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1; 
   #if BOARD<3
+  TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1; //Mode 1 on early board revisions
   /* PWM1 Mode configuration: Channel3 */
   TIM_OC3Init(TIM4, &TIM_OCInitStructure);
   TIM_OC3PreloadConfig(TIM4, TIM_OCPreload_Enable);
+  #else
+  TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM2; //As Board revisions >=3 using P channel mosfet drivers, so inverted levels
   #endif
   /* PWM1 Mode configuration: Channel4 */
   TIM_OC4Init(TIM4, &TIM_OCInitStructure);
@@ -69,7 +76,11 @@ void setup_pwm(void) {
 
 
   /*Now setup timer2 as PWM0*/
-  TIM_TimeBaseStructure.TIM_Period = PWM_PERIOD2;
+  #if BOARD<3
+  TIM_TimeBaseStructure.TIM_Period = NORMAL_PWM_PERIOD(1);
+  #else
+  TIM_TimeBaseStructure.TIM_Period = NORMAL_PWM_PERIOD(0);
+  #endif
   TIM_TimeBaseInit(TIM2, &TIM_TimeBaseStructure);//same as timer4
   /* PWM1 Mode configuration: Channel3 */
   TIM_OC3Init(TIM2, &TIM_OCInitStructure);
@@ -82,7 +93,7 @@ void setup_pwm(void) {
 
   #if BOARD>=3
   /*Now setup timer3 as PWM1*/
-  TIM_TimeBaseStructure.TIM_Period = PWM_PERIOD2;//TODO - new orthogonal frequency
+  TIM_TimeBaseStructure.TIM_Period = NORMAL_PWM_PERIOD(2);
   TIM_TimeBaseInit(TIM3, &TIM_TimeBaseStructure);//same as timer4
   /* PWM1 Mode configuration: Channel1 */
   TIM_OC1Init(TIM3, &TIM_OCInitStructure);
@@ -97,6 +108,7 @@ void setup_pwm(void) {
   /*Now setup timer1 as motor control */
   PrescalerValue = 0;//no prescaler
   TIM_TimeBaseStructure.TIM_Period = 2047;//gives a slower frequency - 35KHz, meeting Rohm BD6231F spec, and giving 11 bits of res each way
+  TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;//Make sure we have mode1 
   TIM_OCInitStructure.TIM_OutputNState = TIM_OutputNState_Disable;//These settings need to be applied on timers 1 and 8                 
   TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High; 
   TIM_OCInitStructure.TIM_OCIdleState = TIM_OCIdleState_Reset;
@@ -115,19 +127,24 @@ void setup_pwm(void) {
   * @brief Try to correct the timer phase by adjusting the reload register for one pwm cycle
   * @param Pointer to unsigned 32 bit integer bitmask for the timers to be corrected
   * @retval none
-  * Note: this could be improved, atm it just uses some macros and is hardcoded for timer3 only
+  * Note: this could be improved, atm it just uses some macros and is hardcoded for the timers, but making it more flexible would need arrays of pointers
   * (need to use different timers for each output) 
   */
 void Tryfudge(uint32_t* Fudgemask) {
-	if((*Fudgemask)&(uint32_t)1 && TIM2->CNT<(PWM_FUDGE2-2)) {//If the first bit is set, adjust the first timer in the list if it is safe to do so
-		//while(TIM2->CNT>=(PWM_FUDGE2-2));
+	if((*Fudgemask)&(uint32_t)0x01 && TIM2->CNT<(FUDGED_PWM_PERIOD(0)-2)) {//If the second bit is set, adjust the first timer in the list if it is safe to do so
 		TIM2->CR1 &= ~TIM_CR1_ARPE;//Disable reload buffering so we can load directly
-		TIM2->ARR = PWM_FUDGE2;//Load reload register directly
+		TIM2->ARR = FUDGED_PWM_PERIOD(0);//Load reload register directly
 		TIM2->CR1 |= TIM_CR1_ARPE;//Enable buffering so we load buffered register
-		TIM2->ARR = PWM_PERIOD2;//Load the buffer, so the pwm period returns to normal after 1 period
-		*Fudgemask&=~(uint32_t)1;//Clear the bit
+		TIM2->ARR = NORMAL_PWM_PERIOD(0);//Load the buffer, so the pwm period returns to normal after 1 period
+		*Fudgemask&=~(uint32_t)0x01;//Clear the bit
 	}
-	//Other timers could go here at some point
+	if((*Fudgemask)&(uint32_t)0x04 && TIM4->CNT<(FUDGED_PWM_PERIOD(2)-2)) {//If the first bit is set, adjust the first timer in the list if it is safe to do so
+		TIM2->CR1 &= ~TIM_CR1_ARPE;//Disable reload buffering so we can load directly
+		TIM2->ARR = FUDGED_PWM_PERIOD(2);//Load reload register directly
+		TIM2->CR1 |= TIM_CR1_ARPE;//Enable buffering so we load buffered register
+		TIM2->ARR = NORMAL_PWM_PERIOD(0);//Load the buffer, so the pwm period returns to normal after 1 period
+		*Fudgemask&=~(uint32_t)0x04;//Clear the bit
+	}
 }
 
 /**

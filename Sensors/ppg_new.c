@@ -7,7 +7,7 @@
 #include "../main.h"
 #include "../timer.h"
 
-volatile float Last_PPG_Values[3];
+volatile float Last_PPG_Values[PPG_CHANNELS];
 
 //This should really be done with macros, but 64(decimate)*21(decimate)*14(adc clks)*6(adc clkdiv)=112896
 // == 336*336 - so one change in the pwm reload value will give an orthogonal frequency to the baseband decimator 
@@ -20,7 +20,7 @@ volatile float Last_PPG_Values[3];
   */
 void PPG_LO_Filter(volatile uint16_t* buff) {
 	static uint8_t bindex;			//Baseband decimation index
-	static int32_t Frequency_Bin[3][2];	//Only three frequencies in use atm - consisting of and I and Q component
+	static int32_t Frequency_Bin[PPG_CHANNELS][2];//All Frequencies in use - consisting of and I and Q component
 	static uint32_t Fudgemask;
 	static const int8_t sinusoid[72]=STEP_SIN,cosinusoid[72]=STEP_COS;//Lookup tables
 	int32_t I=0,Q=0,a;			//I and Q integration bins, general purpose variables
@@ -42,11 +42,13 @@ void PPG_LO_Filter(volatile uint16_t* buff) {
 	//Zero frequency - i.e. directly on quadrature 
 	//nothing to do to this bin
 	//Negative frequencie(s) go here, need to get to 0hz, so multiply bin by a +ive complex exponential
+	#if PPG_CHANNELS>=2
 	a=Frequency_Bin[2][0];
 	Frequency_Bin[2][0]=Frequency_Bin[2][0]*7-Frequency_Bin[2][1]*4;//Rotate the phasor in the bin - real here (~30degree rotation)
 	Frequency_Bin[2][1]=Frequency_Bin[2][1]*7+a*4;//complex here
 	Frequency_Bin[2][1]>>=3;Frequency_Bin[2][0]>>=3;//divide by 8
-	#if PPG_CHANNELS>3
+	#endif
+	#if PPG_CHANNELS>3 || !PPG_CHANNELS
 	#error "Unsupported number of channels - decoder error"
 	#endif
 	//Add the I and Q directly into the bins
@@ -55,14 +57,13 @@ void PPG_LO_Filter(volatile uint16_t* buff) {
 	}
 	//End of decimating filters
 	if(++bindex==PPG_NO_SUBSAMPLES) {	//Decimation factor of 12 - 62.004Hz data output
-		Last_PPG_Values[0]=sqrtf(((float)Frequency_Bin[0][0]*(float)Frequency_Bin[0][0])+((float)Frequency_Bin[0][1]*(float)Frequency_Bin[0][1]));
-		Last_PPG_Values[1]=sqrtf(((float)Frequency_Bin[1][0]*(float)Frequency_Bin[1][0])+((float)Frequency_Bin[1][1]*(float)Frequency_Bin[1][1]));
-		Add_To_Buffer(((uint32_t)Last_PPG_Values[0])>>8,&(Buff[0]));//There will always be at least 8 bits on noise, so shift out the mess
-		Add_To_Buffer(((uint32_t)Last_PPG_Values[1])>>8,&(Buff[1]));
-		//Other frequencies corresponding to different LEDs could go here - use the array of buffers?
+		for(uint8_t n=0;n<PPG_CHANNELS;n++) {
+			Last_PPG_Values[n]=sqrtf(((float)Frequency_Bin[n][0]*(float)Frequency_Bin[n][0])+((float)Frequency_Bin[n][1]*(float)Frequency_Bin[n][1]));
+			Add_To_Buffer(((uint32_t)Last_PPG_Values[n])>>8,&(Buff[n]));//There will always be at least 8 bits on noise, so shift out the mess
+		}				//fill the array of buffers
 		memset(Frequency_Bin,0,sizeof(Frequency_Bin));//Zero everything
 		bindex=0;			//Reset this
-		Fudgemask|=1;			//Sets a TIM3 fudge as requested
+		Fudgemask|=FUDGE_ALL_TIMERS;	//Sets a TIMx fudges as requested
 	}
 }
 
@@ -112,7 +113,7 @@ uint16_t PPG_correct_brightness(uint32_t Decimated_value, uint16_t PWM_value) {
 	float corrected_pwm=PWM_Linear(PWM_value);
 	corrected_pwm*=(float)(TARGET_ADC)/(float)Decimated_value;//This is the linearised pwm value required to get target amplitude
 	corrected_pwm=(corrected_pwm>1.0)?1.0:corrected_pwm;//Enforce limit on range to 100%
-	return ((asinf(corrected_pwm)/M_PI)*PWM_PERIOD);//Convert back to a PWM period value
+	return ((asinf(corrected_pwm)/M_PI)*PWM_PERIOD_CENTER);//Convert back to a PWM period value
 }
 
 /**
@@ -121,5 +122,5 @@ uint16_t PPG_correct_brightness(uint32_t Decimated_value, uint16_t PWM_value) {
   * @retval A linearised value as a float in the range 0 to 1
   */
 float PWM_Linear(uint16_t PWM_value) {
-	return sinf(((float)PWM_value/(float)PWM_PERIOD)*M_PI);//returns the effecive sinusoidal amplitude in range 0-1
+	return sinf(((float)PWM_value/(float)PWM_PERIOD_CENTER)*M_PI);//returns the effecive sinusoidal amplitude in range 0-1
 }

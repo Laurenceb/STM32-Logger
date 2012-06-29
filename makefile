@@ -56,9 +56,9 @@ else	#Changed from O2 - optimisation split between control loop and rest of proj
   -funroll-loops -fno-common -fpromote-loop-indices -fno-rtti -fno-exceptions
 endif
 
-CC = arm-none-eabi-gcc
-CXX = arm-none-eabi-g++
-SIZE = arm-none-eabi-size
+CC = ~/CodeSourcery/Sourcery_G++_Lite/bin/arm-none-eabi-gcc	#this project depends of the CodeSourcery toolchain, defining the exact path forces
+CXX = ~/CodeSourcery/Sourcery_G++_Lite/bin/arm-none-eabi-g++	#use of the correct toolchain
+SIZE = ~/CodeSourcery/Sourcery_G++_Lite/bin/arm-none-eabi-size
 CFLAGS = -std=gnu99 $(COMPILE_OPTS)
 CXXFLAGS = $(COMPILE_OPTS)
 
