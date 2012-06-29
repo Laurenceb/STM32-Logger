@@ -17,12 +17,6 @@
 	#define PWM_CYCLES_BASE (PWM_CYCLES_CENTER-(PPG_CHANNELS-2)/2) 
 #endif
 
-#define PWM_PERIOD4 379	/* 379+1=380 These two values are used to generate an orthogonal frequency for second LED channel - or third on BOARD>=3*/
-#define PWM_FUDGE4  375 /* 380*191=72580, so we need 80-76=4 take off clks to correct phase after each integration bin is filled */
-
-#define PWM_PERIOD2 375 /* this time we have a low orthogonal frequency*/
-#define PWM_FUDGE2  381 /* need to add 6clks to correct the phase*/
-
 //Macro to give correct pwm periods - channels are numbered 0,1,2 etc
 #define NORMAL_PWM_PERIOD(n) PWM_PERIOD_BASE+(2*n)
 #define FUDGED_PWM_PERIOD(n) PWM_PERIOD_CLKS-NORMAL_PWM_PERIOD(n)*(PWM_CYCLES_BASE-1)
