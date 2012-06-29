@@ -72,7 +72,6 @@ void setup_pwm(void) {
 
   /* TIM4 enable counter */
   TIM_ARRPreloadConfig(TIM4, ENABLE);
-  TIM_Cmd(TIM4, ENABLE);
 
 
   /*Now setup timer2 as PWM0*/
@@ -89,7 +88,6 @@ void setup_pwm(void) {
 
   /* TIM2 enable counter */
   TIM_ARRPreloadConfig(TIM2, ENABLE);
-  TIM_Cmd(TIM2, ENABLE);
 
   #if BOARD>=3
   /*Now setup timer3 as PWM1*/
@@ -102,8 +100,26 @@ void setup_pwm(void) {
 
   /* TIM3 enable counter */
   TIM_ARRPreloadConfig(TIM3, ENABLE);
-  TIM_Cmd(TIM3, ENABLE);
   #endif
+
+  /*We enable all the timers at once with interrupts disabled*/
+  __disable_irq();
+  #if BOARD<3
+    TIM_Cmd(TIM4, ENABLE);
+    #if PPG_CHANNELS>1
+      TIM_Cmd(TIM2, ENABLE);
+    #endif
+  #else
+    TIM_Cmd(TIM2, ENABLE);
+    #if PPG_CHANNELS>1
+      TIM_Cmd(TIM3, ENABLE);
+    #endif
+    #if PPG_CHANNELS>2
+      TIM4->CNT=PWM_PERIOD_CENTER/2;//This causes the third timer to be in antiphase, giving reduce peak ADC signal
+      TIM_Cmd(TIM4, ENABLE);
+    #endif
+  #endif
+  __enable_irq();
 
   /*Now setup timer1 as motor control */
   PrescalerValue = 0;//no prescaler
