@@ -158,6 +158,7 @@ typedef struct
 /**
   * @brief  SD SPI Interface pins
   */
+#if BOARD<3
 #define SD_SPI                           SPI1
 #define SD_SPI_CLK                       RCC_APB2Periph_SPI1
 #define SD_SPI_SCK_PIN                   GPIO_Pin_5                  /* PA.05 */
@@ -172,7 +173,22 @@ typedef struct
 #define SD_CS_PIN                        GPIO_Pin_14                 /* PB.14 */
 #define SD_CS_GPIO_PORT                  GPIOB                       /* GPIOB */
 #define SD_CS_GPIO_CLK                   RCC_APB2Periph_GPIOB
- 
+#else
+#define SD_SPI                           SPI2
+#define SD_SPI_CLK                       RCC_APB1Periph_SPI2
+#define SD_SPI_SCK_PIN                   GPIO_Pin_13                 /* PB.13 */
+#define SD_SPI_SCK_GPIO_PORT             GPIOB                       /* GPIOB */
+#define SD_SPI_SCK_GPIO_CLK              RCC_APB2Periph_GPIOB
+#define SD_SPI_MISO_PIN                  GPIO_Pin_14                 /* PB.14 */
+#define SD_SPI_MISO_GPIO_PORT            GPIOB                       /* GPIOB */
+#define SD_SPI_MISO_GPIO_CLK             RCC_APB2Periph_GPIOB
+#define SD_SPI_MOSI_PIN                  GPIO_Pin_15                 /* PB.15 */
+#define SD_SPI_MOSI_GPIO_PORT            GPIOB                       /* GPIOB */
+#define SD_SPI_MOSI_GPIO_CLK             RCC_APB2Periph_GPIOB
+#define SD_CS_PIN                        GPIO_Pin_8                  /* PB.8 */
+#define SD_CS_GPIO_PORT                  GPIOB                       /* GPIOB */
+#define SD_CS_GPIO_CLK                   RCC_APB2Periph_GPIOB
+#endif
 /** @defgroup STM32_EVAL_SPI_SD_Exported_Constants
   * @{
   */ 

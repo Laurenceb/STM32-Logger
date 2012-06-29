@@ -130,7 +130,7 @@ __attribute__((externally_visible)) void EXTI0_IRQHandler(void) {
   * @param  None
   * @retval None
   */
-__attribute__((externally_visible)) void DMA1_Channel1_IRQHandler(void) {
+__attribute__((externally_visible)) void DMAChannel1_IRQHandler(void) {
 	static uint8_t decimation_counter;
 	if(DMA_GetITStatus(DMA1_IT_HT1)) {
 		DMA_ClearITPendingBit(DMA1_IT_GL1);		//clear all the interrupts
@@ -187,7 +187,7 @@ __attribute__((externally_visible)) void ADC1_2_IRQHandler(void) {
 * Output         : None
 * Return         : None
 *******************************************************************************/
-__attribute__((externally_visible)) void SysTick_Handler(void)
+__attribute__((externally_visible)) void SysTickHandler(void)
 {
 	static float I,old_pressure;
 	static uint16_t Enabled_iterations;			//Note, this is going to break if we spend long periods with +ive pressure set
@@ -281,7 +281,7 @@ __attribute__((externally_visible)) void SysTick_Handler(void)
 * Output         : None
 * Return         : None
 *******************************************************************************/
-__attribute__((externally_visible)) void USB_HP_CAN1_TX_IRQHandler(void)
+__attribute__((externally_visible)) void USB_HP_CAN_TX_IRQHandler(void)
 {
   CTR_HP();
 }
@@ -294,7 +294,7 @@ __attribute__((externally_visible)) void USB_HP_CAN1_TX_IRQHandler(void)
 * Output         : None
 * Return         : None
 *******************************************************************************/
-__attribute__((externally_visible)) void USB_LP_CAN1_RX0_IRQHandler(void)
+__attribute__((externally_visible)) void USB_LP_CAN_RX0_IRQHandler(void)
 {
   USB_Istr();
 }
@@ -332,3 +332,9 @@ __attribute__((externally_visible)) void OTG_FS_IRQHandler(void)
 }
 #endif /* STM32F10X_CL */
 
+
+__attribute__((externally_visible)) void NMIException(void) {while(1);}
+__attribute__((externally_visible)) void HardFaultException(void) {while(1);}
+__attribute__((externally_visible)) void MemManageException(void) {while(1);}
+__attribute__((externally_visible)) void BusFaultException(void) {while(1);}
+__attribute__((externally_visible)) void UsageFaultException(void) {while(1);}

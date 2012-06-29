@@ -29,9 +29,16 @@ void setup_pwm(void) {
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
   /*Enable the Tim1 clk*/
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, ENABLE);
+  #if BOARD>=3
+  /*Enable the Tim3 clk*/
+  RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
+  #endif
 
   TIM_DeInit(TIM1);
   TIM_DeInit(TIM2);
+  #if BOARD>=3
+  TIM_DeInit(TIM3);
+  #endif
   TIM_DeInit(TIM4);
   /* Prescaler of 16 times*/
   uint16_t PrescalerValue = 15;
@@ -47,11 +54,11 @@ void setup_pwm(void) {
   TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
   TIM_OCInitStructure.TIM_Pulse = 4;
   TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1; 
-
+  #if BOARD<3
   /* PWM1 Mode configuration: Channel3 */
   TIM_OC3Init(TIM4, &TIM_OCInitStructure);
   TIM_OC3PreloadConfig(TIM4, TIM_OCPreload_Enable);
-
+  #endif
   /* PWM1 Mode configuration: Channel4 */
   TIM_OC4Init(TIM4, &TIM_OCInitStructure);
   TIM_OC4PreloadConfig(TIM4, TIM_OCPreload_Enable);
@@ -72,6 +79,20 @@ void setup_pwm(void) {
   /* TIM2 enable counter */
   TIM_ARRPreloadConfig(TIM2, ENABLE);
   TIM_Cmd(TIM2, ENABLE);
+
+  #if BOARD>=3
+  /*Now setup timer3 as PWM1*/
+  TIM_TimeBaseStructure.TIM_Period = PWM_PERIOD2;//TODO - new orthogonal frequency
+  TIM_TimeBaseInit(TIM3, &TIM_TimeBaseStructure);//same as timer4
+  /* PWM1 Mode configuration: Channel1 */
+  TIM_OC1Init(TIM3, &TIM_OCInitStructure);
+
+  TIM_OC1PreloadConfig(TIM3, TIM_OCPreload_Enable);
+
+  /* TIM3 enable counter */
+  TIM_ARRPreloadConfig(TIM3, ENABLE);
+  TIM_Cmd(TIM3, ENABLE);
+  #endif
 
   /*Now setup timer1 as motor control */
   PrescalerValue = 0;//no prescaler

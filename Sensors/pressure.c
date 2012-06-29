@@ -1,7 +1,11 @@
 #include "pressure.h"
 #include "../adc.h"
 
-#define DIFF_GAIN 1.0/(float)113.23		/*pressure sensor 23mv/10v at 5psi, +60.1x inst amp gain, +12bit adc*/
+#if BOARD<3
+	#define DIFF_GAIN (1.0/(float)113.23)	/*pressure sensor Honeywell 24pc01smt 23mv/10v at 5psi, +60.1x inst amp gain, +12bit adc*/
+#else
+	#define DIFF_GAIN (1.0/(1.2412*-5.7767*56.556))/*pressure sensor 2SMPP with 56.6 times instrumentation amp gain but negative factor*/
+#endif
 
 volatile float Pressure_Offset;			//zero offset - calibrated at power on
 volatile float Reported_Pressure;		//Pressure as measured by the sensor
@@ -15,7 +19,7 @@ void calibrate_sensor(void) {
 	uint32_t pressoff=0;
 	volatile uint32_t l;
 	for(uint8_t n=1;n;n++) {		//take 256 samples from the pressure sensor
-		pressoff+=readADC2(1);
+		pressoff+=readADC2(PRESSURE_ADC_CHAN);
 		for(l=10000;l;l--);		//~1ms between samples
 	}
 	Pressure_Offset=(float)pressoff/(float)255.0;
@@ -27,7 +31,7 @@ void calibrate_sensor(void) {
   * @retval Pressure in PSI
   */
 float conv_adc_diff(void) {
-	uint16_t p=readADC2(1);
+	uint16_t p=readADC2(PRESSURE_ADC_CHAN);
 	return 	(DIFF_GAIN)*((float)p-Pressure_Offset);
 }
 

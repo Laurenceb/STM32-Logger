@@ -7,17 +7,27 @@
 //192*378=72576 timer clocks 
 #define PWM_PERIOD 377	/* 377+1=378 gives 11.905khz pwm with 72/16=4.5mhz clk - for quadrature sampling */
 
-#define PWM_PERIOD2 379	/* 379+1=380 These two values are used to generate an orthogonal frequency for second LED channel */
+#define PWM_PERIOD2 379	/* 379+1=380 These two values are used to generate an orthogonal frequency for second LED channel - or first on BOARD>=3*/
 #define PWM_FUDGE2  375 /* 380*191=72580, so we need 80-76=4 take off clks to correct phase after each integration bin is filled */
 
 //Macros to link to the periph functions
-#define Set_PWM_0(compare) TIM_SetCompare3(TIM4, compare)
-#define Set_PWM_1(compare) TIM_SetCompare3(TIM2, compare)
-#define Set_PWM_2(compare) TIM_SetCompare4(TIM4, compare)
-#define Set_PWM_Motor(compare) TIM_SetCompare1(TIM1, compare)
-#define Get_PWM_0()  TIM4->CCR3
-#define Get_PWM_1()  TIM2->CCR3
-#define Get_PWM_2()  TIM4->CCR4
+#if BOARD<3
+	#define Set_PWM_0(compare) TIM_SetCompare3(TIM4, compare)
+	#define Set_PWM_1(compare) TIM_SetCompare3(TIM2, compare)
+	#define Set_PWM_2(compare) TIM_SetCompare4(TIM4, compare)
+	#define Set_PWM_Motor(compare) TIM_SetCompare1(TIM1, compare)
+	#define Get_PWM_0()  TIM4->CCR3
+	#define Get_PWM_1()  TIM2->CCR3
+	#define Get_PWM_2()  TIM4->CCR4
+#else
+	#define Set_PWM_0(compare) TIM_SetCompare3(TIM2, compare)
+	#define Set_PWM_1(compare) TIM_SetCompare1(TIM3, compare)
+	#define Set_PWM_2(compare) TIM_SetCompare4(TIM4, compare)
+	#define Set_PWM_Motor(compare) TIM_SetCompare1(TIM1, compare)
+	#define Get_PWM_0()  TIM2->CCR3
+	#define Get_PWM_1()  TIM3->CCR1
+	#define Get_PWM_2()  TIM4->CCR4
+#endif
 //Configure the pwm
 void setup_pwm(void);
 //Fudge timers to fix phase offsets
