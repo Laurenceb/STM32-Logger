@@ -1,7 +1,7 @@
 #include "stm32f10x.h"
 #include "../timer.h"
 
-#define PPG_CHANNELS 2
+#define PPG_CHANNELS 3
 
 #define PPG_NO_SUBSAMPLES 12
 //#define TARGET_ADC 1376256/(3*PPG_CHANNELS)/*Target 67% of ADC range used by the pwm led signal*/

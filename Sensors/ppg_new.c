@@ -20,7 +20,7 @@ volatile float Last_PPG_Values[3];
   */
 void PPG_LO_Filter(volatile uint16_t* buff) {
 	static uint8_t bindex;			//Baseband decimation index
-	static int32_t Frequency_Bin[2][2];	//Only two frequencies in use atm - consisting of and I and Q component
+	static int32_t Frequency_Bin[3][2];	//Only three frequencies in use atm - consisting of and I and Q component
 	static uint32_t Fudgemask;
 	static const int8_t sinusoid[72]=STEP_SIN,cosinusoid[72]=STEP_COS;//Lookup tables
 	int32_t I=0,Q=0,a;			//I and Q integration bins, general purpose variables
@@ -32,13 +32,27 @@ void PPG_LO_Filter(volatile uint16_t* buff) {
 		}
 	}
 	//Now run the "baseband" decimating filter(s)
-	//No positive frequencies at the moment - they would go here TODO
-	Frequency_Bin[0][0]+=I;Frequency_Bin[0][1]+=Q;//Add the I and Q directly into the zero frequency bin
+	//Positive frequency
+	#if PPG_CHANNELS>=3
+	a=Frequency_Bin[2][0];
+	Frequency_Bin[2][0]=Frequency_Bin[2][0]*7+Frequency_Bin[2][1]*4;//Rotate the phasor in the bin - real here (~-30degree rotation)
+	Frequency_Bin[2][1]=Frequency_Bin[2][1]*7-a*4;//complex here
+	Frequency_Bin[2][1]>>=3;Frequency_Bin[2][0]>>=3;//divide by 8
+	#endif
+	//Zero frequency - i.e. directly on quadrature 
+	//nothing to do to this bin
 	//Negative frequencie(s) go here, need to get to 0hz, so multiply bin by a +ive complex exponential
-	a=Frequency_Bin[1][0];Frequency_Bin[1][0]=Frequency_Bin[1][0]*7-Frequency_Bin[1][1]*4;//Rotate the phasor in the bin - real here (~30degree rotation)
-	Frequency_Bin[1][1]=Frequency_Bin[1][1]*7+a*4;//complex here
-	Frequency_Bin[1][1]>>=3;Frequency_Bin[1][0]>>=3;//divide by 8
-	Frequency_Bin[1][0]+=I;Frequency_Bin[1][1]+=Q;//I,Q is real,imaginary
+	a=Frequency_Bin[2][0];
+	Frequency_Bin[2][0]=Frequency_Bin[2][0]*7-Frequency_Bin[2][1]*4;//Rotate the phasor in the bin - real here (~30degree rotation)
+	Frequency_Bin[2][1]=Frequency_Bin[2][1]*7+a*4;//complex here
+	Frequency_Bin[2][1]>>=3;Frequency_Bin[2][0]>>=3;//divide by 8
+	#if PPG_CHANNELS>3
+	#error "Unsupported number of channels - decoder error"
+	#endif
+	//Add the I and Q directly into the bins
+	for(uint8_t n=0;n<PPG_CHANNELS;n++) {
+		Frequency_Bin[n][0]+=I;Frequency_Bin[n][1]+=Q;//I,Q is real,imaginary
+	}
 	//End of decimating filters
 	if(++bindex==PPG_NO_SUBSAMPLES) {	//Decimation factor of 12 - 62.004Hz data output
 		Last_PPG_Values[0]=sqrtf(((float)Frequency_Bin[0][0]*(float)Frequency_Bin[0][0])+((float)Frequency_Bin[0][1]*(float)Frequency_Bin[0][1]));

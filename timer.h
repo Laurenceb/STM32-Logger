@@ -7,8 +7,11 @@
 //192*378=72576 timer clocks 
 #define PWM_PERIOD 377	/* 377+1=378 gives 11.905khz pwm with 72/16=4.5mhz clk - for quadrature sampling */
 
-#define PWM_PERIOD2 379	/* 379+1=380 These two values are used to generate an orthogonal frequency for second LED channel - or first on BOARD>=3*/
-#define PWM_FUDGE2  375 /* 380*191=72580, so we need 80-76=4 take off clks to correct phase after each integration bin is filled */
+#define PWM_PERIOD4 379	/* 379+1=380 These two values are used to generate an orthogonal frequency for second LED channel - or third on BOARD>=3*/
+#define PWM_FUDGE4  375 /* 380*191=72580, so we need 80-76=4 take off clks to correct phase after each integration bin is filled */
+
+#define PWM_PERIOD2 375 /* this time we have a low orthogonal frequency*/
+#define PWM_FUDGE2  381 /* need to add 6clks to correct the phase*/
 
 //Macros to link to the periph functions
 #if BOARD<3
