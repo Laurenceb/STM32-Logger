@@ -49,7 +49,7 @@ FILINFO FATFS_info;
 
 int main(void)
 {
-	uint32_t ppg[2];				//two PPG channels
+	uint32_t ppg;					//PPG channel
 	uint32_t data_counter=0;			//used as data timestamp
 	float sensor_data;				//used for handling data passed back from sensors
 	RTC_t RTC_time;
@@ -141,8 +141,8 @@ int main(void)
 			Delay(400000);
 			shutdown();			//Abort after a single red flash
 		}
-		init_buffer(&(Buff[0]),PPG_BUFFER_SIZE);//Enough for ~0.25S of data
-		init_buffer(&(Buff[1]),PPG_BUFFER_SIZE);
+		for(uint8_t n=0;n<PPG_CHANNELS;n++)
+			init_buffer(&(Buff[n]),PPG_BUFFER_SIZE);//Enough for ~0.25S of data
 	}
 	setup_pwm();					//Enable the PWM outputs on all three channels
 	Delay(100000);					//Sensor+inst amplifier takes about 100ms to stabilise after power on
@@ -171,9 +171,11 @@ int main(void)
 	while (1) {
 		Watchdog_Reset();			//Reset the watchdog each main loop iteration
 		while(!bytes_in_buff(&(Buff[0])));	//Wait for some PPG data
-		Get_From_Buffer(&(ppg[0]),&(Buff[0]));	//Retrive one sample of PPG
-		Get_From_Buffer(&(ppg[1]),&(Buff[1]));	
-		printf("%3f,%lu,%lu",(float)(data_counter++)/PPG_SAMPLE_RATE,ppg[0],ppg[1]);//Print data after a time stamp (not Millis)
+		printf("%3f",(float)(data_counter++)/PPG_SAMPLE_RATE);//The time since PPG collection started
+		for(uint8_t n=0;n<PPG_CHANNELS;n++) {	//Loop through the PPG channels
+			Get_From_Buffer(&ppg,&(Buff[n]));//Retrive one sample of PPG
+			printf(",%lu",ppg);		//Print data after a time stamp (not Millis)
+		}
 		if(Sensors&(1<<PRESSURE_HOSE)) {	//Air hose connected
 			Get_From_Buffer(&sensor_data,&Pressures_Buffer);//This is syncronised with PPG data in PPG ISR using a global defined in the sensor header
 			printf(",%2f",sensor_data);	//print the retreived data
