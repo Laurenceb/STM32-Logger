@@ -28,12 +28,6 @@
 #endif /* USE_STM3210E_EVAL */
 
 #include "mass_mal.h"
-#ifndef CRT
- #include "stm32_eval.h"
-#else
- #include "../../gpio.h"
- #include "../fat_fs/inc/diskio.h"
-#endif
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/

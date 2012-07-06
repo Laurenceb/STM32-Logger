@@ -89,5 +89,10 @@ DRESULT disk_ioctl (BYTE, BYTE, void*);
 RAMFUNC void disk_timerproc (void);
 
 /* Martin Thomas end */
+
+//Macro added by Laurence
+#define DMA_Channel_SPI_SD_RX DMA1_Channel4
+extern BYTE Sd_Spi_Called_From_USB_MSC;
+//End Laurence
 #define _DISKIO
 #endif

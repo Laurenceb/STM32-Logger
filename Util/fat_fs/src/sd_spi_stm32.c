@@ -96,7 +96,7 @@
  #define GPIO_CS                  GPIOB
  #define RCC_APB2Periph_GPIO_CS   RCC_APB2Periph_GPIOB
  #define GPIO_Pin_CS              SD_SEL_PIN
- #define DMA_Channel_SPI_SD_RX    DMA1_Channel4
+ //#define DMA_Channel_SPI_SD_RX    DMA1_Channel4
  #define DMA_Channel_SPI_SD_TX    DMA1_Channel5
  #define DMA_FLAG_SPI_SD_TC_RX    DMA1_FLAG_TC4
  #define DMA_FLAG_SPI_SD_TC_TX    DMA1_FLAG_TC5
@@ -218,6 +218,8 @@ DWORD Timer1, Timer2;	/* 100Hz decrement timers */
 
 static
 BYTE CardType;			/* Card type flags */
+
+BYTE Sd_Spi_Called_From_USB_MSC;/* Added for faster use in USB mass storage*/
 
 enum speed_setting { INTERFACE_SLOW, INTERFACE_FAST };
 
@@ -506,7 +508,8 @@ void stm32_dma_transfer(
 	// not needed
 	//while (DMA_GetFlagStatus(DMA_FLAG_SPI_SD_TC_TX) == RESET) { ; }
 	/* Wait until DMA1_Channel 2 Receive Complete */
-	while (DMA_GetFlagStatus(DMA_FLAG_SPI_SD_TC_RX) == RESET) { ; }
+	if(!Sd_Spi_Called_From_USB_MSC)//Mass storage uses non blocking read
+		while (DMA_GetFlagStatus(DMA_FLAG_SPI_SD_TC_RX) == RESET) { ; }
 	// same w/o function-call:
 	// while ( ( ( DMA1->ISR ) & DMA_FLAG_SPI_SD_TC_RX ) == RESET ) { ; }
 
@@ -857,7 +860,14 @@ DRESULT disk_read (
 				}
 				buff += 512;
 			} while (--count);
-			send_cmd(CMD12, 0);				/* STOP_TRANSMISSION */
+			send_cmd(CMD12, 0);		/* STOP_TRANSMISSION */
+		}
+		if (send_cmd(CMD18, sector) == 0) {	/* READ_MULTIPLE_BLOCK */
+			if (!rcvr_datablock(buff, 512*(DWORD)count)) {
+				
+			}
+			count=0;
+			send_cmd(CMD12, 0);		/* STOP_TRANSMISSION */
 		}
 	}
 	release_spi();
