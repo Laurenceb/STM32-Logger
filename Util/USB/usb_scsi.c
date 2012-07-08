@@ -354,10 +354,11 @@ void SCSI_TestUnitReady_Cmd(uint8_t lun)
 void SCSI_Format_Cmd(uint8_t lun)
 {
   if (MAL_GetStatus(lun))
-  {
-    Set_Scsi_Sense_Data(CBW.bLUN, NOT_READY, MEDIUM_NOT_PRESENT);
-    Set_CSW (CSW_CMD_FAILED, SEND_CSW_ENABLE);
-    Bot_Abort(DIR_IN);
+  { //This is STs code - spec says this always has to be supported, even with SD cards
+    //Set_Scsi_Sense_Data(CBW.bLUN, NOT_READY, MEDIUM_NOT_PRESENT);
+    //Set_CSW (CSW_CMD_FAILED, SEND_CSW_ENABLE);
+    //Bot_Abort(DIR_IN);
+    Set_CSW (CSW_CMD_PASSED, SEND_CSW_ENABLE);
     return;
   }
 #ifdef USE_STM3210E_EVAL
