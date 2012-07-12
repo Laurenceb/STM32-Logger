@@ -9,7 +9,7 @@
 #define _USE_IOCTL	1	/* 1: Use disk_ioctl fucntion */
 
 #include "integer.h"
-
+#include "stm32f10x.h"
 
 /* Status of Disk Functions */
 typedef BYTE	DSTATUS;
@@ -36,7 +36,17 @@ DRESULT disk_write (BYTE, const BYTE*, DWORD, BYTE);
 #endif
 DRESULT disk_ioctl (BYTE, BYTE, void*);
 
-
+void wrapup_transaction(void);		/*Laurence added for spi timing improvements*/
+void stop_cmd(void);
+static BYTE send_cmd (
+	BYTE cmd,		/* Command byte */
+	DWORD arg		/* Argument */
+);
+void release_spi (void);
+BOOL rcvr_datablock (
+	BYTE *buff,			/* Data buffer to store received data */
+	UINT btr			/* Byte count (must be multiple of 4) */
+);
 
 /* Disk Status Bits (DSTATUS) */
 
@@ -92,7 +102,7 @@ RAMFUNC void disk_timerproc (void);
 
 //Macro added by Laurence
 #define DMA_Channel_SPI_SD_RX DMA1_Channel4
-extern BYTE Sd_Spi_Called_From_USB_MSC;
+extern volatile BYTE Sd_Spi_Called_From_USB_MSC;
 //End Laurence
 #define _DISKIO
 #endif

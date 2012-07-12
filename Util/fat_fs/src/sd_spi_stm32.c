@@ -107,7 +107,7 @@
  #define RCC_APBPeriphClockCmd_SPI_SD  RCC_APB1PeriphClockCmd
  #define RCC_APBPeriph_SPI_SD     RCC_APB1Periph_SPI2
  /* - for SPI2 and full-speed APB1: 36MHz/(2)=18mhz */
- #define SPI_BaudRatePrescaler_SPI_SD  SPI_BaudRatePrescaler_2/*Note that the ST perif lib defines prescale as F_APB/S_SPI*/
+ #define SPI_BaudRatePrescaler_SPI_SD  SPI_BaudRatePrescaler_4//2/*Note that the ST perif lib defines prescale as F_APB/S_SPI*/
 
 #elif defined(USE_STM32_P103)
  // Olimex STM32-P103 not tested!
@@ -219,7 +219,7 @@ DWORD Timer1, Timer2;	/* 100Hz decrement timers */
 static
 BYTE CardType;			/* Card type flags */
 
-BYTE Sd_Spi_Called_From_USB_MSC;/* Added for faster use in USB mass storage*/
+volatile BYTE Sd_Spi_Called_From_USB_MSC;/* Added for faster use in USB mass storage*/
 
 enum speed_setting { INTERFACE_SLOW, INTERFACE_FAST };
 
@@ -424,7 +424,6 @@ BYTE wait_ready (void)
 /* Deselect the card and release SPI bus                                 */
 /*-----------------------------------------------------------------------*/
 
-static
 void release_spi (void)
 {
 	DESELECT();
@@ -508,18 +507,33 @@ void stm32_dma_transfer(
 	// not needed
 	//while (DMA_GetFlagStatus(DMA_FLAG_SPI_SD_TC_TX) == RESET) { ; }
 	/* Wait until DMA1_Channel 2 Receive Complete */
-	if(!Sd_Spi_Called_From_USB_MSC)//Mass storage uses non blocking read
+	if(!Sd_Spi_Called_From_USB_MSC) {//Mass storage uses non blocking read
 		while (DMA_GetFlagStatus(DMA_FLAG_SPI_SD_TC_RX) == RESET) { ; }
-	// same w/o function-call:
-	// while ( ( ( DMA1->ISR ) & DMA_FLAG_SPI_SD_TC_RX ) == RESET ) { ; }
+		// same w/o function-call:
+		// while ( ( ( DMA1->ISR ) & DMA_FLAG_SPI_SD_TC_RX ) == RESET ) { ; }
+		/* Disable DMA RX Channel */
+		DMA_Cmd(DMA_Channel_SPI_SD_RX, DISABLE);
+		/* Disable DMA TX Channel */
+		DMA_Cmd(DMA_Channel_SPI_SD_TX, DISABLE);
+		
+		/* Disable SPI RX/TX request */
+		SPI_I2S_DMACmd(SPI_SD, SPI_I2S_DMAReq_Rx | SPI_I2S_DMAReq_Tx, DISABLE);
+	}
+}
 
-	/* Disable DMA RX Channel */
-	DMA_Cmd(DMA_Channel_SPI_SD_RX, DISABLE);
-	/* Disable DMA TX Channel */
-	DMA_Cmd(DMA_Channel_SPI_SD_TX, DISABLE);
+void wrapup_transaction(void) {
+		while (DMA_GetFlagStatus(DMA_FLAG_SPI_SD_TC_RX) == RESET) { ; }
+		/* Disable DMA RX Channel */
+		DMA_Cmd(DMA_Channel_SPI_SD_RX, DISABLE);
+		/* Disable DMA TX Channel */
+		DMA_Cmd(DMA_Channel_SPI_SD_TX, DISABLE);
+		
+		/* Disable SPI RX/TX request */
+		SPI_I2S_DMACmd(SPI_SD, SPI_I2S_DMAReq_Rx | SPI_I2S_DMAReq_Tx, DISABLE);
+}
 
-	/* Disable SPI RX/TX request */
-	SPI_I2S_DMACmd(SPI_SD, SPI_I2S_DMAReq_Rx | SPI_I2S_DMAReq_Tx, DISABLE);
+void stop_cmd(void){
+	send_cmd(CMD12, 0);
 }
 #endif /* STM32_SD_USE_DMA */
 
@@ -620,7 +634,6 @@ void power_off_ (void)
 /* Receive a data packet from MMC                                        */
 /*-----------------------------------------------------------------------*/
 
-static
 BOOL rcvr_datablock (
 	BYTE *buff,			/* Data buffer to store received data */
 	UINT btr			/* Byte count (must be multiple of 4) */
@@ -630,26 +643,28 @@ BOOL rcvr_datablock (
 
 
 	Timer1 = 10;
-	do {							/* Wait for data packet in timeout of 100ms */
+	do {				/* Wait for data packet in timeout of 5//100ms */
 		token = rcvr_spi();
 	} while ((token == 0xFF) && Timer1);
 	if(token != 0xFE) return FALSE;	/* If not valid data token, return with error */
 
 #ifdef STM32_SD_USE_DMA
+	if(Sd_Spi_Called_From_USB_MSC)
+		btr+=2;			/* Receive the CRC as part of the DMA if using USB*/
 	stm32_dma_transfer( TRUE, buff, btr );
 #else
-	do {							/* Receive the data block into buffer */
+	do {				/* Receive the data block into buffer */
 		rcvr_spi_m(buff++);
 		rcvr_spi_m(buff++);
 		rcvr_spi_m(buff++);
 		rcvr_spi_m(buff++);
 	} while (btr -= 4);
 #endif /* STM32_SD_USE_DMA */
-
-	rcvr_spi();						/* Discard CRC */
-	rcvr_spi();
-
-	return TRUE;					/* Return with success */
+	if(!Sd_Spi_Called_From_USB_MSC) {//Mass storage uses non blocking read
+		rcvr_spi();		/* Discard CRC */
+		rcvr_spi();
+	}
+	return TRUE;			/* Return with success */
 }
 
 
@@ -661,7 +676,7 @@ BOOL rcvr_datablock (
 #if _FS_READONLY == 0
 static
 BOOL xmit_datablock (
-	const BYTE *buff,	/* 512 byte data block to be transmitted */
+	const BYTE *buff,		/* 512 byte data block to be transmitted */
 	BYTE token			/* Data/Stop token */
 )
 {
@@ -672,8 +687,8 @@ BOOL xmit_datablock (
 
 	if (wait_ready() != 0xFF) return FALSE;
 
-	xmit_spi(token);					/* transmit data token */
-	if (token != 0xFD) {	/* Is data token */
+	xmit_spi(token);		/* transmit data token */
+	if (token != 0xFD) {		/* Is data token */
 
 #ifdef STM32_SD_USE_DMA
 		stm32_dma_transfer( FALSE, buff, 512 );
@@ -858,20 +873,17 @@ DRESULT disk_read (
 				if (!rcvr_datablock(buff, 512)) {
 					break;
 				}
+				if(Sd_Spi_Called_From_USB_MSC) {//Mass storage uses non blocking read
+					return RES_OK;
+				}
 				buff += 512;
 			} while (--count);
 			send_cmd(CMD12, 0);		/* STOP_TRANSMISSION */
 		}
-		if (send_cmd(CMD18, sector) == 0) {	/* READ_MULTIPLE_BLOCK */
-			if (!rcvr_datablock(buff, 512*(DWORD)count)) {
-				
-			}
-			count=0;
-			send_cmd(CMD12, 0);		/* STOP_TRANSMISSION */
-		}
 	}
-	release_spi();
-
+	if(!Sd_Spi_Called_From_USB_MSC) {//Mass storage uses non blocking read
+		release_spi();
+	}
 	return count ? RES_ERROR : RES_OK;
 }
 

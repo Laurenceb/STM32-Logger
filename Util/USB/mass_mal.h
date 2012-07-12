@@ -31,16 +31,16 @@ extern volatile uint32_t* Data_Buffer;	/*data buffer for DMA transfers*/
 #define MAL_FAIL 1
 #define MAX_LUN  1
 
-#define MAX_DMA_BUFF_SIZE 512/*0*/
+#define MAX_DMA_BUFF_SIZE 514
 
 /* Exported macro ------------------------------------------------------------*/
-#define MAL_TRANSFER_INDEX (This_SD_Transfer-DMA_GetCurrDataCounter(DMA_Channel_SPI_SD_RX))
+#define MAL_TRANSFER_INDEX DMA_GetCurrDataCounter(DMA_Channel_SPI_SD_RX)
 /* Exported functions ------------------------------------------------------- */
 
 uint16_t MAL_Init (uint8_t lun);
 uint16_t MAL_GetStatus (uint8_t lun);
-uint16_t MAL_Read(uint8_t lun, uint32_t Memory_Offset, uint32_t *Readbuff, uint16_t Transfer_Length);
-uint16_t MAL_Write(uint8_t lun, uint32_t Memory_Offset, uint32_t *Writebuff, uint16_t Transfer_Length);
+uint16_t MAL_Read(uint8_t lun, uint32_t Memory_Offset, uint32_t *Readbuff, uint32_t Transfer_Length);
+uint16_t MAL_Write(uint8_t lun, uint32_t Memory_Offset, uint32_t *Writebuff, uint32_t Transfer_Length);
 #endif /* __MASS_MAL_H */
 
 /******************* (C) COPYRIGHT 2011 STMicroelectronics *****END OF FILE****/

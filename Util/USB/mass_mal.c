@@ -81,7 +81,7 @@ uint16_t MAL_Init(uint8_t lun)
 * Output         : None
 * Return         : None
 *******************************************************************************/
-uint16_t MAL_Write(uint8_t lun, uint32_t Memory_Offset, uint32_t *Writebuff, uint16_t Transfer_Length)
+uint16_t MAL_Write(uint8_t lun, uint32_t Memory_Offset, uint32_t *Writebuff, uint32_t Transfer_Length)
 {
 
   switch (lun)
@@ -114,7 +114,7 @@ uint16_t MAL_Write(uint8_t lun, uint32_t Memory_Offset, uint32_t *Writebuff, uin
 * Output         : None
 * Return         : Buffer pointer
 *******************************************************************************/
-uint16_t MAL_Read(uint8_t lun, uint32_t Memory_Offset, uint32_t *Readbuff, uint16_t Transfer_Length)
+uint16_t MAL_Read(uint8_t lun, uint32_t Memory_Offset, uint32_t *Readbuff, uint32_t Transfer_Length)
 {
 
   switch (lun)

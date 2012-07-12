@@ -63,7 +63,7 @@ int main(void)
 		shutdown();
 	}
 	SysTick_Configuration();			//Start up system timer at 100Hz for uSD card functionality
-	Watchdog_Config(WATCHDOG_TIMEOUT);		//Set the watchdog
+	//Watchdog_Config(WATCHDOG_TIMEOUT);		//Set the watchdog
 	Watchdog_Reset();				//Reset watchdog as soon as possible incase it is still running at power on
 	rtc_init();					//Real time clock initialise - (keeps time unchanged if set)
 	Usarts_Init();
@@ -78,7 +78,7 @@ int main(void)
 		while (bDeviceState != CONFIGURED) {	//Wait for USB config - timeout causes shutdown
 			if(Millis>10000 || !nojack)	//No USB cable - shutdown (Charger pin will be set to open drain, cant be disabled without usb)
 				shutdown();
-			if(GET_CHRG_STATE)		//Jack detect resets the countdown
+			if(GET_VBUS_STATE)		//Jack detect resets the countdown
 				nojack=0x0FFFFF;
 			nojack--;
 			Watchdog_Reset();		//Reset watchdog here, if we are stalled here the Millis timeout should catch us
