@@ -48,6 +48,7 @@ extern uint32_t Mass_Block_Size[2];
 /* Extern function prototypes ------------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 
+
 /*******************************************************************************
 * Function Name  : Read_Memory
 * Description    : Handle the Read operation from the microSD card.
@@ -55,30 +56,105 @@ extern uint32_t Mass_Block_Size[2];
 * Output         : None.
 * Return         : None.
 *******************************************************************************/
+/*
+void Read_Memory(uint8_t lun, uint32_t Memory_Offset, uint32_t Transfer_Length)
+{
+  static uint32_t Offset, Length;
+  uint32_t This_SD_Transfer;
+  if (TransferState == TXFR_IDLE )
+  {
+    Offset = Memory_Offset * Mass_Block_Size[lun];
+    Length = Transfer_Length * Mass_Block_Size[lun];
+    TransferState = TXFR_ONGOING;
+  }
+  if (TransferState == TXFR_ONGOING )
+  {
+    if (!Block_Read_count)			//We have completed sending the data over the USB, time to get more
+    {
+      if( Length > MAX_DMA_BUFF_SIZE)		//Try to do transfers in multiple blocks at a time, but we have limited ram
+	This_SD_Transfer = MAX_DMA_BUFF_SIZE;	//Amount to transfer in this SD DMA transaction
+      else
+	This_SD_Transfer = Length;		//Transfer the remainder
+      MAL_Read(lun ,
+               Offset ,
+               Data_Buffer,
+               This_SD_Transfer);
+
+      USB_SIL_Write(EP1_IN, (uint8_t *)Data_Buffer, BULK_MAX_PACKET_SIZE);
+
+      Block_Read_count = This_SD_Transfer - BULK_MAX_PACKET_SIZE;
+      Block_offset = BULK_MAX_PACKET_SIZE;
+    }
+    else
+    {
+      USB_SIL_Write(EP1_IN, (uint8_t *)Data_Buffer + Block_offset, BULK_MAX_PACKET_SIZE);
+
+      Block_Read_count -= BULK_MAX_PACKET_SIZE;
+      Block_offset += BULK_MAX_PACKET_SIZE;
+    }
+
+    SetEPTxCount(ENDP1, BULK_MAX_PACKET_SIZE);
+#ifndef USE_STM3210C_EVAL
+    SetEPTxStatus(ENDP1, EP_TX_VALID);
+#endif    
+    Offset += BULK_MAX_PACKET_SIZE;
+    Length -= BULK_MAX_PACKET_SIZE;
+
+    CSW.dDataResidue -= BULK_MAX_PACKET_SIZE;
+    Led_RW_ON();
+  }
+  if (Length == 0)
+  {
+    Block_Read_count = 0;
+    Block_offset = 0;
+    Offset = 0;
+    Bot_State = BOT_DATA_IN_LAST;
+    TransferState = TXFR_IDLE;
+    Led_RW_OFF();
+  }
+}
+
+
+
+
+*/
+
+/*******************************************************************************
+* Function Name  : Read_Memory
+* Description    : Handle the Read operation from the microSD card.
+* Input          : None.
+* Output         : None.
+* Return         : None.
+*******************************************************************************/
+
 void Read_Memory(uint8_t lun, uint32_t Memory_Offset, uint32_t Transfer_Length)
 {
 	static uint32_t Length,Transfer_counter;
 	if (TransferState == TXFR_IDLE ){
 		Length = Transfer_Length * Mass_Block_Size[lun];
+		Transfer_counter = Memory_Offset * Mass_Block_Size[lun];
 		TransferState = TXFR_ONGOING;
 		Sd_Spi_Called_From_USB_MSC = 1;			//Set this to stop the SD card driver blocking
-		MAL_Read(lun, Memory_Offset * Mass_Block_Size[lun], (uint8_t *)Data_Buffer, 512);//Read and discard CRC
+		MAL_Read(lun, Transfer_counter, (uint8_t *)Data_Buffer, 512);//Read and discard CRC
 		Block_offset=0;
 	}
 	if (TransferState == TXFR_ONGOING ){
 		while(MAL_TRANSFER_INDEX>Mass_Block_Size[lun]-Block_offset-BULK_MAX_PACKET_SIZE){;}//Wait for enough to be transferred
-		USB_SIL_Write(EP1_IN, (uint8_t *)Data_Buffer + Block_offset, BULK_MAX_PACKET_SIZE);
-		Block_offset += BULK_MAX_PACKET_SIZE;
-		if(Mass_Block_Size[lun]==Block_offset) {	//If we have finished the DMA transfer 
-			wrapup_transaction();			//Complete transaction on card - DMA shutdown and CRC dump
+		Block_offset += BULK_MAX_PACKET_SIZE; 
+		if(Mass_Block_Size[lun] == Block_offset) {	//If we have finished the DMA transfer 
+			wrapup_transaction();			//Complete transaction on card - DMA shutdown
+			release_spi();
+			USB_SIL_Write(EP1_IN, (uint8_t *)Data_Buffer + Block_offset - BULK_MAX_PACKET_SIZE, BULK_MAX_PACKET_SIZE);
 			if(Length>BULK_MAX_PACKET_SIZE)		//Data remains
-    				MAL_Read(lun,Memory_Offset*Mass_Block_Size[lun]+Transfer_counter+BULK_MAX_PACKET_SIZE,(uint8_t*)Data_Buffer,512);	
+				MAL_Read(lun,Transfer_counter+BULK_MAX_PACKET_SIZE,(uint8_t*)Data_Buffer,512);
 			Block_offset=0;				//Reset this here
 		}
+		else
+			USB_SIL_Write(EP1_IN, (uint8_t *)Data_Buffer + Block_offset - BULK_MAX_PACKET_SIZE, BULK_MAX_PACKET_SIZE);	
 		SetEPTxCount(ENDP1, BULK_MAX_PACKET_SIZE);
 		#ifndef USE_STM3210C_EVAL
 		SetEPTxStatus(ENDP1, EP_TX_VALID);
-		#endif    
+		#endif   
 		Length -= BULK_MAX_PACKET_SIZE;
 		Transfer_counter += BULK_MAX_PACKET_SIZE;
 		CSW.dDataResidue -= BULK_MAX_PACKET_SIZE;
@@ -86,10 +162,12 @@ void Read_Memory(uint8_t lun, uint32_t Memory_Offset, uint32_t Transfer_Length)
 	}
 	if (Length == 0){
 		Block_offset = 0;
+		Transfer_counter=0;
 		Bot_State = BOT_DATA_IN_LAST;
 		TransferState = TXFR_IDLE;
 		Led_RW_OFF();
 		Sd_Spi_Called_From_USB_MSC = 0;		//Reset this to start the SD card driver blocking
+		//release_spi();
 	}
 }
 
@@ -106,9 +184,10 @@ void Read_Memory(uint8_t lun, uint32_t Memory_Offset, uint32_t Transfer_Length)
 	static uint32_t Length;
 	static uint8_t Used_CMD18;
 	if (TransferState == TXFR_IDLE ){
-		if(Used_CMD18)			//Complete transaction on card
-			stop_cmd();				//Stop command
-		release_spi();
+		//if(Used_CMD18){				//Complete transaction on card
+		//	stop_cmd();				//Stop command
+		//	release_spi();
+		//}
 		Length = Transfer_Length * Mass_Block_Size[lun];
 		TransferState = TXFR_ONGOING;
 		Sd_Spi_Called_From_USB_MSC = 1;			//Set this to stop the SD card driver blocking

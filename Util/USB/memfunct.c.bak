@@ -117,3 +117,76 @@ void Read_Memory(uint8_t lun, uint32_t Memory_Offset, uint32_t Transfer_Length)
 	}
 }
 
+/*******************************************************************************
+* Function Name  : Read_Memory
+* Description    : Handle the Read operation from the microSD card.
+* Input          : None.
+* Output         : None.
+* Return         : None.
+*******************************************************************************/
+void Read_Memory(uint8_t lun, uint32_t Memory_Offset, uint32_t Transfer_Length)
+{
+	static uint32_t Length/*, ThisLength*/,Transfer_counter;
+	//static uint8_t Used_CMD18;
+	if (TransferState == TXFR_IDLE ){
+		Length = Transfer_Length * Mass_Block_Size[lun];
+		TransferState = TXFR_ONGOING;
+		Sd_Spi_Called_From_USB_MSC = 1;			//Set this to stop the SD card driver blocking
+		//Used_CMD18=(Transfer_Length>1);			//So we know if we need to send the stop command
+		//if(Used_CMD18)		
+		//	MAL_Read(lun, Memory_Offset * Mass_Block_Size[lun], (uint8_t *)Data_Buffer, 1024);//Just request two blocks to force CMD18
+		//else
+			MAL_Read(lun, Memory_Offset * Mass_Block_Size[lun], (uint8_t *)Data_Buffer, 512);//Read and discard CRC
+		//if(Transfer_Length>=0x0F)
+		//	ThisLength = (0x0F-1) * Mass_Block_Size[lun];//Cards have a limit of 16 sectors with CMD18 it seems?
+		//else
+		//	ThisLength = Length;
+		Block_offset=0;
+		//Transfer_counter=0;
+	}
+	if (TransferState == TXFR_ONGOING ){
+		while(MAL_TRANSFER_INDEX>Mass_Block_Size[lun]-Block_offset-BULK_MAX_PACKET_SIZE){;}//Wait for enough to be transferred
+		USB_SIL_Write(EP1_IN, (uint8_t *)Data_Buffer + Block_offset, BULK_MAX_PACKET_SIZE);
+		Block_offset += BULK_MAX_PACKET_SIZE;
+		if(Mass_Block_Size[lun]==Block_offset) {	//If we have finished the DMA transfer 
+			wrapup_transaction();			//Complete transaction on card - DMA shutdown and CRC dump
+			if(Length>BULK_MAX_PACKET_SIZE) {	//Data remains
+				//rcvr_datablock((uint8_t*)Data_Buffer, 512);//Receive a new datablock - aquires card and starts DMA
+				//if(!Used_CMD18)
+				//	TransferState = TXFR_IDLE;
+				/*if(ThisLength>BULK_MAX_PACKET_SIZE)//We are in a sub transfer
+					rcvr_datablock((uint8_t*)Data_Buffer, 512);//Receive a new datablock - aquires card and starts DMA
+				else {
+					stop_cmd();		//Terminate the CMD18
+					release_spi();
+					if(Length-BULK_MAX_PACKET_SIZE>=0x0F * Mass_Block_Size[lun])//Determine if this is the last Sub transfer
+						ThisLength = (0x0F-1) * Mass_Block_Size[lun];//Cards have a limit of 1023 sectors with CMD18 it seems
+					else
+						ThisLength = Length;
+					ThisLength+=BULK_MAX_PACKET_SIZE;*/
+    				MAL_Read(lun,Memory_Offset*Mass_Block_Size[lun]+Transfer_counter+BULK_MAX_PACKET_SIZE,(uint8_t*)Data_Buffer,512);
+				//}	
+			}
+			Block_offset=0;				//Reset this here
+		}
+		SetEPTxCount(ENDP1, BULK_MAX_PACKET_SIZE);
+		#ifndef USE_STM3210C_EVAL
+		SetEPTxStatus(ENDP1, EP_TX_VALID);
+		#endif    
+		Length -= BULK_MAX_PACKET_SIZE;
+		Transfer_counter += BULK_MAX_PACKET_SIZE;
+		CSW.dDataResidue -= BULK_MAX_PACKET_SIZE;
+		Led_RW_ON();
+	}
+	if (Length == 0){
+		Block_offset = 0;
+		Bot_State = BOT_DATA_IN_LAST;
+		TransferState = TXFR_IDLE;
+		Led_RW_OFF();
+		//if(Used_CMD18)				//Complete transaction on card
+		//	stop_cmd();				//Stop command
+		//release_spi();
+		Sd_Spi_Called_From_USB_MSC = 0;		//Reset this to start the SD card driver blocking
+	}
+}
+

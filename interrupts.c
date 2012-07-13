@@ -111,7 +111,7 @@ __attribute__((externally_visible)) void EXTI0_IRQHandler(void) {
 		/*Called Code goes here*/
 		Button_hold_tim=BUTTON_TURNOFF_TIME;
 		RED_LED_ON;					//Red LED is used to indicate successful button press to the user
-		if(GET_CHRG_STATE) {				//Interrupt due to USB insertion - reset to usb mode
+		if(GET_VBUS_STATE) {				//Interrupt due to USB insertion - reset to usb mode
 			if(file_opened)
 				shutdown_filesystem();
 			NVIC_SystemReset();			//Software reset of the system - USB inserted whilst running
