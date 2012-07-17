@@ -89,6 +89,24 @@ void DMA_ISR_Config(void) {
 }
 
 /**
+  * @brief  Configure the DMA interrupt from SPI2 
+  * @param  None
+  * @retval None
+  * This initialiser function assumes the clocks and gpio have been configured
+  */
+void DMA_ISR_Config_SPI2(void) {
+	NVIC_InitTypeDef   NVIC_InitStructure;
+	DMA_ClearFlag(DMA1_FLAG_TC4|DMA1_FLAG_HT4);  		//make sure flags are clear
+	DMA_ITConfig(DMA1_Channel4, DMA_IT_TC, ENABLE);		//interrupt on complete and half complete
+	/* Enable and set DMA1 Interrupt to the sixth priority */
+	NVIC_InitStructure.NVIC_IRQChannel = DMA1_Channel4_IRQn;//The DMA complete/half complete triggered interrupt	
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x00;//Higher pre-emption priority - can nest inside USB/SD
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x03;	//6th subpriority
+	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&NVIC_InitStructure);
+}
+
+/**
   * @brief  This function configures the systick timer to 100hz overflow
   * @param  None
   * @retval None
@@ -152,6 +170,24 @@ __attribute__((externally_visible)) void DMAChannel1_IRQHandler(void) {
 		if(Sensors&(1<<TEMPERATURE_SENSOR))		//Only pass data is I2C temp sensor is connected
 			Add_To_Buffer(*(uint32_t*)(&TMP102_Reported_Temperature),&Temperatures_Buffer);//Pass pressure data via buffer to avoid issues with lag	
 	}
+}
+
+
+/**
+  * @brief  This function handles DMA channel interrupt request.- SPI block transfer complete ISR
+  * @param  None
+  * @retval None
+  */
+__attribute__((externally_visible)) void DMAChannel4_IRQHandler(void) {
+	NVIC_InitTypeDef   NVIC_InitStructure;
+	wrapup_transaction();			//Complete transaction on card - DMA shutdown
+	release_spi();
+	Sd_Spi_Called_From_USB_MSC=0;
+	DMA_ClearFlag(DMA1_FLAG_TC4);
+	DMA_ClearITPendingBit(DMA1_IT_GL4);	//Clear flags
+	NVIC_InitStructure.NVIC_IRQChannel = DMA1_Channel4_IRQn;//Interrupt disables itself
+	NVIC_InitStructure.NVIC_IRQChannelCmd = DISABLE;
+	NVIC_Init(&NVIC_InitStructure);
 }
 
 /**

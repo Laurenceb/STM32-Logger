@@ -63,7 +63,7 @@ int main(void)
 		shutdown();
 	}
 	SysTick_Configuration();			//Start up system timer at 100Hz for uSD card functionality
-	Watchdog_Config(WATCHDOG_TIMEOUT);		//Set the watchdog
+	//Watchdog_Config(WATCHDOG_TIMEOUT);		//Set the watchdog
 	Watchdog_Reset();				//Reset watchdog as soon as possible incase it is still running at power on
 	rtc_init();					//Real time clock initialise - (keeps time unchanged if set)
 	Usarts_Init();

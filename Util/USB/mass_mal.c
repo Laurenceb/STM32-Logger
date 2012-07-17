@@ -19,7 +19,7 @@
 #ifdef USE_STM3210E_EVAL
  #include "stm32_eval_sdio_sd.h"
 #else
- #include "stm32_eval_spi_sd.h"
+ //#include "stm32_eval_spi_sd.h"
 #endif /* USE_STM3210E_EVAL */
 
 #ifdef USE_STM3210E_EVAL
@@ -38,7 +38,7 @@ uint32_t Mass_Block_Size[2];
 uint32_t Mass_Block_Count[2];
 __IO uint32_t Status = 0;
 /* Public variables ----------------------------------------------------------*/
-volatile uint32_t* Data_Buffer;	/*data buffer for DMA transfers*/
+uint32_t* volatile Data_Buffer;	/*data buffer for DMA transfers*/
 
 #ifdef USE_STM3210E_EVAL
 SD_CardInfo mSDCardInfo;
@@ -81,13 +81,13 @@ uint16_t MAL_Init(uint8_t lun)
 * Output         : None
 * Return         : None
 *******************************************************************************/
-uint16_t MAL_Write(uint8_t lun, uint32_t Memory_Offset, uint32_t *Writebuff, uint32_t Transfer_Length)
+uint16_t MAL_Write(uint8_t lun, uint32_t Memory_Offset, uint8_t * volatile Writebuff, uint32_t Transfer_Length)
 {
 
   switch (lun)
   {
     case 0:/* Physical drive number (0) */
-      Status = disk_write (0, (uint8_t*)Writebuff, Memory_Offset/512, Transfer_Length/512);//assume integer sectors - 512 bytes
+      Status = disk_write (0, (uint8_t* volatile)Writebuff, Memory_Offset/512, Transfer_Length/512);//assume integer sectors - 512 bytes
       //Status = SD_WriteBlock((uint8_t*)Writebuff, Memory_Offset, Transfer_Length);
 #ifdef USE_STM3210E_EVAL
       if ( Status != SD_OK )
@@ -114,13 +114,13 @@ uint16_t MAL_Write(uint8_t lun, uint32_t Memory_Offset, uint32_t *Writebuff, uin
 * Output         : None
 * Return         : Buffer pointer
 *******************************************************************************/
-uint16_t MAL_Read(uint8_t lun, uint32_t Memory_Offset, uint32_t *Readbuff, uint32_t Transfer_Length)
+uint16_t MAL_Read(uint8_t lun, uint32_t Memory_Offset, uint8_t * volatile Readbuff, uint32_t Transfer_Length)
 {
 
   switch (lun)
   {
     case 0: /* Physical drive number (0) */
-      Status = disk_read (0, (uint8_t*)Readbuff, Memory_Offset/512, Transfer_Length/512);
+      Status = disk_read (0, (uint8_t* volatile)Readbuff, Memory_Offset/512, Transfer_Length/512);
       //Status = SD_ReadBlock((uint8_t*)Readbuff, Memory_Offset, Transfer_Length);
 #ifdef USE_STM3210E_EVAL      
       if ( Status != SD_OK )
@@ -197,6 +197,7 @@ uint16_t MAL_GetStatus (uint8_t lun)
     //SD_GetCSDRegister(&SD_csd);
     //DeviceSizeMul = SD_csd.DeviceSizeMul + 2;
     //temp_block_mul = (1 << SD_csd.RdBlockLen)/ 512;/* Physical drive number (0) */
+    while(Sd_Spi_Called_From_USB_MSC){;}
     disk_ioctl (0, GET_SECTOR_COUNT, &Mass_Block_Count[0]);//Sectors are the same as blocks and 512 bytes long?
     //Mass_Block_Count[0] = ((SD_csd.DeviceSize + 1) * (1 << (DeviceSizeMul))) * temp_block_mul;
     Mass_Block_Size[0] = 512;
