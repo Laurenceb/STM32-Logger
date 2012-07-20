@@ -126,10 +126,7 @@ __attribute__((externally_visible)) void EXTI0_IRQHandler(void) {
 	if(EXTI_GetITStatus(EXTI_Line0) != RESET) {
 		/* Clear the  EXTI line 0 pending bit */
 		EXTI_ClearITPendingBit(EXTI_Line0);
-		/*Called Code goes here*/
-		Button_hold_tim=BUTTON_TURNOFF_TIME;
-		RED_LED_ON;					//Red LED is used to indicate successful button press to the user
-		if(GET_VBUS_STATE) {				//Interrupt due to USB insertion - reset to usb mode
+		if(USB_SOURCE!=bootsource && GET_VBUS_STATE) {	//Interrupt due to USB insertion - reset to usb mode
 			if(file_opened)
 				shutdown_filesystem();
 			NVIC_SystemReset();			//Software reset of the system - USB inserted whilst running
@@ -140,6 +137,9 @@ __attribute__((externally_visible)) void EXTI0_IRQHandler(void) {
 			red_flash();				//Flash red led - provides some debouncing on jack removal
 			shutdown();				//Shuts down - only wakes up on power pin i.e. WKUP
 		}
+		/*Called Code goes here*/
+		Button_hold_tim=BUTTON_TURNOFF_TIME;
+		RED_LED_ON;					//Red LED is used to indicate successful button press to the user
 	}
 }
 
