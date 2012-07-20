@@ -164,7 +164,7 @@ void USB_Interrupts_Config(void)
 {
   NVIC_InitTypeDef NVIC_InitStructure;
 
-  NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
+ // NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
 
 #ifdef STM32L1XX_MD
   NVIC_InitStructure.NVIC_IRQChannel = USB_LP_IRQn;

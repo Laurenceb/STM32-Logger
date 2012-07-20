@@ -37,6 +37,7 @@
 #include "../inc/integer.h"
 #include "../inc/diskio.h"
 #include "../../../gpio.h"
+#include "../../USB/mass_mal.h"
 
 // demo uses a command line option to define this (see Makefile):
 #define STM32_SD_USE_DMA
@@ -494,7 +495,8 @@ void stm32_dma_transfer(
 #endif
 
 	}
-
+	if(Sd_Spi_Called_From_USB_MSC)
+		DMA_ISR_Config_SPI2();
 	/* Enable DMA RX Channel */
 	DMA_Cmd(DMA_Channel_SPI_SD_RX, ENABLE);
 	/* Enable DMA TX Channel */
@@ -508,6 +510,7 @@ void stm32_dma_transfer(
 	//while (DMA_GetFlagStatus(DMA_FLAG_SPI_SD_TC_TX) == RESET) { ; }
 	/* Wait until DMA1_Channel 2 Receive Complete */
 	if(!Sd_Spi_Called_From_USB_MSC) {//Mass storage uses non blocking read
+		//while(1);
 		while (DMA_GetFlagStatus(DMA_FLAG_SPI_SD_TC_RX) == RESET) { ; }
 		// same w/o function-call:
 		// while ( ( ( DMA1->ISR ) & DMA_FLAG_SPI_SD_TC_RX ) == RESET ) { ; }
@@ -522,7 +525,7 @@ void stm32_dma_transfer(
 }
 
 void wrapup_transaction(void) {
-		while (DMA_GetFlagStatus(DMA_FLAG_SPI_SD_TC_RX) == RESET) { ; }
+		//while (DMA_GetFlagStatus(DMA_FLAG_SPI_SD_TC_RX) == RESET) { ; }
 		/* Disable DMA RX Channel */
 		DMA_Cmd(DMA_Channel_SPI_SD_RX, DISABLE);
 		/* Disable DMA TX Channel */
@@ -633,15 +636,12 @@ void power_off_ (void)
 /*-----------------------------------------------------------------------*/
 /* Receive a data packet from MMC                                        */
 /*-----------------------------------------------------------------------*/
-	BYTE token;
 BOOL rcvr_datablock (
 	BYTE *  volatile buff,		/* Data buffer to store received data */
 	UINT btr			/* Byte count (must be multiple of 4) */
 )
 {
-
-
-
+	BYTE token;
 	Timer1 = 10;
 	do {				/* Wait for data packet in timeout of 5//100ms */
 		token = rcvr_spi();
@@ -716,7 +716,6 @@ BOOL xmit_datablock (
 /*-----------------------------------------------------------------------*/
 /* Send a command packet to MMC                                          */
 /*-----------------------------------------------------------------------*/
-
 static
 BYTE send_cmd (
 	BYTE cmd,		/* Command byte */
@@ -724,7 +723,6 @@ BYTE send_cmd (
 )
 {
 	BYTE n, res;
-
 
 	if (cmd & 0x80) {	/* ACMD<n> is the command sequence of CMD55-CMD<n> */
 		cmd &= 0x7F;
@@ -757,7 +755,6 @@ BYTE send_cmd (
 	do
 		res = rcvr_spi();
 	while ((res & 0x80) && --n);
-
 	return res;			/* Return with the response value */
 }
 

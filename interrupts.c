@@ -96,14 +96,14 @@ void DMA_ISR_Config(void) {
   */
 void DMA_ISR_Config_SPI2(void) {
 	NVIC_InitTypeDef   NVIC_InitStructure;
-	DMA_ClearFlag(DMA1_FLAG_TC4|DMA1_FLAG_HT4);  		//make sure flags are clear
-	DMA_ITConfig(DMA1_Channel4, DMA_IT_TC, ENABLE);		//interrupt on complete and half complete
 	/* Enable and set DMA1 Interrupt to the sixth priority */
 	NVIC_InitStructure.NVIC_IRQChannel = DMA1_Channel4_IRQn;//The DMA complete/half complete triggered interrupt	
 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x00;//Higher pre-emption priority - can nest inside USB/SD
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x03;	//6th subpriority
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
+	DMA_ClearFlag(DMA1_FLAG_TC4|DMA1_FLAG_HT4);  		//make sure flags are clear
+	DMA_ITConfig(DMA1_Channel4, DMA_IT_TC, ENABLE);		//interrupt on complete and half complete
 }
 
 /**
@@ -180,11 +180,12 @@ __attribute__((externally_visible)) void DMAChannel1_IRQHandler(void) {
   */
 __attribute__((externally_visible)) void DMAChannel4_IRQHandler(void) {
 	NVIC_InitTypeDef   NVIC_InitStructure;
+	DMA_ClearFlag(DMA1_FLAG_TC4);
+	DMA_ClearITPendingBit(DMA1_IT_GL4);	//Clear flags
 	wrapup_transaction();			//Complete transaction on card - DMA shutdown
 	release_spi();
 	Sd_Spi_Called_From_USB_MSC=0;
-	DMA_ClearFlag(DMA1_FLAG_TC4);
-	DMA_ClearITPendingBit(DMA1_IT_GL4);	//Clear flags
+	DMA_ITConfig(DMA1_Channel4, DMA_IT_TC|DMA_IT_TE, DISABLE);	
 	NVIC_InitStructure.NVIC_IRQChannel = DMA1_Channel4_IRQn;//Interrupt disables itself
 	NVIC_InitStructure.NVIC_IRQChannelCmd = DISABLE;
 	NVIC_Init(&NVIC_InitStructure);
