@@ -1,5 +1,6 @@
 #include "stm32f10x.h"
 #pragma once
+#include "Sensors/ppg.h"
 #define MAX_DUTY 2047*3/4	/*max duty cycle for the motor - dont want to risk going to 100% as it will overrev motor*/
 #define PWM_RES MAX_DUTY/*motor pwm resolution*/
 
@@ -9,17 +10,19 @@
 
 #define PWM_PERIOD_CLKS (PWM_CYCLES_CENTER*PWM_PERIOD_CENTER)/* 192*378=72576 timer clocks */
 
-#if (PPG_CHANNELS&0x01)	/* An odd number of enabled channels - number of channels goes 1,2,3 etc*/
+#if(PPG_CHANNELS&0x01)	/* An odd number of enabled channels - number of channels goes 1,2,3 etc*/
+	#pragma "Odd number of PPG Channels"
 	#define PWM_PERIOD_BASE (PWM_PERIOD_CENTER-PPG_CHANNELS+1)
-	#define PWM_CYCLES_BASE (PWM_CYCLES_CENTER-(PPG_CHANNELS-1)/2)
+	#define PWM_CYCLES_BASE (PWM_CYCLES_CENTER+(PPG_CHANNELS-1)/2)
 #else			/* An even number */
+	#pragma "Even number of PPG Channels"
 	#define PWM_PERIOD_BASE (PWM_PERIOD_CENTER-PPG_CHANNELS+2)
-	#define PWM_CYCLES_BASE (PWM_CYCLES_CENTER-(PPG_CHANNELS-2)/2) 
+	#define PWM_CYCLES_BASE (PWM_CYCLES_CENTER+(PPG_CHANNELS-2)/2) 
 #endif
 
 //Macro to give correct pwm periods - channels are numbered 0,1,2 etc
 #define NORMAL_PWM_PERIOD(n) PWM_PERIOD_BASE+(2*n)
-#define FUDGED_PWM_PERIOD(n) PWM_PERIOD_CLKS-NORMAL_PWM_PERIOD(n)*(PWM_CYCLES_BASE-1)
+#define FUDGED_PWM_PERIOD(n) PWM_PERIOD_CLKS-NORMAL_PWM_PERIOD(n)*(PWM_CYCLES_BASE-n-1)
 
 //Macros for fudging timers
 #define FUDGE_ALL_TIMERS ((1<<PPG_CHANNELS)-1)
