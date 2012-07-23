@@ -22,7 +22,7 @@
 
 //Macro to give correct pwm periods - channels are numbered 0,1,2 etc
 #define NORMAL_PWM_PERIOD(n) (PWM_PERIOD_BASE+(2*n)-1)
-#define FUDGED_PWM_PERIOD(n) (PWM_PERIOD_CLKS-(NORMAL_PWM_PERIOD(n)+1)*(PWM_CYCLES_BASE-n)-1)
+#define FUDGED_PWM_PERIOD(n) (PWM_PERIOD_CLKS-(NORMAL_PWM_PERIOD(n)+1)*(PWM_CYCLES_BASE-n-1)-1)
 
 //Macros for fudging timers
 #define FUDGE_ALL_TIMERS ((1<<PPG_CHANNELS)-1)
