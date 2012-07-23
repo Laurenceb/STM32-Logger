@@ -43,11 +43,11 @@ void setup_pwm(void) {
   TIM_DeInit(TIM4);
   /* Prescaler of 16 times*/
   uint16_t PrescalerValue = 15;
-  /* Time base configuration */
+  /* Time base configuration  - timer 4 as pwm2*/
   #if BOARD<3
   TIM_TimeBaseStructure.TIM_Period = NORMAL_PWM_PERIOD(0);
   #else
-  TIM_TimeBaseStructure.TIM_Period = NORMAL_PWM_PERIOD(2);
+  TIM_TimeBaseStructure.TIM_Period = NORMAL_PWM_PERIOD(2);//PWM2 on revision 3 boards
   #endif
   TIM_TimeBaseStructure.TIM_Prescaler = PrescalerValue;
   TIM_TimeBaseStructure.TIM_ClockDivision = 0;
@@ -91,7 +91,7 @@ void setup_pwm(void) {
 
   #if BOARD>=3
   /*Now setup timer3 as PWM1*/
-  TIM_TimeBaseStructure.TIM_Period = NORMAL_PWM_PERIOD(2);
+  TIM_TimeBaseStructure.TIM_Period = NORMAL_PWM_PERIOD(1);
   TIM_TimeBaseInit(TIM3, &TIM_TimeBaseStructure);//same as timer4
   /* PWM1 Mode configuration: Channel1 */
   TIM_OC1Init(TIM3, &TIM_OCInitStructure);
@@ -155,10 +155,10 @@ void Tryfudge(uint32_t* Fudgemask) {
 		*Fudgemask&=~(uint32_t)0x01;//Clear the bit
 	}
 	if((*Fudgemask)&(uint32_t)0x04 && TIM4->CNT<(FUDGED_PWM_PERIOD(2)-2)) {//If the first bit is set, adjust the first timer in the list if it is safe to do so
-		TIM2->CR1 &= ~TIM_CR1_ARPE;//Disable reload buffering so we can load directly
-		TIM2->ARR = FUDGED_PWM_PERIOD(2);//Load reload register directly
-		TIM2->CR1 |= TIM_CR1_ARPE;//Enable buffering so we load buffered register
-		TIM2->ARR = NORMAL_PWM_PERIOD(0);//Load the buffer, so the pwm period returns to normal after 1 period
+		TIM4->CR1 &= ~TIM_CR1_ARPE;//Disable reload buffering so we can load directly
+		TIM4->ARR = FUDGED_PWM_PERIOD(2);//Load reload register directly
+		TIM4->CR1 |= TIM_CR1_ARPE;//Enable buffering so we load buffered register
+		TIM4->ARR = NORMAL_PWM_PERIOD(2);//Load the buffer, so the pwm period returns to normal after 1 period
 		*Fudgemask&=~(uint32_t)0x04;//Clear the bit
 	}
 }

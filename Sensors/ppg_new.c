@@ -34,19 +34,24 @@ void PPG_LO_Filter(volatile uint16_t* buff) {
 	//Now run the "baseband" decimating filter(s)
 	//Positive frequency
 	#if PPG_CHANNELS>=3
-	a=Frequency_Bin[2][0];
-	Frequency_Bin[2][0]=Frequency_Bin[2][0]*7+Frequency_Bin[2][1]*4;//Rotate the phasor in the bin - real here (~-30degree rotation)
-	Frequency_Bin[2][1]=Frequency_Bin[2][1]*7-a*4;//complex here
-	Frequency_Bin[2][1]>>=3;Frequency_Bin[2][0]>>=3;//divide by 8
+	a=Frequency_Bin[0][0];
+	Frequency_Bin[0][0]=Frequency_Bin[0][0]*7+Frequency_Bin[0][1]*4;//Rotate the phasor in the bin - real here (~-30degree rotation)
+	Frequency_Bin[0][1]=Frequency_Bin[0][1]*7-a*4;//complex here
+	Frequency_Bin[0][1]>>=3;Frequency_Bin[0][0]>>=3;//divide by 8
 	#endif
 	//Zero frequency - i.e. directly on quadrature 
 	//nothing to do to this bin
 	//Negative frequencie(s) go here, need to get to 0hz, so multiply bin by a +ive complex exponential
 	#if PPG_CHANNELS>=2
-	a=Frequency_Bin[1][0];
-	Frequency_Bin[1][0]=Frequency_Bin[1][0]*7-Frequency_Bin[2][1]*4;//Rotate the phasor in the bin - real here (~30degree rotation)
-	Frequency_Bin[1][1]=Frequency_Bin[1][1]*7+a*4;//complex here
-	Frequency_Bin[1][1]>>=3;Frequency_Bin[1][0]>>=3;//divide by 8
+		#if PPG_CHANNELS>=3
+			#define LST_CN 2
+		#else
+			#define LST_CN 1
+		#endif
+	a=Frequency_Bin[LST_CN][0];
+	Frequency_Bin[LST_CN][0]=Frequency_Bin[LST_CN][0]*7-Frequency_Bin[LST_CN][1]*4;//Rotate the phasor in the bin - real here (~30degree rotation)
+	Frequency_Bin[LST_CN][1]=Frequency_Bin[LST_CN][1]*7+a*4;//complex here
+	Frequency_Bin[LST_CN][1]>>=3;Frequency_Bin[LST_CN][0]>>=3;//divide by 8
 	#endif
 	#if PPG_CHANNELS>3 || !PPG_CHANNELS
 	#error "Unsupported number of channels - decoder error"

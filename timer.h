@@ -5,8 +5,8 @@
 #define PWM_RES MAX_DUTY/*motor pwm resolution*/
 
 //The idea here is that there are 192 cycles of first pwm output (at quadrature) and 191 of second pwm (just below quadrature)
-#define PWM_CYCLES_CENTER 192 
-#define PWM_PERIOD_CENTER 377/* 377+1=378 gives 11.905khz pwm with 72/16=4.5mhz clk - for quadrature sampling */
+#define PWM_CYCLES_CENTER 192ul 
+#define PWM_PERIOD_CENTER 378ul/* 378 gives 11.905khz pwm with 72/16=4.5mhz clk - for quadrature sampling */
 
 #define PWM_PERIOD_CLKS (PWM_CYCLES_CENTER*PWM_PERIOD_CENTER)/* 192*378=72576 timer clocks */
 
@@ -21,8 +21,8 @@
 #endif
 
 //Macro to give correct pwm periods - channels are numbered 0,1,2 etc
-#define NORMAL_PWM_PERIOD(n) PWM_PERIOD_BASE+(2*n)
-#define FUDGED_PWM_PERIOD(n) PWM_PERIOD_CLKS-NORMAL_PWM_PERIOD(n)*(PWM_CYCLES_BASE-n-1)
+#define NORMAL_PWM_PERIOD(n) (PWM_PERIOD_BASE+(2*n)-1)
+#define FUDGED_PWM_PERIOD(n) (PWM_PERIOD_CLKS-(NORMAL_PWM_PERIOD(n)+1)*(PWM_CYCLES_BASE-n)-1)
 
 //Macros for fudging timers
 #define FUDGE_ALL_TIMERS ((1<<PPG_CHANNELS)-1)
