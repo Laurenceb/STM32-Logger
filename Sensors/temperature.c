@@ -15,3 +15,9 @@ float convert_tmp102_temp(uint16_t adcval) {
 		return ((float)(adcval&0x0FFF)*0.0625);
 	return (((float)adcval)*0.0625);	//TMP102 is 0.0625C/LSB
 }
+
+#if BOARD>=3
+float convert_thermistor_temp(uint16_t adcval) {
+	return ((float)adcval*THERMISTOR_GAIN)-THERMISTOR_OFFSET;
+}
+#endif

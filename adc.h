@@ -10,6 +10,7 @@
 	#define SECOND_ADC_CHAN 9/* Usually used for a thermistor*/
 	#define PRESSURE_ADC_CHAN 1/* The guage pressure sensor */
 	#define BATTERY_ADC_CHAN 4/* The battery voltage monitoring */
+	#define THERMISTOR_ADC_CHAN SECOND_ADC_CHAN/* Sensor thermistor */
 #endif
 #define ADC_BUFF_SIZE ADC_BUFFER_SIZE/* 64 samples * 2 for interleaving, * 2bytes/sample==256 */
 

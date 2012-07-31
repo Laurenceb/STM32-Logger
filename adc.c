@@ -41,10 +41,17 @@ void ADC_Configuration(void)
   ADC_Init(ADC2, &ADC_InitStructure);
 
   /* ADC2 injected channel configuration */
+  #if BOARD<3
   ADC_InjectedSequencerLengthConfig(ADC2, 2);//two conversions
+  #else
+  ADC_InjectedSequencerLengthConfig(ADC2, 3);//three conversions on the version 3 pcb - thermistor on the sensor
+  #endif
   ADC_InjectedChannelConfig(ADC2, PRESSURE_ADC_CHAN, 1, ADC_SampleTime_239Cycles5);
-  //ADC_InjectedChannelConfig(ADC2, 16, 2, ADC_SampleTime_239Cycles5);//on die temperature sensor - only on adc1 :-(
+  //ADC_InjectedChannelConfig(ADC2, 16, 3, ADC_SampleTime_239Cycles5);//on die temperature sensor - only on adc1 :-(
   ADC_InjectedChannelConfig(ADC2, BATTERY_ADC_CHAN, 2, ADC_SampleTime_239Cycles5);
+  #if BOARD>=3
+  ADC_InjectedChannelConfig(ADC2, THERMISTOR_ADC_CHAN, 3, ADC_SampleTime_239Cycles5);
+  #endif
   ADC_ExternalTrigInjectedConvConfig(ADC2, ADC_ExternalTrigInjecConv_None);//set sw injected channels
 
 

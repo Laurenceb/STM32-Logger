@@ -31,7 +31,7 @@ extern volatile uint8_t Sensors;
 #define PRESSURE_MARGIN 0.3				/*means a pressure within 0.3PSI of zero will turn off the dump valve if setpoint -ive*/
 
 //Sensors
-enum {PRESSURE_HOSE=0,TEMPERATURE_SENSOR, PPG_SENSOR};
+enum {PRESSURE_HOSE=0,TEMPERATURE_SENSOR, PPG_SENSOR, THERMISTOR_SENSOR};
 
 //function prototypes
 void __fat_print_char(char c);
@@ -41,6 +41,7 @@ uint8_t detect_sensors(void);
 extern volatile buff_type Buff[PPG_CHANNELS];
 extern volatile buff_type Pressures_Buffer;		//Data from pressure sensor
 extern volatile buff_type Temperatures_Buffer;		//Data from temperature sensor
+extern volatile buff_type Thermistor_Buffer;		//Data from patient mounted thermistor for temperature sensing
 //fatfs globals
 extern volatile uint8_t file_opened;
 extern FIL FATFS_logfile;

@@ -39,6 +39,7 @@ volatile uint8_t System_state_Global;			//Stores the system state, controlled by
 volatile uint8_t Sensors;				//Global holding a mask of the sensors found by automatic sensor discovery
 //Sensor buffers to pass data back to logger
 volatile buff_type Temperatures_Buffer;			//Data from temperature sensor
+volatile buff_type Thermistor_Buffer;	
 volatile buff_type Pressures_Buffer;
 //FatFs filesystem globals go here
 FRESULT f_err_code;
@@ -184,6 +185,10 @@ int main(void)
 			Get_From_Buffer(&sensor_data,&Temperatures_Buffer);
 			printf(",%2f",sensor_data);	//print the retreived data
 		}
+		if(Sensors&(1<<THERMISTOR_SENSOR)) {	//If there is a thermistor temperature sensor present
+			Get_From_Buffer(&sensor_data,&Thermistor_Buffer);
+			printf(",%2f",sensor_data);	//print the retreived data
+		}
 		//Other sensors etc can go here
 		printf("\n");				//Terminating newline
 		if(file_opened) {
@@ -257,6 +262,11 @@ uint8_t detect_sensors(void) {
 		sensors|=(1<<TEMPERATURE_SENSOR);	//The I2C job completion means the sensor must be working
 		init_buffer(&Temperatures_Buffer,TMP102_BUFFER_SIZE);
 	}
+	#if BOARD>=3					/*Only version 3 and newer boards can connect directly to a thermistor*/
+	Device_Temperature=convert_thermistor_temp(ADC_GetInjectedConversionValue(ADC2, ADC_InjectedChannel_3));//Convert the thermistor ADC inject channel
+	if(Device_Temperature<50 && Device_Temperature>-10)//Sanity check to see if there is something connected
+		sensors|=(1<<THERMISTOR_SENSOR);	//if so mark sensor as present
+	#endif
 	//Other sensors, e.g. Temperature sensor/sensors on the I2C bus go here
 	//At the moment we assume PPG is always present, TODO make this detectable
 	sensors|=(1<<PPG_SENSOR);

@@ -168,7 +168,10 @@ __attribute__((externally_visible)) void DMAChannel1_IRQHandler(void) {
 		if(Sensors&(1<<PRESSURE_HOSE))			//Only pass data once hose is connected
 			Add_To_Buffer(*(uint32_t*)(&Reported_Pressure),&Pressures_Buffer);//Pass pressure data via buffer to avoid issues with lag
 		if(Sensors&(1<<TEMPERATURE_SENSOR))		//Only pass data is I2C temp sensor is connected
-			Add_To_Buffer(*(uint32_t*)(&TMP102_Reported_Temperature),&Temperatures_Buffer);//Pass pressure data via buffer to avoid issues with lag	
+			Add_To_Buffer(*(uint32_t*)(&TMP102_Reported_Temperature),&Temperatures_Buffer);//Pass press data via buffer avoiding lag issue
+		if(Sensors&(1<<THERMISTOR_SENSOR))		//Only pass data is I2C temp sensor is connected
+			Add_To_Buffer(*(uint32_t*)(&Device_Temperature),&Thermistor_Buffer);//Pass press data via buffer avoiding lag issue
+		//More sensors can be added here	
 	}
 }
 
@@ -267,6 +270,10 @@ __attribute__((externally_visible)) void SysTickHandler(void)
 			Set_Motor(0);				//Sets the Rohm motor controller to idle (low current shutdown) state
 		//Check the die temperature - not possible on adc1 :-(
 		//Device_Temperature=convert_die_temp(ADC_GetInjectedConversionValue(ADC2, ADC_InjectedChannel_3));//The on die temperature sensor
+		#if BOARD>=3
+		if(Sensors&(1<<THERMISTOR_SENSOR))
+			Device_Temperature=convert_thermistor_temp(ADC_GetInjectedConversionValue(ADC2, ADC_InjectedChannel_3));
+		#endif
 		//Could process some more sensor data here
 		old_pressure=Reported_Pressure;			//Set the old pressure record here for use in the D term
 	}
