@@ -264,8 +264,10 @@ uint8_t detect_sensors(void) {
 	}
 	#if BOARD>=3					/*Only version 3 and newer boards can connect directly to a thermistor*/
 	Device_Temperature=convert_thermistor_temp(ADC_GetInjectedConversionValue(ADC2, ADC_InjectedChannel_3));//Convert the thermistor ADC inject channel
-	if(Device_Temperature<50 && Device_Temperature>-10)//Sanity check to see if there is something connected
+	if(Device_Temperature<50 && Device_Temperature>-10) {//Sanity check to see if there is something connected
 		sensors|=(1<<THERMISTOR_SENSOR);	//if so mark sensor as present
+		init_buffer(&Thermistor_Buffer,TMP102_BUFFER_SIZE);
+	}
 	#endif
 	//Other sensors, e.g. Temperature sensor/sensors on the I2C bus go here
 	//At the moment we assume PPG is always present, TODO make this detectable
