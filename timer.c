@@ -23,7 +23,8 @@ void setup_pwm(void) {
 
   ----------------------------------------------------------------------- */
   TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure={};
-  TIM_OCInitTypeDef  TIM_OCInitStructure={};
+  TIM_OCInitTypeDef  	TIM_OCInitStructure={};
+  GPIO_InitTypeDef	GPIO_InitStructure;
   /*Enable the Tim2 clk*/
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
   /*Enable the Tim4 clk*/
@@ -34,6 +35,20 @@ void setup_pwm(void) {
   /*Enable the Tim3 clk*/
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
   #endif
+  //Setup the GPIO pins
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;//reduced slew rate to reduce interference on the board
+  GPIO_PinRemapConfig( GPIO_FullRemap_TIM2, ENABLE );//to B.10
+  #if BOARD<3
+	GPIO_InitStructure.GPIO_Pin = PWM0|PWM1|PWM2;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+	GPIO_Init( GPIOB, &GPIO_InitStructure );
+  #else
+	GPIO_InitStructure.GPIO_Pin = PWM0|PWM2;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+	GPIO_Init( GPIOB, &GPIO_InitStructure );
+	GPIO_InitStructure.GPIO_Pin = PWM1;
+	GPIO_Init( GPIOA, &GPIO_InitStructure );
+  #endif		
 
   TIM_DeInit(TIM1);
   TIM_DeInit(TIM2);
