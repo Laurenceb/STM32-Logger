@@ -118,8 +118,9 @@ void setup_pwm(void) {
   TIM_OC2Init(TIM3, &TIM_OCInitStructure);		//Tim3,ch2 used for gating
   TIM_OC2PreloadConfig(TIM3, TIM_OCPreload_Enable);
   TIM_SelectOutputTrigger(TIM3,TIM_TRGOSource_OC2Ref);
-  TIM_SelectMasterSlaveMode(TIM3,TIM_MasterSlaveMode_Enable);
-  TIM_ETRConfig(TIM2,TIM_ExtTRGPSC_OFF,TIM_ExtTRGPolarity_NonInverted,TIM_TS_ITR2);//Setup timer2 to trigger off timer3 with no filtering
+  TIM_SelectMasterSlaveMode(TIM2,TIM_MasterSlaveMode_Enable);//This is purely a syncronisation option applied to the slave
+  TIM_ETRConfig(TIM2,TIM_ExtTRGPSC_OFF,TIM_ExtTRGPolarity_NonInverted,0x00);//Setup timer2 to trigger off timer3 with no filtering
+  TIM_SelectInputTrigger(TIM2,TIM_TS_ITR2);		//Tim2 off tim3
   TIM_SelectSlaveMode(TIM2,TIM_SlaveMode_Gated);	//Tim2 is gated by the tim3 channel2 input
   #endif
   //Timer4 is slaved off timer2 using channel1 output compare on both board revisions, providing we have at least 2 PPG channels
@@ -131,9 +132,10 @@ void setup_pwm(void) {
   TIM_OC1Init(TIM2, &TIM_OCInitStructure);		//Tim3,ch2 used for gating
   TIM_OC1PreloadConfig(TIM2, TIM_OCPreload_Enable);
   TIM_SelectOutputTrigger(TIM2,TIM_TRGOSource_OC1Ref);
-  TIM_SelectMasterSlaveMode(TIM2,TIM_MasterSlaveMode_Enable);
+  TIM_SelectMasterSlaveMode(TIM4,TIM_MasterSlaveMode_Enable);
   #if PPG_CHANNELS>1
-  TIM_ETRConfig(TIM4,TIM_ExtTRGPSC_OFF,TIM_ExtTRGPolarity_NonInverted,TIM_TS_ITR1);//Setup timer4 to trigger off timer2 with no filtering
+  TIM_ETRConfig(TIM4,TIM_ExtTRGPSC_OFF,TIM_ExtTRGPolarity_NonInverted,0x00);//Setup timer4 to trigger off timer2 with no filtering
+  TIM_SelectInputTrigger(TIM2,TIM_TS_ITR1);		//Tim4 off tim2
   TIM_SelectSlaveMode(TIM4,TIM_SlaveMode_Gated);	//Tim4 is gated by the tim2 channel1 input
   #endif
 
