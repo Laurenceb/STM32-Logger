@@ -244,16 +244,18 @@ void __str_print_char(char c) {
 uint8_t detect_sensors(void) {
 	uint32_t millis=Millis;				//Store the time on entry
 	uint8_t sensors=0;
+	volatile float p=0;
 	SCHEDULE_CONFIG;				//Run the I2C devices config
 	//Detect if there is an air hose connected
 	Pressure_control|=0x80;				//Set msb - indicates motor is free to run
 	Set_Motor((int16_t)(MAX_DUTY)/2);		//Set the motor to 50% max duty cycle
-	while(Millis<(millis+300)) {			//Wait 300ms
-		if(Reported_Pressure>(PRESSURE_MARGIN*5)) {//We got some sane pressure increase
+	while(Millis<(millis+500)) {			//Wait 300ms
+		if(Reported_Pressure>(PRESSURE_MARGIN*4)) {//We got some sane pressure increase
 			sensors|=(1<<PRESSURE_HOSE);
 			init_buffer(&Pressures_Buffer,TMP102_BUFFER_SIZE);//reuse the TMP102 buffer size - as we want the same amount of buffering
 			break;				//Exit loop at this point
 		}
+		p=Reported_Pressure;
 	}
 	Pressure_control&=~0x80;			//Clear the Pressure_control msb so that motor is disabled in control off mode
 	Set_Motor((int16_t)0);				//Set the motor and solenoid off
