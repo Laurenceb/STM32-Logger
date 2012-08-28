@@ -107,7 +107,7 @@ void setup_pwm(void) {
   TIM_OC1PreloadConfig(TIM3, TIM_OCPreload_Enable);
   /* TIM3 enable preload */
   TIM_ARRPreloadConfig(TIM3, ENABLE);
-  #endif
+  #endif 
 
   /*Now we setup the master/slave to orthogonalise the timers*/
   TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Disable;//No signal output to pins
