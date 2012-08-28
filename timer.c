@@ -10,14 +10,14 @@
   */
 void setup_pwm(void) {
   /* -----------------------------------------------------------------------
-    TIM4 Configuration: generate 2 PWM signals with 2 different duty cycles:
-    The TIM4CLK frequency is set to SystemCoreClock (Hz), to get TIM4 counter
+    TIM Configuration: generate 2/3 PWM signals with different duty cycles:
+    The TIMxCLK frequency is set to SystemCoreClock (Hz), to get TIMx counter
     clock at 72 MHz the Prescaler is computed as following:
-     - Prescaler = (TIM4CLK / TIM4 counter clock) - 1
+     - Prescaler = (TIMxCLK / TIMx counter clock) - 1
     SystemCoreClock is set to 72 MHz
 
-    The TIM4 is running at 11.905KHz: TIM4 Frequency = TIM4 counter clock/(ARR + 1)
-                                                  = 4.5 MHz / 378
+    The TIM3 is running at 11.905KHz: TIM3 Frequency = TIM4 counter clock/(ARR + 1)
+                                                  = 72 MHz / 6047
     (with 239.5clk adc sampling -> 252adc clk/sample, and 12mhz adc clk this gives quadrature
     sampling)
 
@@ -56,78 +56,94 @@ void setup_pwm(void) {
   TIM_DeInit(TIM3);
   #endif
   TIM_DeInit(TIM4);
-  /* Prescaler of 16 times*/
-  uint16_t PrescalerValue = 15;
-  /* Time base configuration  - timer 4 as pwm2*/
-  #if BOARD<3
-  TIM_TimeBaseStructure.TIM_Period = NORMAL_PWM_PERIOD(0);
-  #else
-  TIM_TimeBaseStructure.TIM_Period = NORMAL_PWM_PERIOD(2);//PWM2 on revision 3 boards
-  #endif
-  TIM_TimeBaseStructure.TIM_Prescaler = PrescalerValue;
-  TIM_TimeBaseStructure.TIM_ClockDivision = 0;
-  TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
-  /*setup 4*/
-  TIM_TimeBaseInit(TIM4, &TIM_TimeBaseStructure);
-
   /*Setup the initstructure*/
   TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
   TIM_OCInitStructure.TIM_Pulse = 4;
+  TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
+
+  /* Time base configuration  - timer 4 as PWM0/2*/
   #if BOARD<3
-  TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1; //Mode 1 on early board revisions
-  /* PWM1 Mode configuration: Channel3 */
+  TIM_TimeBaseStructure.TIM_Period = PWM_PERIOD(0);
+  #else
+  TIM_TimeBaseStructure.TIM_Period = PWM_PERIOD(2);	//PWM2 on revision 3 boards
+  #endif
+  /*setup 4*/
+  TIM_TimeBaseInit(TIM4, &TIM_TimeBaseStructure);
+  #if BOARD<3
+  TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;	//Mode 1 on early board revisions
+  /* 'PWM1' Mode configuration: Channel3 */
   TIM_OC3Init(TIM4, &TIM_OCInitStructure);
   TIM_OC3PreloadConfig(TIM4, TIM_OCPreload_Enable);
   #else
-  TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM2; //As Board revisions >=3 using P channel mosfet drivers, so inverted levels
+  TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM2;	//As Board revisions >=3 using P channel mosfet drivers, so inverted levels
   #endif
   /* PWM1 Mode configuration: Channel4 */
   TIM_OC4Init(TIM4, &TIM_OCInitStructure);
   TIM_OC4PreloadConfig(TIM4, TIM_OCPreload_Enable);
-
-  /* TIM4 enable counter */
+  /* TIM4 enable preload */
   TIM_ARRPreloadConfig(TIM4, ENABLE);
 
 
-  /*Now setup timer2 as PWM0*/
+  /*Now setup timer2 as PWM0/1*/
   #if BOARD<3
-  TIM_TimeBaseStructure.TIM_Period = NORMAL_PWM_PERIOD(1);
+  TIM_TimeBaseStructure.TIM_Period = PWM_PERIOD(1);
   #else
-  TIM_TimeBaseStructure.TIM_Period = NORMAL_PWM_PERIOD(0);
+  TIM_TimeBaseStructure.TIM_Period = PWM_PERIOD(0);
   #endif
-  TIM_TimeBaseInit(TIM2, &TIM_TimeBaseStructure);//same as timer4
+  TIM_TimeBaseInit(TIM2, &TIM_TimeBaseStructure);	//Same as timer4
   /* PWM1 Mode configuration: Channel3 */
   TIM_OC3Init(TIM2, &TIM_OCInitStructure);
-
   TIM_OC3PreloadConfig(TIM2, TIM_OCPreload_Enable);
-
-  /* TIM2 enable counter */
+  /* TIM2 enable preload */
   TIM_ARRPreloadConfig(TIM2, ENABLE);
+
 
   #if BOARD>=3
   /*Now setup timer3 as PWM1*/
-  TIM_TimeBaseStructure.TIM_Period = NORMAL_PWM_PERIOD(1);
-  TIM_TimeBaseInit(TIM3, &TIM_TimeBaseStructure);//same as timer4
+  TIM_TimeBaseStructure.TIM_Period = PWM_PERIOD(1);
+  TIM_TimeBaseInit(TIM3, &TIM_TimeBaseStructure);	//Same as timer4
   /* PWM1 Mode configuration: Channel1 */
   TIM_OC1Init(TIM3, &TIM_OCInitStructure);
-
   TIM_OC1PreloadConfig(TIM3, TIM_OCPreload_Enable);
-
-  /* TIM3 enable counter */
+  /* TIM3 enable preload */
   TIM_ARRPreloadConfig(TIM3, ENABLE);
+  #endif
+
+  /*Now we setup the master/slave to orthogonalise the timers*/
+  TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Disable;//No signal output to pins
+  TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;	//Normal PWM mode for gating
+  #if BOARD>=3
+  //Timers2 and 4 are slaved off timer3
+  TIM_OCInitStructure.TIM_Pulse = GATING_PERIOD(0);	//Macros used to define these
+  TIM_OC2Init(TIM3, &TIM_OCInitStructure);		//Tim3,ch2 used for gating
+  TIM_OC2PreloadConfig(TIM3, TIM_OCPreload_Enable);
+  TIM_SelectOutputTrigger(TIM3,TIM_TRGOSource_OC2Ref);
+  TIM_SelectMasterSlaveMode(TIM3,TIM_MasterSlaveMode_Enable);
+  TIM_ETRConfig(TIM2,TIM_ExtTRGPSC_OFF,TIM_ExtTRGPolarity_NonInverted,TIM_TS_ITR2);//Setup timer2 to trigger off timer3 with no filtering
+  TIM_SelectSlaveMode(TIM2,TIM_SlaveMode_Gated);	//Tim2 is gated by the tim3 channel2 input
+  #endif
+  //Timer4 is slaved off timer2 using channel1 output compare on both board revisions, providing we have at least 2 PPG channels
+  TIM_OCInitStructure.TIM_Pulse = GATING_PERIOD(1);	//Defined in header file
+  TIM_OC1Init(TIM2, &TIM_OCInitStructure);		//Tim3,ch2 used for gating
+  TIM_OC1PreloadConfig(TIM2, TIM_OCPreload_Enable);
+  TIM_SelectOutputTrigger(TIM2,TIM_TRGOSource_OC1Ref);
+  TIM_SelectMasterSlaveMode(TIM2,TIM_MasterSlaveMode_Enable);
+  #if PPG_CHANNELS>1
+  TIM_ETRConfig(TIM4,TIM_ExtTRGPSC_OFF,TIM_ExtTRGPolarity_NonInverted,TIM_TS_ITR1);//Setup timer4 to trigger off timer2 with no filtering
+  TIM_SelectSlaveMode(TIM4,TIM_SlaveMode_Gated);	//Tim4 is gated by the tim2 channel1 input
   #endif
 
   /*We enable all the timers at once with interrupts disabled*/
   __disable_irq();
   #if BOARD<3
-    TIM_Cmd(TIM4, ENABLE);
-    #if PPG_CHANNELS>1
-      TIM_Cmd(TIM2, ENABLE);
-    #endif
-  #else
     TIM_Cmd(TIM2, ENABLE);
     #if PPG_CHANNELS>1
-      TIM_Cmd(TIM3, ENABLE);
+      TIM_Cmd(TIM4, ENABLE);
+    #endif
+  #else
+    TIM_Cmd(TIM3, ENABLE);
+    #if PPG_CHANNELS>1
+      TIM_Cmd(TIM2, ENABLE);
     #endif
     #if PPG_CHANNELS>2
       TIM4->CNT=PWM_PERIOD_CENTER/2;//This causes the third timer to be in antiphase, giving reduce peak ADC signal
