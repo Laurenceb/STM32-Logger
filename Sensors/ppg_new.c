@@ -24,7 +24,7 @@ void PPG_LO_Filter(volatile uint16_t* buff) {
 	static uint32_t Fudgemask;
 	static const int8_t sinusoid[72]=STEP_SIN,cosinusoid[72]=STEP_COS;//Lookup tables
 	int32_t I=0,Q=0,a;			//I and Q integration bins, general purpose variables
-	Tryfudge(&Fudgemask);			//Try to correct timer phase here
+	//Tryfudge(&Fudgemask);			//Try to correct timer phase here
 	for(uint16_t n=0;n<ADC_BUFF_SIZE/4;) {	//buffer size/4 must be a multiple of 4
 		for(uint8_t m=0;m<72;m++,n++) {	//Loop through the 72 sample lookup
 			I+=(int16_t)buff[n]*(int16_t)cosinusoid[m];
@@ -33,7 +33,7 @@ void PPG_LO_Filter(volatile uint16_t* buff) {
 	}
 	//Now run the "baseband" decimating filter(s)
 	//Positive frequency
-	#if PPG_CHANNELS>=3
+	#if PPG_CHANNELS>=2
 	a=Frequency_Bin[0][0];
 	Frequency_Bin[0][0]=Frequency_Bin[0][0]*7+Frequency_Bin[0][1]*4;//Rotate the phasor in the bin - real here (~-30degree rotation)
 	Frequency_Bin[0][1]=Frequency_Bin[0][1]*7-a*4;//complex here
@@ -42,16 +42,11 @@ void PPG_LO_Filter(volatile uint16_t* buff) {
 	//Zero frequency - i.e. directly on quadrature 
 	//nothing to do to this bin
 	//Negative frequencie(s) go here, need to get to 0hz, so multiply bin by a +ive complex exponential
-	#if PPG_CHANNELS>=2
-		#if PPG_CHANNELS>=3
-			#define LST_CN 2
-		#else
-			#define LST_CN 1
-		#endif
-	a=Frequency_Bin[LST_CN][0];
-	Frequency_Bin[LST_CN][0]=Frequency_Bin[LST_CN][0]*7-Frequency_Bin[LST_CN][1]*4;//Rotate the phasor in the bin - real here (~30degree rotation)
-	Frequency_Bin[LST_CN][1]=Frequency_Bin[LST_CN][1]*7+a*4;//complex here
-	Frequency_Bin[LST_CN][1]>>=3;Frequency_Bin[LST_CN][0]>>=3;//divide by 8
+	#if PPG_CHANNELS>=3
+	a=Frequency_Bin[2][0];
+	Frequency_Bin[2][0]=Frequency_Bin[2][0]*7-Frequency_Bin[2][1]*4;//Rotate the phasor in the bin - real here (~30degree rotation)
+	Frequency_Bin[2][1]=Frequency_Bin[2][1]*7+a*4;//complex here
+	Frequency_Bin[2][1]>>=3;Frequency_Bin[2][0]>>=3;//divide by 8
 	#endif
 	#if PPG_CHANNELS>3 || !PPG_CHANNELS
 	#error "Unsupported number of channels - decoder error"
@@ -68,7 +63,7 @@ void PPG_LO_Filter(volatile uint16_t* buff) {
 		}				//fill the array of buffers
 		memset(Frequency_Bin,0,sizeof(Frequency_Bin));//Zero everything
 		bindex=0;			//Reset this
-		Fudgemask|=FUDGE_ALL_TIMERS;	//Sets a TIMx fudges as requested
+		//Fudgemask|=FUDGE_ALL_TIMERS;	//Sets a TIMx fudges as requested
 	}
 }
 

@@ -63,9 +63,9 @@ void setup_pwm(void) {
 
   /* Time base configuration  - timer 4 as PWM0/2*/
   #if BOARD<3
-  TIM_TimeBaseStructure.TIM_Period = PWM_PERIOD(0);
+  TIM_TimeBaseStructure.TIM_Period = PWM_PERIOD_ZERO;
   #else
-  TIM_TimeBaseStructure.TIM_Period = PWM_PERIOD(2);	//PWM2 on revision 3 boards
+  TIM_TimeBaseStructure.TIM_Period = PWM_PERIOD_TWO;	//PWM2 on revision 3 boards
   #endif
   /*setup 4*/
   TIM_TimeBaseInit(TIM4, &TIM_TimeBaseStructure);
@@ -84,11 +84,11 @@ void setup_pwm(void) {
   TIM_ARRPreloadConfig(TIM4, ENABLE);
 
 
-  /*Now setup timer2 as PWM0/1*/
+  /*Now setup timer2 as PWM1/0*/
   #if BOARD<3
-  TIM_TimeBaseStructure.TIM_Period = PWM_PERIOD(1);
+  TIM_TimeBaseStructure.TIM_Period = PWM_PERIOD_ONE;
   #else
-  TIM_TimeBaseStructure.TIM_Period = PWM_PERIOD(0);
+  TIM_TimeBaseStructure.TIM_Period = PWM_PERIOD_ZERO;
   #endif
   TIM_TimeBaseInit(TIM2, &TIM_TimeBaseStructure);	//Same as timer4
   /* PWM1 Mode configuration: Channel3 */
@@ -100,7 +100,7 @@ void setup_pwm(void) {
 
   #if BOARD>=3
   /*Now setup timer3 as PWM1*/
-  TIM_TimeBaseStructure.TIM_Period = PWM_PERIOD(1);
+  TIM_TimeBaseStructure.TIM_Period = PWM_PERIOD_ONE;
   TIM_TimeBaseInit(TIM3, &TIM_TimeBaseStructure);	//Same as timer4
   /* PWM1 Mode configuration: Channel1 */
   TIM_OC1Init(TIM3, &TIM_OCInitStructure);
@@ -114,7 +114,7 @@ void setup_pwm(void) {
   TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;	//Normal PWM mode for gating
   #if BOARD>=3
   //Timers2 and 4 are slaved off timer3
-  TIM_OCInitStructure.TIM_Pulse = GATING_PERIOD(0);	//Macros used to define these
+  TIM_OCInitStructure.TIM_Pulse = GATING_PERIOD_ZERO;	//Macros used to define these
   TIM_OC2Init(TIM3, &TIM_OCInitStructure);		//Tim3,ch2 used for gating
   TIM_OC2PreloadConfig(TIM3, TIM_OCPreload_Enable);
   TIM_SelectOutputTrigger(TIM3,TIM_TRGOSource_OC2Ref);
@@ -123,7 +123,11 @@ void setup_pwm(void) {
   TIM_SelectSlaveMode(TIM2,TIM_SlaveMode_Gated);	//Tim2 is gated by the tim3 channel2 input
   #endif
   //Timer4 is slaved off timer2 using channel1 output compare on both board revisions, providing we have at least 2 PPG channels
-  TIM_OCInitStructure.TIM_Pulse = GATING_PERIOD(1);	//Defined in header file
+  #if BOARD>=3
+  TIM_OCInitStructure.TIM_Pulse = GATING_PERIOD_ONE;	//Defined in header file
+  #else
+  TIM_OCInitStructure.TIM_Pulse = GATING_PERIOD_ZERO;	//Defined in header file
+  #endif
   TIM_OC1Init(TIM2, &TIM_OCInitStructure);		//Tim3,ch2 used for gating
   TIM_OC1PreloadConfig(TIM2, TIM_OCPreload_Enable);
   TIM_SelectOutputTrigger(TIM2,TIM_TRGOSource_OC1Ref);
@@ -153,7 +157,7 @@ void setup_pwm(void) {
   __enable_irq();
 
   /*Now setup timer1 as motor control */
-  PrescalerValue = 0;//no prescaler
+  //note no prescaler
   TIM_TimeBaseStructure.TIM_Period = 2047;//gives a slower frequency - 35KHz, meeting Rohm BD6231F spec, and giving 11 bits of res each way
   TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;//Make sure we have mode1 
   TIM_OCInitStructure.TIM_OutputNState = TIM_OutputNState_Disable;//These settings need to be applied on timers 1 and 8                 
@@ -176,7 +180,7 @@ void setup_pwm(void) {
   * @retval none
   * Note: this could be improved, atm it just uses some macros and is hardcoded for the timers, but making it more flexible would need arrays of pointers
   * (need to use different timers for each output) 
-  */
+  *//*
 void Tryfudge(uint32_t* Fudgemask) {
 	if((*Fudgemask)&(uint32_t)0x01 && TIM2->CNT<(FUDGED_PWM_PERIOD(0)-2)) {//If the second bit is set, adjust the first timer in the list if it is safe to do so
 		TIM2->CR1 &= ~TIM_CR1_ARPE;//Disable reload buffering so we can load directly
@@ -192,7 +196,7 @@ void Tryfudge(uint32_t* Fudgemask) {
 		TIM4->ARR = NORMAL_PWM_PERIOD(2);//Load the buffer, so the pwm period returns to normal after 1 period
 		*Fudgemask&=~(uint32_t)0x04;//Clear the bit
 	}
-}
+}*/
 
 /**
   * @brief  Configure the timer channel for PWM out to pump motor, -ive duty turns on valve
