@@ -4,7 +4,7 @@
 #define MAX_DUTY 2047*3/4	/*max duty cycle for the motor - dont want to risk going to 100% as it will overrev motor*/
 #define PWM_RES MAX_DUTY	/*motor pwm resolution*/
 
-#define PWM_PERIOD_TWO 5982ul
+#define PWM_PERIOD_TWO 6047ul//5982ul
 #define PWM_PERIOD_ONE 6047ul
 #define PWM_PERIOD_ZERO 5951ul
 

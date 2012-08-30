@@ -132,9 +132,8 @@ void setup_pwm(void) {
   TIM_SelectOutputTrigger(TIM2,TIM_TRGOSource_OC1Ref);
   TIM_OC1Init(TIM2, &TIM_OCInitStructure);		//Tim2,ch1 used for gating
   TIM_OC1PreloadConfig(TIM2, TIM_OCPreload_Enable);
-  //TIM_SelectMasterSlaveMode(TIM4,TIM_MasterSlaveMode_Enable);
   #if PPG_CHANNELS>1
-  //TIM_ETRConfig(TIM4,TIM_ExtTRGPSC_OFF,TIM_ExtTRGPolarity_NonInverted,0x00);//Setup timer4 to trigger off timer2 with no filtering
+  TIM_SelectMasterSlaveMode(TIM4,TIM_MasterSlaveMode_Enable);
   TIM_SelectInputTrigger(TIM4,TIM_TS_ITR1);		//Tim4 off tim2
   TIM_SelectSlaveMode(TIM4,TIM_SlaveMode_Gated);	//Tim4 is gated by the tim2 channel1 input
   #endif
@@ -148,8 +147,8 @@ void setup_pwm(void) {
     TIM_Cmd(TIM2, ENABLE);
   #else
     #if PPG_CHANNELS>2
-      //TIM4->CNT=PWM_PERIOD_CENTER/2;//This causes the third timer to be in antiphase, giving reduce peak ADC signal
-      //TIM_Cmd(TIM4, ENABLE);
+      TIM4->CNT=PWM_PERIOD_CENTER/2;//This causes the third timer to be in antiphase, giving reduce peak ADC signal
+      TIM_Cmd(TIM4, ENABLE);
     #endif
     #if PPG_CHANNELS>1
       TIM_Cmd(TIM2, ENABLE);
