@@ -114,12 +114,12 @@ void setup_pwm(void) {
   TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;	//Normal PWM mode for gating
   #if BOARD>=3
   //Timers2 and 4 are slaved off timer3
+  TIM_SelectMasterSlaveMode(TIM3,TIM_MasterSlaveMode_Enable);//This is purely a syncronisation option applied to the master
   TIM_OCInitStructure.TIM_Pulse = GATING_PERIOD_ZERO;	//Macros used to define these
+  TIM_SelectOutputTrigger(TIM3,TIM_TRGOSource_OC2Ref);
   TIM_OC2Init(TIM3, &TIM_OCInitStructure);		//Tim3,ch2 used for gating
   TIM_OC2PreloadConfig(TIM3, TIM_OCPreload_Enable);
-  TIM_SelectOutputTrigger(TIM3,TIM_TRGOSource_OC2Ref);
-  TIM_SelectMasterSlaveMode(TIM2,TIM_MasterSlaveMode_Enable);//This is purely a syncronisation option applied to the slave
-  TIM_ETRConfig(TIM2,TIM_ExtTRGPSC_OFF,TIM_ExtTRGPolarity_NonInverted,0x00);//Setup timer2 to trigger off timer3 with no filtering
+  TIM_SelectMasterSlaveMode(TIM2,TIM_MasterSlaveMode_Enable);//This is purely a syncronisation option applied to the master
   TIM_SelectInputTrigger(TIM2,TIM_TS_ITR2);		//Tim2 off tim3
   TIM_SelectSlaveMode(TIM2,TIM_SlaveMode_Gated);	//Tim2 is gated by the tim3 channel2 input
   #endif
@@ -129,32 +129,32 @@ void setup_pwm(void) {
   #else
   TIM_OCInitStructure.TIM_Pulse = GATING_PERIOD_ZERO;	//Defined in header file
   #endif
-  TIM_OC1Init(TIM2, &TIM_OCInitStructure);		//Tim3,ch2 used for gating
-  TIM_OC1PreloadConfig(TIM2, TIM_OCPreload_Enable);
   TIM_SelectOutputTrigger(TIM2,TIM_TRGOSource_OC1Ref);
-  TIM_SelectMasterSlaveMode(TIM4,TIM_MasterSlaveMode_Enable);
+  TIM_OC1Init(TIM2, &TIM_OCInitStructure);		//Tim2,ch1 used for gating
+  TIM_OC1PreloadConfig(TIM2, TIM_OCPreload_Enable);
+  //TIM_SelectMasterSlaveMode(TIM4,TIM_MasterSlaveMode_Enable);
   #if PPG_CHANNELS>1
-  TIM_ETRConfig(TIM4,TIM_ExtTRGPSC_OFF,TIM_ExtTRGPolarity_NonInverted,0x00);//Setup timer4 to trigger off timer2 with no filtering
-  TIM_SelectInputTrigger(TIM2,TIM_TS_ITR1);		//Tim4 off tim2
+  //TIM_ETRConfig(TIM4,TIM_ExtTRGPSC_OFF,TIM_ExtTRGPolarity_NonInverted,0x00);//Setup timer4 to trigger off timer2 with no filtering
+  TIM_SelectInputTrigger(TIM4,TIM_TS_ITR1);		//Tim4 off tim2
   TIM_SelectSlaveMode(TIM4,TIM_SlaveMode_Gated);	//Tim4 is gated by the tim2 channel1 input
   #endif
 
   /*We enable all the timers at once with interrupts disabled*/
   __disable_irq();
   #if BOARD<3
-    TIM_Cmd(TIM2, ENABLE);
     #if PPG_CHANNELS>1
       TIM_Cmd(TIM4, ENABLE);
     #endif
+    TIM_Cmd(TIM2, ENABLE);
   #else
-    TIM_Cmd(TIM3, ENABLE);
+    #if PPG_CHANNELS>2
+      //TIM4->CNT=PWM_PERIOD_CENTER/2;//This causes the third timer to be in antiphase, giving reduce peak ADC signal
+      //TIM_Cmd(TIM4, ENABLE);
+    #endif
     #if PPG_CHANNELS>1
       TIM_Cmd(TIM2, ENABLE);
     #endif
-    #if PPG_CHANNELS>2
-      TIM4->CNT=PWM_PERIOD_CENTER/2;//This causes the third timer to be in antiphase, giving reduce peak ADC signal
-      TIM_Cmd(TIM4, ENABLE);
-    #endif
+    TIM_Cmd(TIM3, ENABLE);
   #endif
   __enable_irq();
 
@@ -162,6 +162,7 @@ void setup_pwm(void) {
   //note no prescaler
   TIM_TimeBaseStructure.TIM_Period = 2047;//gives a slower frequency - 35KHz, meeting Rohm BD6231F spec, and giving 11 bits of res each way
   TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;//Make sure we have mode1 
+  TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;//Enable output
   TIM_OCInitStructure.TIM_OutputNState = TIM_OutputNState_Disable;//These settings need to be applied on timers 1 and 8                 
   TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High; 
   TIM_OCInitStructure.TIM_OCIdleState = TIM_OCIdleState_Reset;

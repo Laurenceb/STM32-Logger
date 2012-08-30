@@ -209,6 +209,8 @@ int main(void)
 			Pressure_Setpoint=-1;
 		else
 			Pressure_Setpoint=3;		//3PSI setpoint
+		//if(TIM2->CCR1>(5930-Millis/1000))
+		//	TIM2->CCR1=TIM2->CCR1-1;
 		if(System_state_Global&0x80) {		//A "control" button press
 			System_state_Global&=~0x80;	//Wipe the flag bit to show this has been processed
 			PPG_Automatic_Brightness_Control();//At the moment this is the only function implimented
