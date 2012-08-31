@@ -245,7 +245,7 @@ __attribute__((externally_visible)) void SysTickHandler(void)
 		//Now handle the pressure controller
 		if(Pressure_control&0x7F) {//If active pressure control is enabled
 			//run a PI controller on the air pump motor
-			if(Pressure_Setpoint>0 || (Button_hold_tim<(BUTTON_TURNOFF_TIME-BUTTON_MULTIPRESS_TIMEOUT) && Button_hold_tim) ) {
+			if(Pressure_Setpoint>0 && ( Button_hold_tim>(BUTTON_TURNOFF_TIME-BUTTON_MULTIPRESS_TIMEOUT) || !Button_hold_tim ) ) {
 				// A Negative setpoint or prolonged button press forces a dump of air
 				float error=Pressure_Setpoint-Reported_Pressure;//Pressure_Setpoint is a global containing the target diff press
 				if(Enabled_iterations++>I_HOLDOFF) {
