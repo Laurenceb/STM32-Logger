@@ -93,7 +93,8 @@ void PPG_Automatic_Brightness_Control(void) {
 		uint32_t time=Millis;	//Store the system time here
 		time+=(uint32_t)(4000.0/PPG_SAMPLE_RATE);//four samples
 		while(Millis<time);	//Delay for a couple of PPG samples to set the analogue stabilise	
-	}while((abs(vals[0]-old_vals[0])>PWM_STEP_LIM)||(abs(vals[1]-old_vals[1])>PWM_STEP_LIM)||(abs(vals[2]-old_vals[2])>PWM_STEP_LIM));
+	}while((abs(vals[0]-old_vals[0])>old_vals[0]/PWM_STEP_LIM)||(abs(vals[1]-old_vals[1])>old_vals[1]/PWM_STEP_LIM)||\
+		(abs(vals[2]-old_vals[2])>old_vals[2]/PWM_STEP_LIM));
 }
 
 

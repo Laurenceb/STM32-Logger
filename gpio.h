@@ -11,6 +11,8 @@
 #define CHARGER_EN	GPIO_Pin_2
 #define SD_SEL_PIN	GPIO_Pin_14
 
+#define GET_BUTTON	GPIO_ReadInputDataBit(GPIOA,WKUP)
+
 #define VBUS_DETECT	CHARGER_EN
 
 #define USB_SOURCE	0x01
@@ -50,6 +52,8 @@
 #define PWREN		GPIO_Pin_5
 #define CHARGER_EN	GPIO_Pin_5
 #define SD_SEL_PIN	GPIO_Pin_8
+
+#define GET_BUTTON	GPIO_ReadInputDataBit(GPIOA,WKUP)
 
 #define VBUS_DETECT	GPIO_Pin_2
 

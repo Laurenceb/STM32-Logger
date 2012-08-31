@@ -14,9 +14,9 @@
 #define PPG_BUFFER_SIZE 128
 #define ADC_BUFFER_SIZE 4608
 
-#define PWM_STEP_LIM  PWM_PERIOD_CENTER/100
+#define PWM_STEP_LIM  100		/* A 1% or less shift per iteration causes termination */
 
-#define PPG_SAMPLE_RATE (float)62.004    /* 72000000/6/(12.5+1.5)/72/16/12  */
+#define PPG_SAMPLE_RATE (float)62.004   /* 72000000/6/(12.5+1.5)/72/16/12  */
 
 #define STEP_SIN {0,1,3,4,5,6,7,9,10,11,11,12,13,14,14,14,15,15,15,15,15,14,14,14,13,12,11,11,10,9,7,6,5,4,3,1,0,-1,-3,-4,-5,-6,-7,-9,-10,-11,-11,-12,\
 -13,-14,-14,-14,-15,-15,-15,-15,-15,-14,-14,-14,-13,-12,-11,-11,-10,-9,-8,-6,-5,-4,-3,-1}

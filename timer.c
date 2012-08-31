@@ -133,7 +133,7 @@ void setup_pwm(void) {
   TIM_OC1Init(TIM2, &TIM_OCInitStructure);		//Tim2,ch1 used for gating
   TIM_OC1PreloadConfig(TIM2, TIM_OCPreload_Enable);
   #if PPG_CHANNELS>1
-  TIM_SelectMasterSlaveMode(TIM4,TIM_MasterSlaveMode_Enable);
+  //TIM_SelectMasterSlaveMode(TIM4,TIM_MasterSlaveMode_Enable);
   TIM_SelectInputTrigger(TIM4,TIM_TS_ITR1);		//Tim4 off tim2
   TIM_SelectSlaveMode(TIM4,TIM_SlaveMode_Gated);	//Tim4 is gated by the tim2 channel1 input
   #endif

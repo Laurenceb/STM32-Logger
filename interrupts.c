@@ -245,8 +245,9 @@ __attribute__((externally_visible)) void SysTickHandler(void)
 		//Now handle the pressure controller
 		if(Pressure_control&0x7F) {//If active pressure control is enabled
 			//run a PI controller on the air pump motor
-			if(Pressure_Setpoint>0) {		//A negative setpoint forces a dump of air
-				float error=Pressure_Setpoint-Reported_Pressure;//pressure_setpoint is a global containing the target diff press
+			if(Pressure_Setpoint>0 || (Button_hold_tim<(BUTTON_TURNOFF_TIME-BUTTON_MULTIPRESS_TIMEOUT) && Button_hold_tim) ) {
+				// A Negative setpoint or prolonged button press forces a dump of air
+				float error=Pressure_Setpoint-Reported_Pressure;//Pressure_Setpoint is a global containing the target diff press
 				if(Enabled_iterations++>I_HOLDOFF) {
 					I+=error*PRESSURE_I_CONST;//Constants defined in main.h
 					if(I>PRESSURE_I_LIM)	//Enforce limits
@@ -291,7 +292,7 @@ __attribute__((externally_visible)) void SysTickHandler(void)
 	}
 	//Now process the control button functions
 	if(Button_hold_tim ) {					//If a button press generated timer has been triggered
-		if(GPIO_ReadInputDataBit(GPIOA,WKUP)) {		//Button hold turns off the device
+		if(GET_BUTTON) {				//Button hold turns off the device
 			if(!--Button_hold_tim) {
 				shutdown_filesystem();
 				shutdown();			//Turn off the logger after closing any open files
