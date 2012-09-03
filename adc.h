@@ -18,6 +18,8 @@
 #define SAMPLING_FACTOR	4096.0/6.6/* 1/2 factor pot divider on the frontend board - integrated on BOARD>=3 */
 #define MINIMUM_VOLTAGE 3.0	/* A single lithium polymer cell*/
 
+#define GET_BATTERY_VOLTAGE (float)readADC2(BATTERY_ADC_CHAN)/(SAMPLING_FACTOR)/* Macro to return battery voltage as a float using blocking regular conv*/
+
 extern volatile uint16_t * ADC1_Convertion_buff;//malloc this
 
 void ADC_Configuration(void);
