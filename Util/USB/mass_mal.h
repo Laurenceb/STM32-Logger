@@ -26,7 +26,7 @@
  #include "../../interrupts.h"
 #endif
 /* Exported types ------------------------------------------------------------*/
-extern uint32_t* volatile Data_Buffer;	/*data buffer for DMA transfers*/
+extern volatile uint32_t* Data_Buffer;		/*data buffer for DMA transfers*/
 /* Exported constants --------------------------------------------------------*/
 #define MAL_OK   0
 #define MAL_FAIL 1
@@ -40,8 +40,8 @@ extern uint32_t* volatile Data_Buffer;	/*data buffer for DMA transfers*/
 
 uint16_t MAL_Init (uint8_t lun);
 uint16_t MAL_GetStatus (uint8_t lun);
-uint16_t MAL_Read(uint8_t lun, uint32_t Memory_Offset, uint8_t * volatile Readbuff, uint32_t Transfer_Length);
-uint16_t MAL_Write(uint8_t lun, uint32_t Memory_Offset, uint8_t * volatile Writebuff, uint32_t Transfer_Length);
+uint16_t MAL_Read(uint8_t lun, uint32_t Memory_Offset, volatile uint8_t * Readbuff, uint32_t Transfer_Length);
+uint16_t MAL_Write(uint8_t lun, uint32_t Memory_Offset, volatile uint8_t * Writebuff, uint32_t Transfer_Length);
 #endif /* __MASS_MAL_H */
 
 /******************* (C) COPYRIGHT 2011 STMicroelectronics *****END OF FILE****/

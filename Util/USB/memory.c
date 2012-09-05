@@ -65,7 +65,7 @@ void Read_Memory(uint8_t lun, uint32_t Memory_Offset, uint32_t Transfer_Length)
 		TransferState = TXFR_ONGOING;
 		while(Sd_Spi_Called_From_USB_MSC){;}
 		Sd_Spi_Called_From_USB_MSC = 1;			//Set this to stop the SD card driver blocking
-		while(MAL_Read(lun, Transfer_counter, (uint8_t * volatile)Data_Buffer,512)){//Read and discard CRC
+		while(MAL_Read(lun, Transfer_counter, (volatile uint8_t *)Data_Buffer,512)){//Read and discard CRC
 			release_spi();
 			MAL_Init(0);
 		}
@@ -73,7 +73,7 @@ void Read_Memory(uint8_t lun, uint32_t Memory_Offset, uint32_t Transfer_Length)
 	}
 	if (TransferState == TXFR_ONGOING ){
 		while(MAL_TRANSFER_INDEX>(512-Block_offset-BULK_MAX_PACKET_SIZE)){;}//Wait for enough to be transferred
-		USB_SIL_Write(EP1_IN, (uint8_t * volatile)Data_Buffer + Block_offset, BULK_MAX_PACKET_SIZE);	
+		USB_SIL_Write(EP1_IN, (volatile uint8_t *)Data_Buffer + Block_offset, BULK_MAX_PACKET_SIZE);	
 		SetEPTxCount(ENDP1, BULK_MAX_PACKET_SIZE);
 		#ifndef USE_STM3210C_EVAL
 		SetEPTxStatus(ENDP1, EP_TX_VALID);
@@ -84,7 +84,7 @@ void Read_Memory(uint8_t lun, uint32_t Memory_Offset, uint32_t Transfer_Length)
 			if(Length>BULK_MAX_PACKET_SIZE)	{	//Data remains
 				while(Sd_Spi_Called_From_USB_MSC){;}//Wait for ready - shouldnt happen
 				Sd_Spi_Called_From_USB_MSC=1;
-				while(MAL_Read(lun,Transfer_counter+BULK_MAX_PACKET_SIZE,(uint8_t* volatile)Data_Buffer,512)){//Try and recover from error
+				while(MAL_Read(lun,Transfer_counter+BULK_MAX_PACKET_SIZE,(volatile uint8_t*)Data_Buffer,512)){//Try and recover from error
 					release_spi();
 					MAL_Init(0);
 				}
