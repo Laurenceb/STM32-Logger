@@ -438,7 +438,7 @@ void release_spi (void)
 static
 void stm32_dma_transfer(
 	BOOL receive,		/* FALSE for buff->SPI, TRUE for SPI->buff               */
-	const BYTE * volatile buff,	/* receive TRUE  : 512 byte data block to be transmitted
+	const volatile BYTE * buff,	/* receive TRUE  : 512 byte data block to be transmitted
 						   receive FALSE : Data buffer to store received data    */
 	UINT btr 			/* receive TRUE  : Byte count (must be multiple of 2)
 						   receive FALSE : Byte count (must be 512)              */
@@ -637,7 +637,7 @@ void power_off_ (void)
 /* Receive a data packet from MMC                                        */
 /*-----------------------------------------------------------------------*/
 BOOL rcvr_datablock (
-	BYTE *  volatile buff,		/* Data buffer to store received data */
+	volatile BYTE *  buff,		/* Data buffer to store received data */
 	UINT btr			/* Byte count (must be multiple of 4) */
 )
 {
@@ -847,7 +847,7 @@ DSTATUS disk_status (
 
 DRESULT disk_read (
 	BYTE drv,			/* Physical drive number (0) */
-	BYTE * volatile buff,		/* Pointer to the data buffer to store read data */
+	volatile BYTE * buff,		/* Pointer to the data buffer to store read data */
 	DWORD sector,			/* Start sector number (LBA) */
 	BYTE count			/* Sector count (1..255) */
 )

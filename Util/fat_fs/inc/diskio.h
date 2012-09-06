@@ -30,7 +30,7 @@ typedef enum {
 int assign_drives (int, int);
 DSTATUS disk_initialize (BYTE);
 DSTATUS disk_status (BYTE);
-DRESULT disk_read (BYTE, BYTE* volatile, DWORD, BYTE);
+DRESULT disk_read (BYTE, volatile BYTE*, DWORD, BYTE);
 #if	_READONLY == 0
 DRESULT disk_write (BYTE, const BYTE*, DWORD, BYTE);
 #endif
@@ -44,7 +44,7 @@ static BYTE send_cmd (
 );
 void release_spi (void);
 //BOOL rcvr_datablock (
-//	BYTE * volatile buff,		/* Data buffer to store received data */
+//	volatile BYTE * buff,		/* Data buffer to store received data */
 //	UINT btr			/* Byte count (must be multiple of 4) */
 //);
 
