@@ -57,7 +57,7 @@ void ADC_Configuration(void)
 
   /* Set the analogue watchdog on the battery voltage conversion*/
   ADC_AnalogWatchdogCmd(ADC2,ADC_AnalogWatchdog_SingleInjecEnable);
-  ADC_AnalogWatchdogThresholdsConfig(ADC2,0xFFFF,(uint16_t)((float)SAMPLING_FACTOR*MINIMUM_VOLTAGE));//watchdog fires on low voltage
+  ADC_AnalogWatchdogThresholdsConfig(ADC2,0x0FFF,(uint16_t)((float)SAMPLING_FACTOR*MINIMUM_VOLTAGE));//watchdog fires on low voltage
   ADC_AnalogWatchdogSingleChannelConfig(ADC2, BATTERY_ADC_CHAN);//set the watchdog to the battery voltage channel
   ADC_ITConfig(ADC2, ADC_IT_AWD, ENABLE);//enable the analogue watchdog interrupt
 

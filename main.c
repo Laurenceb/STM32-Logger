@@ -138,9 +138,8 @@ int main(void)
 			}
 		}
 		if(f_err_code) {			//There was an init error
-			RED_LED_ON;
-			Delay(400000);
-			shutdown();			//Abort after a single red flash
+			red_flash();
+			shutdown();			//Abort after a single red flash ------------------ABORT 1
 		}
 		for(uint8_t n=0;n<PPG_CHANNELS;n++)
 			init_buffer(&(Buff[n]),PPG_BUFFER_SIZE);//Enough for ~0.25S of data
@@ -152,6 +151,18 @@ int main(void)
 	EXTI_ONOFF_EN();				//Enable the off interrupt - allow some time for debouncing
 	I2C_Config();					//Setup the I2C bus
 	uint8_t sensors_=detect_sensors();		//Search for connected sensors
+	if(!sensors_||GET_BATTERY_VOLTAGE<BATTERY_STARTUP_LIMIT) {//We will have to turn off
+		if(file_opened)
+			f_close(&FATFS_logfile);	//be sure to terminate file neatly
+		red_flash();
+		Delay(400000);
+		red_flash();				//Two flashes means battery abort -----------------ABORT 2
+		if(sensors_)
+			shutdown();
+		Delay(400000);
+		red_flash();				//Three flashes means no sensors abort ------------ABORT 3
+		shutdown();
+	}
 	Pressure_control=sensors_&(1<<PRESSURE_HOSE);	//Enable active pressure control if a hose is connected
 	Pressure_Setpoint=0;				//Not applied pressure, should cause motor and solenoid to go to idle state
 	rtc_gettime(&RTC_time);				//Get the RTC time and put a timestamp on the start of the file
@@ -220,8 +231,6 @@ int main(void)
 			Pressure_Setpoint=-1;
 		else
 			Pressure_Setpoint=3;		//3PSI setpoint
-		//if(TIM2->CCR1>(5930-Millis/1000))
-		//	TIM2->CCR1=TIM2->CCR1-1;
 		if(System_state_Global&0x80) {		//A "control" button press
 			System_state_Global&=~0x80;	//Wipe the flag bit to show this has been processed
 			PPG_Automatic_Brightness_Control();//At the moment this is the only function implimented

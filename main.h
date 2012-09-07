@@ -30,6 +30,10 @@ extern volatile uint8_t Sensors;
 #define PRESSURE_D_CONST -0.001*(float)(PWM_RES*ITERATION_RATE)/*means a change of 1PSI/second will decrease pwm duty by 0.1%*/
 #define PRESSURE_MARGIN 0.3				/*means a pressure within 0.3PSI of zero will turn off the dump valve if setpoint -ive*/
 
+//Battery specific config goes here
+#define BATTERY_STARTUP_LIMIT 3.7 /*Around 25% capacity remaining for lithium polymer at 25C slow discharge*/
+#define MINIMUM_VOLTAGE 3.0	/* A single lithium polymer cell*/
+
 //Sensors
 enum {PRESSURE_HOSE=0,TEMPERATURE_SENSOR, PPG_SENSOR_ZERO, PPG_SENSOR_ONE, PPG_SENSOR_TWO, THERMISTOR_SENSOR};
 #define PPG_SENSORS ((1<<PPG_SENSOR_ZERO)|(1<<PPG_SENSOR_ONE)|(1<<PPG_SENSOR_TWO))
