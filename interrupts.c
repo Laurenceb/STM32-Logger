@@ -183,15 +183,20 @@ __attribute__((externally_visible)) void DMAChannel1_IRQHandler(void) {
   */
 __attribute__((externally_visible)) void DMAChannel4_IRQHandler(void) {
 	NVIC_InitTypeDef   NVIC_InitStructure;
+	GPIO_InitTypeDef   GPIO_InitStructure;
 	DMA_ClearFlag(DMA1_FLAG_TC4);
 	DMA_ClearITPendingBit(DMA1_IT_GL4);	//Clear flags
-	wrapup_transaction();			//Complete transaction on card - DMA shutdown
-	release_spi();
-	Sd_Spi_Called_From_USB_MSC=0;
 	DMA_ITConfig(DMA1_Channel4, DMA_IT_TC|DMA_IT_TE, DISABLE);	
 	NVIC_InitStructure.NVIC_IRQChannel = DMA1_Channel4_IRQn;//Interrupt disables itself
 	NVIC_InitStructure.NVIC_IRQChannelCmd = DISABLE;
 	NVIC_Init(&NVIC_InitStructure);
+	GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_SPI_SD_MOSI;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AF_PP;
+	GPIO_Init(GPIO_SPI_SD, &GPIO_InitStructure);
+	wrapup_transaction();			//Complete transaction on card - DMA shutdown
+	release_spi();
+	Sd_Spi_Called_From_USB_MSC=0;
 }
 
 /**
