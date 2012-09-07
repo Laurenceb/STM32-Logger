@@ -154,14 +154,22 @@ int main(void)
 	uint8_t sensors_=detect_sensors();		//Search for connected sensors
 	Pressure_control=sensors_&(1<<PRESSURE_HOSE);	//Enable active pressure control if a hose is connected
 	Pressure_Setpoint=0;				//Not applied pressure, should cause motor and solenoid to go to idle state
-	if(sensors_&(1<<PPG_SENSOR)) {
-		Sensors=1<<PPG_SENSOR;			//Set this bit so that the PPG decoder start running
-		while(!bytes_in_buff(&(Buff[0])));	//Wait for some PPG data for the auto brightness to work with
-		PPG_Automatic_Brightness_Control();	//Run the automatic brightness setting on power on
-	}
 	rtc_gettime(&RTC_time);				//Get the RTC time and put a timestamp on the start of the file
 	printf("%d-%d-%dT%d:%d:%d\n",RTC_time.year,RTC_time.month,RTC_time.mday,RTC_time.hour,RTC_time.min,RTC_time.sec);//ISO 8601 timestamp header
-	printf("Battery: %fV\n",GET_BATTERY_VOLTAGE);	//Get the battery voltage using blocking regular conversion and print
+	printf("Battery: %3fV\n",GET_BATTERY_VOLTAGE);	//Get the battery voltage using blocking regular conversion and print
+	printf("Time, ");				//Print out the sensors that are present in the CSV file
+	if(sensors_&1<<PPG_SENSOR_ZERO)
+		printf("PPG(0), ");
+	if(sensors_&1<<PPG_SENSOR_ONE)
+		printf("PPG(1), ");
+	if(sensors_&1<<PPG_SENSOR_TWO)
+		printf("PPG(2), ");
+	if(sensors_&1<<PRESSURE_HOSE)
+		printf("Pressure, ");
+	if(sensors_&1<<TEMPERATURE_SENSOR)
+		printf("I2C temp sensor, ");
+	if(sensors_&1<<THERMISTOR_SENSOR)
+		printf("Temperature sensor\r\n");
 	if(file_opened) {
 		f_puts(print_string,&FATFS_logfile);
 		print_string[0]=0x00;			//Set string length to 0
@@ -175,8 +183,10 @@ int main(void)
 		while(!bytes_in_buff(&(Buff[0])));	//Wait for some PPG data
 		printf("%3f",(float)(data_counter++)/PPG_SAMPLE_RATE);//The time since PPG collection started
 		for(uint8_t n=0;n<PPG_CHANNELS;n++) {	//Loop through the PPG channels
-			Get_From_Buffer(&ppg,&(Buff[n]));//Retrive one sample of PPG
-			printf(",%lu",ppg);		//Print data after a time stamp (not Millis)
+			if(Sensors&1<<(PPG_SENSOR_ZERO+n)) {//If sensor is present
+				Get_From_Buffer(&ppg,&(Buff[n]));//Retrive one sample of PPG
+				printf(",%lu",ppg);		//Print data after a time stamp (not Millis)
+			}
 		}
 		if(Sensors&(1<<PRESSURE_HOSE)) {	//Air hose connected
 			Get_From_Buffer(&sensor_data,&Pressures_Buffer);//This is syncronised with PPG data in PPG ISR using a global defined in the sensor header
@@ -275,7 +285,16 @@ uint8_t detect_sensors(void) {
 	}
 	#endif
 	//Other sensors, e.g. Temperature sensor/sensors on the I2C bus go here
-	//At the moment we assume PPG is always present, TODO make this detectable
-	sensors|=(1<<PPG_SENSOR);
+	//PPG is detectable
+	Sensors|=PPG_SENSORS;				//Set this bit so that the PPG decoder start running
+	while(!bytes_in_buff(&(Buff[0])));		//Wait for some PPG data for the auto brightness to work with
+	PPG_Automatic_Brightness_Control();		//Run the automatic brightness setting on power on
+	if(Get_PWM_0()==PWM_PERIOD_CENTER/2)
+		sensors|=(1<<PPG_SENSOR_ZERO);
+	if(Get_PWM_1()==PWM_PERIOD_CENTER/2)
+		sensors|=(1<<PPG_SENSOR_ONE);
+	if(Get_PWM_2()==PWM_PERIOD_CENTER/2)
+		sensors|=(1<<PPG_SENSOR_TWO);
+	Sensors&=~PPG_SENSORS;				//Make sure this is not set
 	return sensors;
 }

@@ -32,7 +32,7 @@ extern volatile uint32_t* Data_Buffer;		/*data buffer for DMA transfers*/
 #define MAL_FAIL 1
 #define MAX_LUN  1
 
-#define MAX_DMA_BUFF_SIZE 5120
+#define MAX_DMA_BUFF_SIZE 518			/*has to store only one sector*/
 
 /* Exported macro ------------------------------------------------------------*/
 #define MAL_TRANSFER_INDEX DMA_GetCurrDataCounter(DMA_Channel_SPI_SD_RX)

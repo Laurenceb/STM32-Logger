@@ -31,7 +31,8 @@ extern volatile uint8_t Sensors;
 #define PRESSURE_MARGIN 0.3				/*means a pressure within 0.3PSI of zero will turn off the dump valve if setpoint -ive*/
 
 //Sensors
-enum {PRESSURE_HOSE=0,TEMPERATURE_SENSOR, PPG_SENSOR, THERMISTOR_SENSOR};
+enum {PRESSURE_HOSE=0,TEMPERATURE_SENSOR, PPG_SENSOR_ZERO, PPG_SENSOR_ONE, PPG_SENSOR_TWO, THERMISTOR_SENSOR};
+#define PPG_SENSORS ((1<<PPG_SENSOR_ZERO)|(1<<PPG_SENSOR_ONE)|(1<<PPG_SENSOR_TWO))
 
 //function prototypes
 void __fat_print_char(char c);
