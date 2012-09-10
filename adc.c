@@ -76,6 +76,8 @@ void ADC_Configuration(void)
   /* Check the end of ADC2 calibration */
   while(ADC_GetCalibrationStatus(ADC2));
   
+  readADC2(BATTERY_ADC_CHAN);//Have to flush this for some reason
+
   /* ADC2 is now set up - move the ADC1 using DMA*/
   /* DMA1 channel1(ADC1) configuration -------------------------------------------*/
   DMA_DeInit(DMA1_Channel1);

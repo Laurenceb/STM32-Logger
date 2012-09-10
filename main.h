@@ -38,6 +38,9 @@ extern volatile uint8_t Sensors;
 enum {PRESSURE_HOSE=0,TEMPERATURE_SENSOR, PPG_SENSOR_ZERO, PPG_SENSOR_ONE, PPG_SENSOR_TWO, THERMISTOR_SENSOR};
 #define PPG_SENSORS ((1<<PPG_SENSOR_ZERO)|(1<<PPG_SENSOR_ONE)|(1<<PPG_SENSOR_TWO))
 
+//PPG Sensor detect
+#define PPG_DETECTION_LIMIT ((PWM_PERIOD_CENTER/2)-(PWM_PERIOD_CENTER/50))
+
 //function prototypes
 void __fat_print_char(char c);
 void __str_print_char(char c);

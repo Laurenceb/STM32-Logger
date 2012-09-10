@@ -144,6 +144,7 @@ int main(void)
 		for(uint8_t n=0;n<PPG_CHANNELS;n++)
 			init_buffer(&(Buff[n]),PPG_BUFFER_SIZE);//Enough for ~0.25S of data
 	}
+	Watchdog_Reset();				//Card init can take a couple of seconds
 	setup_pwm();					//Enable the PWM outputs on all three channels
 	Delay(100000);					//Sensor+inst amplifier takes about 100ms to stabilise after power on
 	ADC_Configuration();				//We leave this a bit later to allow stabilisation
@@ -151,7 +152,10 @@ int main(void)
 	EXTI_ONOFF_EN();				//Enable the off interrupt - allow some time for debouncing
 	I2C_Config();					//Setup the I2C bus
 	uint8_t sensors_=detect_sensors();		//Search for connected sensors
+	sensor_data=GET_BATTERY_VOLTAGE;		//Have to flush adc for some reason
+	Delay(10000);
 	if(!sensors_||GET_BATTERY_VOLTAGE<BATTERY_STARTUP_LIMIT) {//We will have to turn off
+		Watchdog_Reset();			//LED flashing takes a while
 		if(file_opened)
 			f_close(&FATFS_logfile);	//be sure to terminate file neatly
 		red_flash();
@@ -298,11 +302,11 @@ uint8_t detect_sensors(void) {
 	Sensors|=PPG_SENSORS;				//Set this bit so that the PPG decoder start running
 	while(!bytes_in_buff(&(Buff[0])));		//Wait for some PPG data for the auto brightness to work with
 	PPG_Automatic_Brightness_Control();		//Run the automatic brightness setting on power on
-	if(Get_PWM_0()==PWM_PERIOD_CENTER/2)
+	if(Get_PWM_0()<=PPG_DETECTION_LIMIT)
 		sensors|=(1<<PPG_SENSOR_ZERO);
-	if(Get_PWM_1()==PWM_PERIOD_CENTER/2)
+	if(Get_PWM_1()<=PPG_DETECTION_LIMIT)
 		sensors|=(1<<PPG_SENSOR_ONE);
-	if(Get_PWM_2()==PWM_PERIOD_CENTER/2)
+	if(Get_PWM_2()<=PPG_DETECTION_LIMIT)
 		sensors|=(1<<PPG_SENSOR_TWO);
 	Sensors&=~PPG_SENSORS;				//Make sure this is not set
 	return sensors;
