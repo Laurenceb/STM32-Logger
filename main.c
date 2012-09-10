@@ -172,19 +172,20 @@ int main(void)
 	rtc_gettime(&RTC_time);				//Get the RTC time and put a timestamp on the start of the file
 	printf("%d-%d-%dT%d:%d:%d\n",RTC_time.year,RTC_time.month,RTC_time.mday,RTC_time.hour,RTC_time.min,RTC_time.sec);//ISO 8601 timestamp header
 	printf("Battery: %3fV\n",GET_BATTERY_VOLTAGE);	//Get the battery voltage using blocking regular conversion and print
-	printf("Time, ");				//Print out the sensors that are present in the CSV file
+	printf("Time");					//Print out the sensors that are present in the CSV file
 	if(sensors_&1<<PPG_SENSOR_ZERO)
-		printf("PPG(0), ");
+		printf(", PPG(0)");
 	if(sensors_&1<<PPG_SENSOR_ONE)
-		printf("PPG(1), ");
+		printf(", PPG(1)");
 	if(sensors_&1<<PPG_SENSOR_TWO)
-		printf("PPG(2), ");
+		printf(", PPG(2)");
 	if(sensors_&1<<PRESSURE_HOSE)
-		printf("Pressure, ");
+		printf(", Pressure");
 	if(sensors_&1<<TEMPERATURE_SENSOR)
-		printf("I2C temp sensor, ");
+		printf(", I2C temp sensor");
 	if(sensors_&1<<THERMISTOR_SENSOR)
-		printf("Temperature sensor\r\n");
+		printf(", Temperature sensor");
+	printf("\r\n");
 	if(file_opened) {
 		f_puts(print_string,&FATFS_logfile);
 		print_string[0]=0x00;			//Set string length to 0
@@ -198,10 +199,9 @@ int main(void)
 		while(!bytes_in_buff(&(Buff[0])));	//Wait for some PPG data
 		printf("%3f",(float)(data_counter++)/PPG_SAMPLE_RATE);//The time since PPG collection started
 		for(uint8_t n=0;n<PPG_CHANNELS;n++) {	//Loop through the PPG channels
-			if(Sensors&1<<(PPG_SENSOR_ZERO+n)) {//If sensor is present
-				Get_From_Buffer(&ppg,&(Buff[n]));//Retrive one sample of PPG
-				printf(",%lu",ppg);		//Print data after a time stamp (not Millis)
-			}
+			Get_From_Buffer(&ppg,&(Buff[n]));//Retrive one sample of PPG
+			if(Sensors&(1<<(PPG_SENSOR_ZERO+n)))//If sensor is present
+				printf(",%lu",ppg);	//Print data after a time stamp (not Millis)
 		}
 		if(Sensors&(1<<PRESSURE_HOSE)) {	//Air hose connected
 			Get_From_Buffer(&sensor_data,&Pressures_Buffer);//This is syncronised with PPG data in PPG ISR using a global defined in the sensor header
