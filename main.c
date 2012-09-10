@@ -34,7 +34,6 @@ volatile buff_type Buff[PPG_CHANNELS];			//Shared with ISR
 volatile uint8_t Pressure_control;			//Enables the pressure control PI
 volatile float Pressure_Setpoint;			//Target differential pressure for the pump
 volatile uint32_t Millis;				//System uptime (rollover after 50 days)
-volatile float Device_Temperature;			//Die temperature sensor converted to centigrade
 volatile uint8_t System_state_Global;			//Stores the system state, controlled by the button, most significant bit is a flag
 volatile uint8_t Sensors;				//Global holding a mask of the sensors found by automatic sensor discovery
 //Sensor buffers to pass data back to logger

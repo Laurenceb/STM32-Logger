@@ -20,7 +20,7 @@ float convert_tmp102_temp(uint16_t adcval);
 #if BOARD>=3
 float convert_thermistor_temp(uint16_t adcval);
 #endif
-extern volatile float Device_Temperature;//CPU temperature monitoring, if supported
+extern volatile float Device_Temperature;//CPU temperature monitoring, if supported, converted to centigrade
 
 extern volatile uint16_t TMP102_Data_Buffer;
 extern volatile float TMP102_Reported_Temperature;//Global used to pass compensated data
