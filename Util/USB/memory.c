@@ -71,7 +71,7 @@ void Read_Memory(uint8_t lun, uint32_t Memory_Offset, uint32_t Transfer_Length)
 		Block_offset=0;
 	}
 	if (TransferState == TXFR_ONGOING ){
-		while(MAL_TRANSFER_INDEX>Mass_Block_Size[lun]-Block_offset-BULK_MAX_PACKET_SIZE){;}//Wait for enough to be transferred
+		while(MAL_TRANSFER_INDEX>Mass_Block_Size[lun]-Block_offset-BULK_MAX_PACKET_SIZE-1){;}//Wait for enough to be transferred - offset from CRC
 		USB_SIL_Write(EP1_IN, (uint8_t *)Data_Buffer + Block_offset, BULK_MAX_PACKET_SIZE);
 		Block_offset += BULK_MAX_PACKET_SIZE;
 		if(Mass_Block_Size[lun]==Block_offset) { //If we have finished the DMA transfer
