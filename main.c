@@ -51,6 +51,7 @@ int main(void)
 {
 	uint32_t ppg;					//PPG channel
 	uint32_t data_counter=0;			//used as data timestamp
+	uint8_t system_state=0;				//used to track button press functionality
 	float sensor_data;				//used for handling data passed back from sensors
 	RTC_t RTC_time;
         _REENT_INIT_PTR(&my_reent);
@@ -184,7 +185,7 @@ int main(void)
 		printf(", I2C temp sensor");
 	if(sensors_&1<<THERMISTOR_SENSOR)
 		printf(", Temperature sensor");
-	printf("\r\n");
+	printf(", Button press\r\n");
 	if(file_opened) {
 		f_puts(print_string,&FATFS_logfile);
 		print_string[0]=0x00;			//Set string length to 0
@@ -215,7 +216,14 @@ int main(void)
 			printf(",%2f",sensor_data);	//print the retreived data
 		}
 		//Other sensors etc can go here
-		printf("\n");				//Terminating newline
+		//Button multipress status
+		if(System_state_Global&0x80) {		//A "control" button press
+			system_state=System_state_Global;//Copy to local variable
+			if(System_state_Global==1)	//A single button press
+				PPG_Automatic_Brightness_Control();//At the moment this is the only function implimented
+			System_state_Global&=~0x80;	//Wipe the flag bit to show this has been processed
+		}
+		printf(",%d\n",system_state);		//Terminating newline
 		if(file_opened) {
 			f_puts(print_string,&FATFS_logfile);
 			print_string[0]=0x00;		//Set string length to 0
@@ -234,10 +242,6 @@ int main(void)
 			Pressure_Setpoint=-1;
 		else
 			Pressure_Setpoint=3;		//3PSI setpoint
-		if(System_state_Global&0x80) {		//A "control" button press
-			System_state_Global&=~0x80;	//Wipe the flag bit to show this has been processed
-			PPG_Automatic_Brightness_Control();//At the moment this is the only function implimented
-		}
 	}
 }
 

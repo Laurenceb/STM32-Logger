@@ -53,7 +53,7 @@ ifdef DEBUG
  DEBUG_MACRO = -DDEBUG
 else	#Changed from O2 - optimisation split between control loop and rest of project, using a seperate makefile
  TARGET_OPTS = $(OPTIMISE) -finline -finline-functions-called-once\
-  -funroll-loops -fno-common -fpromote-loop-indices -fno-rtti -fno-exceptions
+  -funroll-loops -fno-common -fpromote-loop-indices -fno-rtti -fno-exceptions -ffunction-sections -fdata-sections
 endif
 
 CC = ~/CodeSourcery/Sourcery_G++_Lite/bin/arm-none-eabi-gcc	#this project depends of the CodeSourcery toolchain, defining the exact path forces
