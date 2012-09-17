@@ -32,7 +32,11 @@ extern volatile uint8_t Sensors;
 
 //Battery specific config goes here
 #define BATTERY_STARTUP_LIMIT 3.7 /*Around 25% capacity remaining for lithium polymer at 25C slow discharge*/
-#define MINIMUM_VOLTAGE 3.0	/* A single lithium polymer cell*/
+#if BORAD<3
+	#define MINIMUM_VOLTAGE 3.0	/* A single lithium polymer cell*/
+#else
+	#define MINIMUM_VOLTAGE 3.37	/* A single lithium polymer cell through LDO regulator - no smps on later boards*/
+#endif
 
 //Sensors
 enum {PRESSURE_HOSE=0,TEMPERATURE_SENSOR, PPG_SENSOR_ZERO, PPG_SENSOR_ONE, PPG_SENSOR_TWO, THERMISTOR_SENSOR};
