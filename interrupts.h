@@ -21,7 +21,7 @@
 
 //These times are all in units of 10ms
 #define BUTTON_DEBOUNCE 		(80-5)
-#define BUTTON_MULTIPRESS_TIMEOUT	45
+#define BUTTON_MULTIPRESS_TIMEOUT	45*10
 #define BUTTON_TURNOFF_TIME		80
 
 void ISR_Config(void);
