@@ -18,7 +18,7 @@ extern volatile uint8_t Sensors;
 #define PRE_SIZE 1000000ul	/*Preallocate size*/
 
 //#define SINGLE_LOGFILE
-#ifdef SINGLE_LOGFILE
+#ifndef SINGLE_LOGFILE
  #define LOGFILE_NAME print_string
 #else
  #define LOGFILE_NAME "logfile.txt"

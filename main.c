@@ -175,10 +175,9 @@ int main(void)
 	}
 	Pressure_control=sensors_&(1<<PRESSURE_HOSE);	//Enable active pressure control if a hose is connected
 	Pressure_Setpoint=0;				//Not applied pressure, should cause motor and solenoid to go to idle state
-#ifdef SINGLE_LOGFILE					/* Otherwise this will already be in the print string */
 	rtc_gettime(&RTC_time);				//Get the RTC time and put a timestamp on the start of the file
+	print_string[0]=0x00;				//Set string length to 0
 	printf("%d-%d-%dT%d:%d:%d\n",RTC_time.year,RTC_time.month,RTC_time.mday,RTC_time.hour,RTC_time.min,RTC_time.sec);//ISO 8601 timestamp header
-#endif
 	printf("Battery: %3fV\n",GET_BATTERY_VOLTAGE);	//Get the battery voltage using blocking regular conversion and print
 	printf("Time");					//Print out the sensors that are present in the CSV file
 	if(sensors_&1<<PPG_SENSOR_ZERO)

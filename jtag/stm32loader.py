@@ -45,7 +45,7 @@ class CmdException(Exception):
     pass
 
 class CommandInterface:
-    def open(self, aport='/dev/rfcomm3', abaudrate=115200) :
+    def open(self, aport='/dev/rfcomm0', abaudrate=115200) :
 #        self.sp = open(aport,'rb+')
         self.sp=serial.Serial(
             port=aport,
@@ -338,7 +338,7 @@ if __name__ == "__main__":
         pass
 
     conf = {
-            'port': '/dev/rfcomm3',
+            'port': '/dev/rfcomm0',
             'baud': 115200,
             'address': 0x08000000,
             'erase': 0,
