@@ -24,7 +24,7 @@ extern volatile uint8_t Sensors;
  #define LOGFILE_NAME "logfile.txt"
 #endif
 
-#define SYSTEM_STATES 1		/*Number of different control states- atm just brightness control implimented*/
+#define SYSTEM_STATES 4		/*Number of different control states- atm just brightness control implimented as 1, others are indicators*/
 
 #define WATCHDOG_TIMEOUT 3000	/*4 second timeout - enough for the uSD card to block its max time and a bit*/
 

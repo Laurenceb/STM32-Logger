@@ -225,12 +225,13 @@ int main(void)
 		//Other sensors etc can go here
 		//Button multipress status
 		if(System_state_Global&0x80) {		//A "control" button press
-			system_state=System_state_Global;//Copy to local variable
-			if(System_state_Global==1)	//A single button press
+			system_state=System_state_Global&~0x80;//Copy to local variable
+			if(system_state==1)		//A single button press
 				PPG_Automatic_Brightness_Control();//At the moment this is the only function implimented
 			System_state_Global&=~0x80;	//Wipe the flag bit to show this has been processed
 		}
 		printf(",%d\n",system_state);		//Terminating newline
+		system_state=0;				//Reset this
 		if(file_opened) {
 			f_puts(print_string,&FATFS_logfile);
 			print_string[0]=0x00;		//Set string length to 0
