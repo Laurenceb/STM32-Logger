@@ -17,6 +17,13 @@ extern volatile uint8_t Sensors;
 
 #define PRE_SIZE 1000000ul	/*Preallocate size*/
 
+//#define SINGLE_LOGFILE
+#ifdef SINGLE_LOGFILE
+ #define LOGFILE_NAME print_string
+#else
+ #define LOGFILE_NAME "logfile.txt"
+#endif
+
 #define SYSTEM_STATES 1		/*Number of different control states- atm just brightness control implimented*/
 
 #define WATCHDOG_TIMEOUT 3000	/*4 second timeout - enough for the uSD card to block its max time and a bit*/

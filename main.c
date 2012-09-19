@@ -116,7 +116,13 @@ int main(void)
 				}
 				f_close(&FATFS_logfile);//Close the time.txt file
 			}
-			if((f_err_code=f_open(&FATFS_logfile,"logfile.txt",FA_CREATE_ALWAYS | FA_WRITE))) {//Present
+#ifndef SINGLE_LOGFILE
+			rtc_gettime(&RTC_time);		//Get the RTC time and put a timestamp on the start of the file
+			rprintfInit(__str_print_char);	//Print to the string
+			printf("%d-%d-%dT%d-%d-%d.txt",RTC_time.year,RTC_time.month,RTC_time.mday,RTC_time.hour,RTC_time.min,RTC_time.sec);//Timestamp name
+			rprintfInit(__usart_send_char);	//Printf over the bluetooth
+#endif
+			if((f_err_code=f_open(&FATFS_logfile,LOGFILE_NAME,FA_CREATE_ALWAYS | FA_WRITE))) {//Present
 				printf("FatFs drive error %d\r\n",f_err_code);
 				if(f_err_code==FR_DISK_ERR || f_err_code==FR_NOT_READY)
 					Usart_Send_Str((char*)"No uSD card inserted?\r\n");
@@ -169,8 +175,10 @@ int main(void)
 	}
 	Pressure_control=sensors_&(1<<PRESSURE_HOSE);	//Enable active pressure control if a hose is connected
 	Pressure_Setpoint=0;				//Not applied pressure, should cause motor and solenoid to go to idle state
+#ifdef SINGLE_LOGFILE					/* Otherwise this will already be in the print string */
 	rtc_gettime(&RTC_time);				//Get the RTC time and put a timestamp on the start of the file
 	printf("%d-%d-%dT%d:%d:%d\n",RTC_time.year,RTC_time.month,RTC_time.mday,RTC_time.hour,RTC_time.min,RTC_time.sec);//ISO 8601 timestamp header
+#endif
 	printf("Battery: %3fV\n",GET_BATTERY_VOLTAGE);	//Get the battery voltage using blocking regular conversion and print
 	printf("Time");					//Print out the sensors that are present in the CSV file
 	if(sensors_&1<<PPG_SENSOR_ZERO)
@@ -263,6 +271,7 @@ void __str_print_char(char c) {
 	uint8_t a=strlen(print_string)%255;		//Make sure we cant overwrite ram
 	print_string[a]=c;				//Append string
 	print_string[a+1]=0x00;				//Null terminate
+	__usart_send_char(c);				//Send to the bluetooth as well
 }
 
 /**
