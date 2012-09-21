@@ -112,7 +112,7 @@ void Write_Memory (uint8_t lun, uint32_t Memory_Offset, uint32_t Transfer_Length
 
   static uint32_t W_Offset, W_Length;
 
-  uint32_t temp =  Counter + 64;
+  uint32_t temp =  Counter +Data_Len/*+ 64*/;
 
   if (TransferState == TXFR_IDLE )
   {
@@ -128,16 +128,17 @@ void Write_Memory (uint8_t lun, uint32_t Memory_Offset, uint32_t Transfer_Length
       *((uint8_t *)Data_Buffer + Counter ) = Bulk_Data_Buff[Idx++];
     }
 
-    W_Offset += Data_Len;
+    //W_Offset += Data_Len;
     W_Length -= Data_Len;
 
     if (Counter>=MAX_DMA_BUFF_SIZE || !W_Length)
     {
      MAL_Write(lun ,
-                W_Offset - Mass_Block_Size[lun],
+                W_Offset, /*- Mass_Block_Size[lun],*/
                 Data_Buffer,
                 Counter);
      Counter=0;
+     W_Offset+=MAX_DMA_BUFF_SIZE;
     }
 
     CSW.dDataResidue -= Data_Len;
