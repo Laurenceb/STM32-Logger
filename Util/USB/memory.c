@@ -123,7 +123,6 @@ void Write_Memory (uint8_t lun, uint32_t Memory_Offset, uint32_t Transfer_Length
 
   if (TransferState == TXFR_ONGOING )
   {
-    while(Sd_Spi_Called_From_USB_MSC){while(1){;}}
     for (Idx = 0 ; Counter < temp; Counter++)
     {
       *((uint8_t *)Data_Buffer + Counter ) = Bulk_Data_Buff[Idx++];
