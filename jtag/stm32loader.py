@@ -77,65 +77,72 @@ class CommandInterface:
                     #Unknown responce
                     raise CmdException("Unknown response. "+info+": "+hex(ask))
 
+    def enterCMD(self):
+        self.sp.timeout=0.1
+        reply=""
+        iterations=0
+        while reply[0:3]!="CMD":
+           self.sp.write("$$$")
+           reply=self.sp.readline()
+           iterations+=1
+           if iterations>3:
+               raise CmdException("RN41/2 CMD mode entry failed")
+        self.sp.timeout=5
+
+    def exitCMD(self):
+        self.sp.timeout=0.1
+        reply=""
+        iterations=0
+        while reply[0:3]!="END":
+           self.sp.write("---\r")
+           reply=self.sp.readline()
+           iterations+=1
+           if iterations>3:
+               raise CmdException("RN41/2 exit CMD mode entry failed")
+        self.sp.timeout=5
+
+    def sendCMD(self, cmd):
+        self.sp.timeout=0.1
+        reply=""
+        iterations=0
+        while reply[0:3]!="AOK":
+           self.sp.write(cmd+"\r\n")
+           reply=self.sp.readline()
+           iterations+=1
+           if iterations>3:
+               raise CmdException("RN41/2 command "+cmd+" failed")
+        self.sp.timeout=5
 
     def reset(self):
         time.sleep(0.2)
-        self.sp.write("S*,0800\r\n") #Set GPIO11 low to set Reset
-        self.sp.flush()
+        sendCMD(self, "S*,0800")     #Set GPIO11 low to set Reset
         time.sleep(0.2)
-        self.sp.write("S*,0808\r\n") #Set GPIO11 high to clear Reset
-        self.sp.flush()
+        sendCMD(self, "S*,0808")     #Set GPIO11 high to clear Reset
         time.sleep(0.2)
 
     def initChip(self):
         # Set boot
         #self.sp.write("btld")
         #time.sleep(0.5)
-        self.sp.write("$$$")
-        self.sp.flush()
-        time.sleep(0.1)
-        self.sp.write("ST,254\r\n") #Set remote continuous config
-        self.sp.flush()
-        time.sleep(0.1)
-        self.sp.write("S@,0808\r\n") #Set GPIO3 output to keep power enabled
-        self.sp.flush()
-        time.sleep(0.1)
-        self.sp.write("S&,0808\r\n") #Set GPIO3 high to keep power enabled
-        self.sp.flush()
-        time.sleep(0.1)
-        self.sp.write("S*,0404\r\n") #Set GPIO10 high to set BOOT0
-        self.sp.flush()
-        self.reset()
-        self.sp.write("S*,0400\r\n") #Set GPIO10 low to clear BOOT0
-        self.sp.flush()
-        time.sleep(0.1)
-        self.sp.write("---\r") #exit cmd mode
-        self.sp.flush()
-        time.sleep(0.1)
+        enterCMD(self)
+        sendCMD(self,"ST,254")       #Set remote continuous config
+        sendCMD(self,"S@,0808")      #Set GPIO3 output to keep power enabled
+        sendCMD(self,"S&,0808")      #Set GPIO3 high to keep power enabled
+        sendCMD(self,"S*,0404")      #Set GPIO10 high to set BOOT0
+        sendCMD(self,"S*,0400")      #Set GPIO10 low to clear BOOT0
+        exitCMD(self)                #exit cmd mode
         self.sp.flushInput()
-        self.sp.write("\x7F")       # Syncro
+        self.sp.write("\x7F")        # Syncro
         return self._wait_for_ask("Syncro") 
 
     def releaseChip(self):
-        time.sleep(0.5)
-        self.sp.write("$$$")
-        time.sleep(0.1)
-        print(self.sp.readline())
-        self.sp.flush()
+        enterCMD(self)
         self.reset()
-        self.sp.write("S&,0800\r\n") #Set GPIO3 as low to kill power on reset
-        self.sp.flush()
-        time.sleep(0.1)
-        self.sp.write("S@,0800\r\n") #Set GPIO3 as input to kill power on reset
-        time.sleep(0.1)
-        print(self.sp.readline())
-        self.sp.flush()
-        self.sp.write("ST,60\r\n") #Set remote 60second config
-        self.sp.flush()
-        time.sleep(0.1)
-        self.sp.write("---\r") #exit cmd mode
-        self.sp.flush()
-        self.sp.close()        #leaves the bluetooth rfcomm free for other connections
+        sendCMD(self,"S&,0800")      #Set GPIO3 as low to kill power on reset
+        sendCMD(self,"S@,0800")      #Set GPIO3 as input to kill power on reset
+        sendCMD(self,"ST,60")        #Set remote 60second config
+        exitCMD(self)
+        self.sp.close()              #leaves the bluetooth rfcomm free for other connections
 
     def cmdGeneric(self, cmd):
         self.sp.write(chr(cmd))

@@ -94,63 +94,10 @@ int main(void)
 			Watchdog_Reset();
 		}
 	}
-	else {
-		if(!GET_PWR_STATE)			//Check here to make sure the power button is still pressed, if not, sleep
-			shutdown();			//This means a glitch on the supply line, or a power glitch results in sleep
-		if((f_err_code = f_mount(0, &FATFS_Obj)))Usart_Send_Str((char*)"FatFs mount error\r\n");//This should only error if internal error
-		else {					//FATFS initialised ok, try init the card, this also sets up the SPI1
-			if(!f_open(&FATFS_logfile,"time.txt",FA_OPEN_EXISTING | FA_READ | FA_WRITE)) {//Try and open a time file to get the system time
-				if(!f_stat((const TCHAR *)"time.txt",&FATFS_info)) {//Get file info
-					if(!FATFS_info.fsize) {//Empty file
-						RTC_time.year=(FATFS_info.fdate>>9)+1980;//populate the time struct (FAT start==1980, RTC.year==0)
-						RTC_time.month=(FATFS_info.fdate>>5)&0x000F;
-						RTC_time.mday=FATFS_info.fdate&0x001F;
-						RTC_time.hour=(FATFS_info.ftime>>11)&0x001F;
-						RTC_time.min=(FATFS_info.ftime>>5)&0x003F;
-						RTC_time.sec=(FATFS_info.ftime<<1)&0x003E;
-						rtc_settime(&RTC_time);
-						rprintfInit(__fat_print_char);//printf to the open file
-						printf("RTC set to %d/%d/%d %d:%d:%d\n",RTC_time.mday,RTC_time.month,RTC_time.year,\
-						RTC_time.hour,RTC_time.min,RTC_time.sec);
-					}				
-				}
-				f_close(&FATFS_logfile);//Close the time.txt file
-			}
-#ifndef SINGLE_LOGFILE
-			rtc_gettime(&RTC_time);		//Get the RTC time and put a timestamp on the start of the file
-			rprintfInit(__str_print_char);	//Print to the string
-			printf("%d-%d-%dT%d-%d-%d.txt",RTC_time.year,RTC_time.month,RTC_time.mday,RTC_time.hour,RTC_time.min,RTC_time.sec);//Timestamp name
-			rprintfInit(__usart_send_char);	//Printf over the bluetooth
-#endif
-			if((f_err_code=f_open(&FATFS_logfile,LOGFILE_NAME,FA_CREATE_ALWAYS | FA_WRITE))) {//Present
-				printf("FatFs drive error %d\r\n",f_err_code);
-				if(f_err_code==FR_DISK_ERR || f_err_code==FR_NOT_READY)
-					Usart_Send_Str((char*)"No uSD card inserted?\r\n");
-			}
-			else {				//We have a mounted card
-				f_err_code=f_lseek(&FATFS_logfile, PRE_SIZE);// Pre-allocate clusters
-				if (f_err_code || f_tell(&FATFS_logfile) != PRE_SIZE)// Check if the file size has been increased correctly
-					Usart_Send_Str((char*)"Pre-Allocation error\r\n");
-				else {
-					if((f_err_code=f_lseek(&FATFS_logfile, 0)))//Seek back to start of file to start writing
-						Usart_Send_Str((char*)"Seek error\r\n");
-					else
-						rprintfInit(__str_print_char);//Printf to the logfile
-				}
-				if(f_err_code)
-					f_close(&FATFS_logfile);//Close the already opened file on error
-				else
-					file_opened=1;	//So we know to close the file properly on shutdown
-			}
-		}
-		if(f_err_code) {			//There was an init error
-			red_flash();
-			shutdown();			//Abort after a single red flash ------------------ABORT 1
-		}
-		for(uint8_t n=0;n<PPG_CHANNELS;n++)
-			init_buffer(&(Buff[n]),PPG_BUFFER_SIZE);//Enough for ~0.25S of data
-	}
-	Watchdog_Reset();				//Card init can take a couple of seconds
+	if(!GET_PWR_STATE)				//Check here to make sure the power button is still pressed, if not, sleep
+		shutdown();				//This means a glitch on the supply line, or a power glitch results in sleep
+	for(uint8_t n=0;n<PPG_CHANNELS;n++)
+		init_buffer(&(Buff[n]),PPG_BUFFER_SIZE);//Enough for ~0.25S of data
 	setup_pwm();					//Enable the PWM outputs on all three channels
 	Delay(100000);					//Sensor+inst amplifier takes about 100ms to stabilise after power on
 	ADC_Configuration();				//We leave this a bit later to allow stabilisation
@@ -173,6 +120,57 @@ int main(void)
 		red_flash();				//Three flashes means no sensors abort ------------ABORT 3
 		shutdown();
 	}
+	if((f_err_code = f_mount(0, &FATFS_Obj)))Usart_Send_Str((char*)"FatFs mount error\r\n");//This should only error if internal error
+	else {						//FATFS initialised ok, try init the card, this also sets up the SPI1
+		if(!f_open(&FATFS_logfile,"time.txt",FA_OPEN_EXISTING | FA_READ | FA_WRITE)) {//Try and open a time file to get the system time
+			if(!f_stat((const TCHAR *)"time.txt",&FATFS_info)) {//Get file info
+				if(!FATFS_info.fsize) {	//Empty file
+					RTC_time.year=(FATFS_info.fdate>>9)+1980;//populate the time struct (FAT start==1980, RTC.year==0)
+					RTC_time.month=(FATFS_info.fdate>>5)&0x000F;
+					RTC_time.mday=FATFS_info.fdate&0x001F;
+					RTC_time.hour=(FATFS_info.ftime>>11)&0x001F;
+					RTC_time.min=(FATFS_info.ftime>>5)&0x003F;
+					RTC_time.sec=(FATFS_info.ftime<<1)&0x003E;
+					rtc_settime(&RTC_time);
+					rprintfInit(__fat_print_char);//printf to the open file
+					printf("RTC set to %d/%d/%d %d:%d:%d\n",RTC_time.mday,RTC_time.month,RTC_time.year,\
+					RTC_time.hour,RTC_time.min,RTC_time.sec);
+				}				
+			}
+			f_close(&FATFS_logfile);	//Close the time.txt file
+		}
+#ifndef SINGLE_LOGFILE
+		rtc_gettime(&RTC_time);			//Get the RTC time and put a timestamp on the start of the file
+		rprintfInit(__str_print_char);		//Print to the string
+		printf("%d-%d-%dT%d-%d-%d.txt",RTC_time.year,RTC_time.month,RTC_time.mday,RTC_time.hour,RTC_time.min,RTC_time.sec);//Timestamp name
+		rprintfInit(__usart_send_char);		//Printf over the bluetooth
+#endif
+		if((f_err_code=f_open(&FATFS_logfile,LOGFILE_NAME,FA_CREATE_ALWAYS | FA_WRITE))) {//Present
+			printf("FatFs drive error %d\r\n",f_err_code);
+			if(f_err_code==FR_DISK_ERR || f_err_code==FR_NOT_READY)
+				Usart_Send_Str((char*)"No uSD card inserted?\r\n");
+		}
+		else {					//We have a mounted card
+			f_err_code=f_lseek(&FATFS_logfile, PRE_SIZE);// Pre-allocate clusters
+			if (f_err_code || f_tell(&FATFS_logfile) != PRE_SIZE)// Check if the file size has been increased correctly
+				Usart_Send_Str((char*)"Pre-Allocation error\r\n");
+			else {
+				if((f_err_code=f_lseek(&FATFS_logfile, 0)))//Seek back to start of file to start writing
+					Usart_Send_Str((char*)"Seek error\r\n");
+				else
+					rprintfInit(__str_print_char);//Printf to the logfile
+			}
+			if(f_err_code)
+				f_close(&FATFS_logfile);//Close the already opened file on error
+			else
+				file_opened=1;		//So we know to close the file properly on shutdown
+		}
+	}
+	if(f_err_code) {				//There was an init error
+		red_flash();
+		shutdown();				//Abort after a single red flash ------------------ABORT 1
+	}
+	Watchdog_Reset();				//Card Init can take a second or two
 	Pressure_control=sensors_&(1<<PRESSURE_HOSE);	//Enable active pressure control if a hose is connected
 	Pressure_Setpoint=0;				//Not applied pressure, should cause motor and solenoid to go to idle state
 	rtc_gettime(&RTC_time);				//Get the RTC time and put a timestamp on the start of the file
@@ -198,7 +196,7 @@ int main(void)
 		print_string[0]=0x00;			//Set string length to 0
 	}
 	for(uint8_t n=0;n<PPG_CHANNELS;n++)
-		Empty_Buffer(&Buff[n]);			//Empty all the PPG buffers to sync all the data
+		Empty_Buffer(&Buff[n]);			//Empty all the PPG buffers to sync all the data - buffers will have some data from autobrightness
 	Millis=0;					//Reset system uptime, we have 50 days before overflow
 	Sensors|=sensors_;				//Set the global sensors variable here to mark the detected sensors as present
 	while (1) {
