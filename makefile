@@ -17,7 +17,7 @@ HSE_VALUE = 12000000UL
 #DEBUG = 1
 
 # [OPTIONAL] Set the serial details for bootloading
-STM32LDR_PORT = /dev/rfcomm3
+STM32LDR_PORT = /dev/rfcomm0
 STM32LDR_BAUD = 115200
 # [OPTIONAL] Comment out to disable bootloader verification
 STM32LDR_VERIFY = -v

@@ -19,12 +19,12 @@ void ISR_Config(void) {
 	/* Enable and set SYSTICK Interrupt to the fifth priority */
 	NVIC_InitStructure.NVIC_IRQChannel = SysTick_IRQn;	//The 100hz timer triggered interrupt	
 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x00;//Pre-emption priority
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x05;	//5th subpriority
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x05;	//6th subpriority
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
-	NVIC_InitStructure.NVIC_IRQChannel = ADC1_2_IRQn;	//The 100hz timer triggered interrupt	
+	NVIC_InitStructure.NVIC_IRQChannel = ADC1_2_IRQn;	//The ADC watchdog triggered interrupt	
 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x01;//Low Pre-emption priority
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x06;	//6th subpriority
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x06;	//7th subpriority
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
 	//Now we configure the I2C Event ISR
@@ -39,6 +39,12 @@ void ISR_Config(void) {
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x00;	//Highest group priority
 	//NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
+	/* Enabling interrupt from USART1 - bluetooth commands, e.g. enter bootloader*/
+	NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQn;//UAVtalk Rx triggered interrupt
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x01;//Low pre-emption priority
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x02;	//Third highest group - above the dma
+	//NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&NVIC_InitStructure); 
 }
 
 /**
@@ -67,7 +73,7 @@ void EXTI_ONOFF_EN(void) {
 	/* Enable and set EXTI0 Interrupt to the lowest priority */
 	NVIC_InitStructure.NVIC_IRQChannel = EXTI0_IRQn;	//The WKUP triggered interrupt	
 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x01;//Lower pre-emption priority
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x07;	//low group priority
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x07;	//lowest group priority
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
 }
@@ -83,7 +89,7 @@ void DMA_ISR_Config(void) {
 	/* Enable and set DMA1 Interrupt to the sixth priority */
 	NVIC_InitStructure.NVIC_IRQChannel = DMA1_Channel1_IRQn;//The DMA complete/half complete triggered interrupt	
 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x01;//Higher pre-emption priority - can nest inside USB/SD
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x04;	//6th subpriority
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x04;	//5th subpriority
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
 }
@@ -159,7 +165,7 @@ __attribute__((externally_visible)) void DMAChannel1_IRQHandler(void) {
 
 
 /**
-  * @brief  This function handles ADC1-2 interrupt requests.- Should only be from the analogu watchdog
+  * @brief  This function handles ADC1-2 interrupt requests.- Should only be from the analog watchdog
   * @param  None
   * @retval None
   */

@@ -79,6 +79,7 @@ class CommandInterface:
 
 
     def reset(self):
+        time.sleep(0.5)
         self.sp.setRTS(1)
         time.sleep(0.5)
         self.sp.setRTS(0)
@@ -86,9 +87,11 @@ class CommandInterface:
 
     def initChip(self):
         # Set boot
-        self.sp.setDTR(1)
-        self.reset()
-        self.sp.setDTR(0)
+	self.sp.write("btld")
+	time.sleep(0.5)
+        #self.sp.setDTR(1)
+        #self.reset()
+        #self.sp.setDTR(0)
         #self.sp.close()
         #self.sp=open("/dev/rfcomm3","rb+")
         self.sp.write("\x7F")       # Syncro
