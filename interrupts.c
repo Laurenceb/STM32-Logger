@@ -40,11 +40,11 @@ void ISR_Config(void) {
 	//NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
 	/* Enabling interrupt from USART1 - bluetooth commands, e.g. enter bootloader*/
-	NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQn;//UAVtalk Rx triggered interrupt
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x01;//Low pre-emption priority
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x02;	//Third highest group - above the dma
+	//NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQn;//UAVtalk Rx triggered interrupt
+	//NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x01;//Low pre-emption priority
+	//NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x02;	//Third highest group - above the dma
 	//NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-	NVIC_Init(&NVIC_InitStructure); 
+	//NVIC_Init(&NVIC_InitStructure); 
 }
 
 /**
