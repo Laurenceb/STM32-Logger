@@ -2,7 +2,7 @@
 #include "core_cm3.h"
 #include "main.h"
 #include "ff.h"
-
+#ifdef BOOTLOADER
 void BootLoader(void) {
 	void (*SysMemBootJump)(void) = (void (*)(void)) (*((uint32_t *) 0x1FFF0004));
 	__set_PRIMASK(1);
@@ -35,4 +35,4 @@ __attribute__((externally_visible)) void USART1_IRQHandler(void) {
 		}
 	}
 }
-
+#endif

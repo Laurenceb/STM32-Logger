@@ -40,10 +40,10 @@ void Usarts_Init() {
 
     /* Enable USART2 DMA Rx request */
     //USART_DMACmd(USART2_USART, USART_DMAReq_Rx , ENABLE);
-
+#ifdef BOOTLOADER
     /* Enable the RXNE interrupt on USART1 */
-    //USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
-
+    USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
+#endif
     /* Enable the USART1 */
     USART_Cmd(USART1_USART, ENABLE);
     /* Enable the USART2 */

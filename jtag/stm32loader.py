@@ -147,7 +147,7 @@ class CommandInterface:
         self.enterCMD()
         self.reset()
         self.sendCMD("ST,60")        #Set remote 60second config
-        self.sendCMD("S&,0800")      #Set GPIO3 as low to kill power on reset
+        self.sendCMD("S&,0800")      #Set GPIO3 as low to kill power on reset - note this will fail to get ACK if the logger turns off
         self.sendCMD("S@,0800")      #Set GPIO3 as input to kill power on reset
         self.exitCMD()
         self.sp.close()              #leaves the bluetooth rfcomm free for other connections - if the logger hasnt turned itself off
