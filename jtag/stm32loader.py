@@ -78,71 +78,79 @@ class CommandInterface:
                     raise CmdException("Unknown response. "+info+": "+hex(ask))
 
     def enterCMD(self):
-        self.sp.timeout=0.1
+        self.sp.timeout=0.2
         reply=""
         iterations=0
         while reply[0:3]!="CMD":
+           self.sp.flushInput()
            self.sp.write("$$$")
+           self.sp.flush()
            reply=self.sp.readline()
            iterations+=1
            if iterations>3:
-               raise CmdException("RN41/2 CMD mode entry failed")
+               raise CmdException("RN41/2 CMD mode entry failed:"+reply)
         self.sp.timeout=5
 
     def exitCMD(self):
-        self.sp.timeout=0.1
+        self.sp.timeout=0.2
         reply=""
         iterations=0
         while reply[0:3]!="END":
+           self.sp.flushInput()
            self.sp.write("---\r")
+           self.sp.flush()
            reply=self.sp.readline()
            iterations+=1
            if iterations>3:
-               raise CmdException("RN41/2 exit CMD mode entry failed")
+               raise CmdException("RN41/2 exit CMD mode entry failed:"+reply)
         self.sp.timeout=5
 
     def sendCMD(self, cmd):
-        self.sp.timeout=0.1
+        self.sp.timeout=0.2
         reply=""
         iterations=0
         while reply[0:3]!="AOK":
+           self.sp.flushInput()
            self.sp.write(cmd+"\r\n")
+           self.sp.flush()
            reply=self.sp.readline()
            iterations+=1
            if iterations>3:
-               raise CmdException("RN41/2 command "+cmd+" failed")
+               raise CmdException("RN41/2 command "+cmd+" failed:"+reply)
         self.sp.timeout=5
 
     def reset(self):
         time.sleep(0.2)
-        sendCMD(self, "S*,0800")     #Set GPIO11 low to set Reset
+        self.sendCMD("S*,0800")      #Set GPIO11 low to set Reset
         time.sleep(0.2)
-        sendCMD(self, "S*,0808")     #Set GPIO11 high to clear Reset
+        self.sendCMD("S*,0808")      #Set GPIO11 high to clear Reset
         time.sleep(0.2)
 
     def initChip(self):
         # Set boot
         #self.sp.write("btld")
         #time.sleep(0.5)
-        enterCMD(self)
-        sendCMD(self,"ST,254")       #Set remote continuous config
-        sendCMD(self,"S@,0808")      #Set GPIO3 output to keep power enabled
-        sendCMD(self,"S&,0808")      #Set GPIO3 high to keep power enabled
-        sendCMD(self,"S*,0404")      #Set GPIO10 high to set BOOT0
-        sendCMD(self,"S*,0400")      #Set GPIO10 low to clear BOOT0
-        exitCMD(self)                #exit cmd mode
+        self.enterCMD()
+        self.sendCMD("ST,254")       #Set remote continuous config
+        self.sendCMD("S@,0808")      #Set GPIO3 output to keep power enabled
+        self.sendCMD("S&,0808")      #Set GPIO3 high to keep power enabled
+        self.sendCMD("S*,0404")      #Set GPIO10 high to set BOOT0
+        self.reset()
+        self.sendCMD("S*,0400")      #Set GPIO10 low to clear BOOT0
+        self.exitCMD()               #exit cmd mode
+        time.sleep(0.2)
         self.sp.flushInput()
         self.sp.write("\x7F")        # Syncro
         return self._wait_for_ask("Syncro") 
 
     def releaseChip(self):
-        enterCMD(self)
+        self.enterCMD()
         self.reset()
-        sendCMD(self,"S&,0800")      #Set GPIO3 as low to kill power on reset
-        sendCMD(self,"S@,0800")      #Set GPIO3 as input to kill power on reset
-        sendCMD(self,"ST,60")        #Set remote 60second config
-        exitCMD(self)
-        self.sp.close()              #leaves the bluetooth rfcomm free for other connections
+        self.sendCMD("ST,60")        #Set remote 60second config
+        self.sendCMD("S&,0800")      #Set GPIO3 as low to kill power on reset
+        self.sendCMD("S@,0800")      #Set GPIO3 as input to kill power on reset
+        self.exitCMD()
+        self.sp.close()              #leaves the bluetooth rfcomm free for other connections - if the logger hasnt turned itself off
 
     def cmdGeneric(self, cmd):
         self.sp.write(chr(cmd))
