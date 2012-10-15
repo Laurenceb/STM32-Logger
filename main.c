@@ -109,6 +109,8 @@ int main(void)
 	Delay(10000);
 	if(!(sensors_&~(1<<PRESSURE_HOSE))||GET_BATTERY_VOLTAGE<BATTERY_STARTUP_LIMIT) {//We will have to turn off
 		Watchdog_Reset();			//LED flashing takes a while
+		if(abs(Reported_Pressure)>PRESSURE_MARGIN)
+			Set_Motor(-1);			//If the is air backpressure, dump to rapidly drop to zero pressure before turnoff
 		if(file_opened)
 			f_close(&FATFS_logfile);	//be sure to terminate file neatly
 		red_flash();
