@@ -116,7 +116,7 @@ int main(void)
 		red_flash();
 		Delay(400000);
 		red_flash();				//Two flashes means battery abort -----------------ABORT 2
-		if(sensors_)
+		if(sensors_&~(1<<PRESSURE_HOSE))
 			shutdown();
 		Delay(400000);
 		red_flash();				//Three flashes means no sensors abort ------------ABORT 3
