@@ -39,7 +39,7 @@ extern volatile uint8_t Sensors;
 
 //Battery specific config goes here
 #define BATTERY_STARTUP_LIMIT 3.7 /*Around 25% capacity remaining for lithium polymer at 25C slow discharge*/
-#if BORAD<3
+#if BOARD<3
 	#define MINIMUM_VOLTAGE 3.0	/* A single lithium polymer cell*/
 #else
 	#define MINIMUM_VOLTAGE 3.37	/* A single lithium polymer cell through LDO regulator - no smps on later boards*/

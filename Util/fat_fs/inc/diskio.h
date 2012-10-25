@@ -101,7 +101,11 @@ RAMFUNC void disk_timerproc (void);
 /* Martin Thomas end */
 
 //Macro added by Laurence
-#define DMA_Channel_SPI_SD_RX DMA1_Channel4
+#if BOARD>=3
+	#define DMA_Channel_SPI_SD_RX DMA1_Channel4
+#else
+	#define DMA_Channel_SPI_SD_RX DMA1_Channel2
+#endif
 extern volatile BYTE Sd_Spi_Called_From_USB_MSC;
 //End Laurence
 #define _DISKIO
