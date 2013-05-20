@@ -117,13 +117,11 @@ __attribute__((externally_visible)) void EXTI0_IRQHandler(void) {
 		/* Clear the  EXTI line 0 pending bit */
 		EXTI_ClearITPendingBit(EXTI_Line0);
 		if(USB_SOURCE!=bootsource && GET_VBUS_STATE) {	//Interrupt due to USB insertion - reset to usb mode
-			if(file_opened)
-				shutdown_filesystem();
-			NVIC_SystemReset();			//Software reset of the system - USB inserted whilst running
+                        Shutdown_System=USB_INSERTED;		//Request a software reset of the system - USB inserted whilst running
 		}
 		if(USB_SOURCE==bootsource) {
 			if(file_opened) 
-				shutdown_filesystem();
+				shutdown_filesystem();          //This should not happen
 			red_flash();				//Flash red led - provides some debouncing on jack removal
 			shutdown();				//Shuts down - only wakes up on power pin i.e. WKUP
 		}
@@ -172,18 +170,8 @@ __attribute__((externally_visible)) void DMAChannel1_IRQHandler(void) {
   * @retval None
   */
 __attribute__((externally_visible)) void ADC1_2_IRQHandler(void) {
-	if(ADC_GetITStatus(ADC2, ADC_IT_AWD)) {			//Analogue watchdog was triggered
-		if(file_opened) {
-			char c[]="\r\nLow Battery\r\n";
-			uint8_t a;
-			f_write(&FATFS_logfile,c,sizeof(c),&a);	//Write the error to the file
-			f_sync(&FATFS_logfile);			//Flush buffers
-			f_truncate(&FATFS_logfile);		//Truncate the lenght - fix pre allocation
-			f_close(&FATFS_logfile);		//Close any opened file
-		}
-		red_flash();					//Flash red led
-		shutdown();					//Shutdown to save battery
-	}
+	if(ADC_GetITStatus(ADC2, ADC_IT_AWD))			//Analogue watchdog was triggered
+		Shutdown_System=LOW_BATTERY;			//Shutdown to save battery
 	ADC_ClearITPendingBit(ADC2, ADC_IT_EOC);
 	ADC_ClearITPendingBit(ADC2, ADC_IT_JEOC);
 	ADC_ClearITPendingBit(ADC1, ADC_IT_EOC);
@@ -266,9 +254,7 @@ __attribute__((externally_visible)) void SysTickHandler(void)
 	if(Button_hold_tim ) {					//If a button press generated timer has been triggered
 		if(GET_BUTTON) {				//Button hold turns off the device
 			if(!--Button_hold_tim) {
-				if(file_opened)
-					shutdown_filesystem(1,file_opened);
-				shutdown();			//Turn off the logger after closing any open files
+                                Shutdown_System=BUTTON_TURNOFF;//Request turn off of logger after closing any open files
 			}
 		}
 		else {						//Button released - this can only ever run once per press

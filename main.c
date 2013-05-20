@@ -36,6 +36,7 @@ volatile float Pressure_Setpoint;			//Target differential pressure for the pump
 volatile uint32_t Millis;				//System uptime (rollover after 50 days)
 volatile uint8_t System_state_Global;			//Stores the system state, controlled by the button, most significant bit is a flag
 volatile uint8_t Sensors;				//Global holding a mask of the sensors found by automatic sensor discovery
+volatile uint8_t Shutdown_System;			//Used to order a system shutdown to sleep mode
 //Sensor buffers to pass data back to logger
 volatile buff_type Temperatures_Buffer;			//Data from temperature sensor
 volatile buff_type Thermistor_Buffer;	
@@ -233,7 +234,7 @@ int main(void)
 		}
 		printf(",%d\n",system_state);		//Terminating newline
 		system_state=0;				//Reset this
-		if(file_opened) {
+		if(file_opened  & 0x01) {
 			f_puts(print_string,&FATFS_logfile);
 			print_string[0]=0x00;		//Set string length to 0
 		}
@@ -247,6 +248,17 @@ int main(void)
 			switch_leds_on();		//Flash the LED(s)
 		else
 			switch_leds_off();
+                if(Shutdown_System) {			//A system shutdown has been requested
+			if(file_opened)
+				shutdown_filesystem(Shutdown_System, file_opened);
+			if(Shutdown_System==USB_INSERTED)
+				NVIC_SystemReset();	//Software reset of the system - USB inserted whilst running
+			else {
+				if(Shutdown_System==LOW_BATTERY)
+					red_flash;	//Used to indicate an error condition before turnoff
+				shutdown();		//Puts us into sleep mode
+			}
+		}
 		if(Millis%15000>4000)			//15 second cycle of pressure control - 11s dump, 4s pump to 3psi
 			Pressure_Setpoint=-1;
 		else

@@ -15,6 +15,8 @@ extern volatile uint32_t Millis;
 extern volatile uint8_t System_state_Global;
 extern volatile uint8_t Sensors;
 
+extern volatile uint8_t Shutdown_System;
+
 #define PRE_SIZE 1000000ul	/*Preallocate size*/
 
 //#define SINGLE_LOGFILE
@@ -37,6 +39,7 @@ extern volatile uint8_t Sensors;
 #define PRESSURE_D_CONST -0.001*(float)(PWM_RES*ITERATION_RATE)/*means a change of 1PSI/second will decrease pwm duty by 0.1%*/
 #define PRESSURE_MARGIN 0.3				/*means a pressure within 0.3PSI of zero will turn off the dump valve if setpoint -ive*/
 
+enum{BUTTON_TURNOFF=1,USB_INSERTED,LOW_BATTERY};
 //Battery specific config goes here
 #define BATTERY_STARTUP_LIMIT 3.7 /*Around 25% capacity remaining for lithium polymer at 25C slow discharge*/
 #if BOARD<3
