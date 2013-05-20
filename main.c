@@ -203,7 +203,8 @@ int main(void)
 	Sensors|=sensors_;				//Set the global sensors variable here to mark the detected sensors as present
 	while (1) {
 		Watchdog_Reset();			//Reset the watchdog each main loop iteration
-		while(!bytes_in_buff(&(Buff[0])));	//Wait for some PPG data
+		while(!bytes_in_buff(&(Buff[0])))
+			__WFI();		//Wait for some PPG data
 		printf("%3f",(float)(data_counter++)/PPG_SAMPLE_RATE);//The time since PPG collection started
 		for(uint8_t n=0;n<PPG_CHANNELS;n++) {	//Loop through the PPG channels
 			Get_From_Buffer(&ppg,&(Buff[n]));//Retrive one sample of PPG
