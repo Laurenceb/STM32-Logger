@@ -121,7 +121,7 @@ __attribute__((externally_visible)) void EXTI0_IRQHandler(void) {
 		}
 		if(USB_SOURCE==bootsource) {
 			if(file_opened) 
-				shutdown_filesystem();          //This should not happen
+				shutdown_filesystem(1,file_opened);//This should not happen
 			red_flash();				//Flash red led - provides some debouncing on jack removal
 			shutdown();				//Shuts down - only wakes up on power pin i.e. WKUP
 		}
