@@ -34,7 +34,9 @@
  //#define USE_STM3210E_EVAL
  //#define USE_STM3210C_EVAL
  //#define USE_STM32L152_EVAL
- #define CRT
+ #ifndef CRT
+  #define CRT
+ #endif
 #endif
 
 /* Define the STM32F10x hardware depending on the used evaluation board */

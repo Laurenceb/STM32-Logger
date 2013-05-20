@@ -255,7 +255,7 @@ int main(void)
 				NVIC_SystemReset();	//Software reset of the system - USB inserted whilst running
 			else {
 				if(Shutdown_System==LOW_BATTERY)
-					red_flash;	//Used to indicate an error condition before turnoff
+					red_flash();	//Used to indicate an error condition before turnoff
 				shutdown();		//Puts us into sleep mode
 			}
 		}
