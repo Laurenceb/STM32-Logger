@@ -190,7 +190,7 @@ static uint32_t struct_to_counter( const RTC_t *t )
 	if (year%400 == 0 || (year%4 == 0 && year%100 !=0)) {
 		;
 	} else {
-		if (t->month > 1) {
+		if (t->month > 2) {
 			result--;
 		}
 	}
