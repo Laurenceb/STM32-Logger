@@ -272,7 +272,7 @@ int main(void)
   * @retval None
   */
 void __fat_print_char(char c) {
-	f_write(&FATFS_logfile,&c,1,&a);
+	f_write(&FATFS_logfile,&c,(UINT)1,&a);
 }
 
 /**
@@ -281,9 +281,9 @@ void __fat_print_char(char c) {
   * @retval None
   */
 void __str_print_char(char c) {
-	uint8_t a=strlen(print_string)%255;		//Make sure we cant overwrite ram
-	print_string[a]=c;				//Append string
-	print_string[a+1]=0x00;				//Null terminate
+	uint8_t indx=strlen(print_string)%255;		//Make sure we cant overwrite ram
+	print_string[indx]=c;				//Append string
+	print_string[indx+1]=0x00;			//Null terminate
 	__usart_send_char(c);				//Send to the bluetooth as well
 }
 
