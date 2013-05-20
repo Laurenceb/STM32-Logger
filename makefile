@@ -90,7 +90,7 @@ MAIN_OBJS = $(sort \
  $(patsubst %.c,%.o,$(wildcard Util/*.c)) \
  $(patsubst %.c,%.o,$(wildcard Util/USB/*.c)) \
  $(patsubst %.c,%.o,$(wildcard Util/fat_fs/src/*.c)) \
- $(patsubst %.c,%.o,$(wildcard Util/fat_fs/option/*.c)) \
+ $(patsubst %.c,%.o,$(wildcard Util/fat_fs/option/ccsbcs.c)) \
  $(patsubst %.c,%.o,$(wildcard Sensors/*.c)) \
  $(STARTUP_OBJ))
 

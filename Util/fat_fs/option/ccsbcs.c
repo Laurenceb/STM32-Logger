@@ -25,7 +25,7 @@
 /   1258  Vietnam (OEM, Windows)
 */
 
-#include "../ff.h"
+#include "../inc/ff.h"
 
 
 #if _CODE_PAGE == 437
@@ -313,6 +313,7 @@ const WCHAR Tbl[] = {	/*  CP1250(0x80-0xFF) to Unicode conversion table */
 	0x0111, 0x0144, 0x0148, 0x00F3, 0x00F4, 0x0151, 0x00F6, 0x00F7,
 	0x0159, 0x016F, 0x00FA, 0x0171, 0x00FC, 0x00FD, 0x0163, 0x02D9
 };
+
 
 #elif _CODE_PAGE == 1251
 #define _TBLDEF 1
