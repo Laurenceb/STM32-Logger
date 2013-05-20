@@ -266,7 +266,8 @@ __attribute__((externally_visible)) void SysTickHandler(void)
 	if(Button_hold_tim ) {					//If a button press generated timer has been triggered
 		if(GET_BUTTON) {				//Button hold turns off the device
 			if(!--Button_hold_tim) {
-				shutdown_filesystem();
+				if(file_opened)
+					shutdown_filesystem(1,file_opened);
 				shutdown();			//Turn off the logger after closing any open files
 			}
 		}
