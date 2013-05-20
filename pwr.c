@@ -17,7 +17,7 @@ void disable_pin() {
 void shutdown_filesystem() {
 	char c[]="\r\nLogger turned off\r\n";
 	uint8_t a;
-	f_write(&FATFS_logfile,c,sizeof(c),&a);		//Write the error to the file
+	f_write(&FATFS_logfile,c,strlen(c),&a);	//Write the error to the file
 	f_sync(&FATFS_logfile);				//Flush buffers
 	f_truncate(&FATFS_logfile);			//Truncate the lenght - fix pre allocation
 	f_close(&FATFS_logfile);			//Close any opened file
