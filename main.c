@@ -146,7 +146,7 @@ int main(void)
 #ifndef SINGLE_LOGFILE
 		rtc_gettime(&RTC_time);			//Get the RTC time and put a timestamp on the start of the file
 		rprintfInit(__str_print_char);		//Print to the string
-		printf("%d-%d-%dT%d-%d-%d.txt",RTC_time.year,RTC_time.month,RTC_time.mday,RTC_time.hour,RTC_time.min,RTC_time.sec);//Timestamp name
+		printf("%d-%d-%dT%d-%d-%d.csv",RTC_time.year,RTC_time.month,RTC_time.mday,RTC_time.hour,RTC_time.min,RTC_time.sec);//Timestamp name
 		rprintfInit(__usart_send_char);		//Printf over the bluetooth
 #endif
 		if((f_err_code=f_open(&FATFS_logfile,LOGFILE_NAME,FA_CREATE_ALWAYS | FA_WRITE))) {//Present

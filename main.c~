@@ -93,6 +93,7 @@ int main(void)
 			else
 				switch_leds_off();
 			Watchdog_Reset();
+			__WFI();			//Sleep mode
 		}
 	}
 	if(!GET_PWR_STATE)				//Check here to make sure the power button is still pressed, if not, sleep
@@ -205,7 +206,7 @@ int main(void)
 	while (1) {
 		Watchdog_Reset();			//Reset the watchdog each main loop iteration
 		while(!bytes_in_buff(&(Buff[0])))
-			__WFI();		//Wait for some PPG data
+			__WFI();			//Wait for some PPG data
 		printf("%3f",(float)(data_counter++)/PPG_SAMPLE_RATE);//The time since PPG collection started
 		for(uint8_t n=0;n<PPG_CHANNELS;n++) {	//Loop through the PPG channels
 			Get_From_Buffer(&ppg,&(Buff[n]));//Retrive one sample of PPG
