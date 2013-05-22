@@ -3604,7 +3604,7 @@ END GROUP
                 0x08008bf8                SysTick_Configuration
                 0x08008c24                EXTI0_IRQHandler
                 0x08008c98                DMAChannel1_IRQHandler
-                0x08008d68                ADC1_2_IRQHandler
+                0x08008d68                ADC_IRQHandler
                 0x08008dc0                SysTickHandler
                 0x08009150                USB_HP_CAN_TX_IRQHandler
                 0x08009154                USB_LP_CAN_RX0_IRQHandler
@@ -3626,6 +3626,7 @@ END GROUP
                 0x08009170                EXTI3_IRQHandler
                 0x08009170                I2C2_EV_IRQHandler
                 0x08009170                UsageFault_Handler
+                0x08009170                ADC1_2_IRQHandler
                 0x08009170                SPI1_IRQHandler
                 0x08009170                TAMPER_IRQHandler
                 0x08009170                DMA1_Channel4_IRQHandler
@@ -4351,7 +4352,6 @@ END GROUP
                 0x0800edbc                DMAChannel4_IRQHandler
                 0x0800edbc                PendSVC
                 0x0800edbc                CAN_RX1_IRQHandler
-                0x0800edbc                ADC_IRQHandler
                 0x0800edbc                DMAChannel5_IRQHandler
                 0x0800edbc                DMAChannel2_IRQHandler
                 0x0800edbc                __STM32ReservedException7
@@ -4785,7 +4785,7 @@ END GROUP
 .debug_pubnames
  *(.debug_pubnames)
 
-.debug_info     0x00000000    0x1652d
+.debug_info     0x00000000    0x1653d
  *(.debug_info .gnu.linkonce.wi.*)
  .debug_info    0x00000000      0x882 Sensors/ppg_new.o
  .debug_info    0x00000882      0x221 Sensors/pressure.o
@@ -4817,11 +4817,11 @@ END GROUP
  .debug_info    0x00011adb      0x561 lib/CMSIS_CM3/core_cm3.o
  .debug_info    0x0001203c       0x82 lib/CMSIS_CM3/startup/gcc/startup_stm32f10x_md.o
  .debug_info    0x000120be      0x2da lib/CMSIS_CM3/system_stm32f10x.o
- .debug_info    0x00012398     0x25d0 main.o
- .debug_info    0x00014968      0x61a pwr.o
- .debug_info    0x00014f82      0xd5e timer.o
- .debug_info    0x00015ce0      0x66a usart.o
- .debug_info    0x0001634a      0x1e3 watchdog.o
+ .debug_info    0x00012398     0x25e0 main.o
+ .debug_info    0x00014978      0x61a pwr.o
+ .debug_info    0x00014f92      0xd5e timer.o
+ .debug_info    0x00015cf0      0x66a usart.o
+ .debug_info    0x0001635a      0x1e3 watchdog.o
 
 .debug_abbrev   0x00000000     0x3ebb
  *(.debug_abbrev)
@@ -4861,7 +4861,7 @@ END GROUP
  .debug_abbrev  0x00003b9d      0x1f0 usart.o
  .debug_abbrev  0x00003d8d      0x12e watchdog.o
 
-.debug_line     0x00000000     0xd0ec
+.debug_line     0x00000000     0xd0f8
  *(.debug_line)
  .debug_line    0x00000000      0x71b Sensors/ppg_new.o
  .debug_line    0x0000071b      0x3ad Sensors/pressure.o
@@ -4893,11 +4893,11 @@ END GROUP
  .debug_line    0x0000b028      0x1ba lib/CMSIS_CM3/core_cm3.o
  .debug_line    0x0000b1e2       0x8b lib/CMSIS_CM3/startup/gcc/startup_stm32f10x_md.o
  .debug_line    0x0000b26d      0x347 lib/CMSIS_CM3/system_stm32f10x.o
- .debug_line    0x0000b5b4      0x91d main.o
- .debug_line    0x0000bed1      0x57b pwr.o
- .debug_line    0x0000c44c      0x3ba timer.o
- .debug_line    0x0000c806      0x5d1 usart.o
- .debug_line    0x0000cdd7      0x315 watchdog.o
+ .debug_line    0x0000b5b4      0x929 main.o
+ .debug_line    0x0000bedd      0x57b pwr.o
+ .debug_line    0x0000c458      0x3ba timer.o
+ .debug_line    0x0000c812      0x5d1 usart.o
+ .debug_line    0x0000cde3      0x315 watchdog.o
 
 .debug_frame    0x00000000     0x2174
  *(.debug_frame)
@@ -4976,7 +4976,7 @@ END GROUP
  .debug_frame   0x00002120       0x28 /home/laurence/CodeSourcery/Sourcery_CodeBench_Lite_for_ARM_EABI/bin/../lib/gcc/arm-none-eabi/4.7.2/../../../../arm-none-eabi/lib/thumb2/libcs3unhosted.a(unhosted-sbrk.o)
  .debug_frame   0x00002148       0x2c /home/laurence/CodeSourcery/Sourcery_CodeBench_Lite_for_ARM_EABI/bin/../lib/gcc/arm-none-eabi/4.7.2/../../../../arm-none-eabi/lib/thumb2/libc.a(lib_a-init.o)
 
-.debug_str      0x00000000    0x4baff
+.debug_str      0x00000000    0x4bafc
  *(.debug_str)
  .debug_str     0x00000000    0x43139 Sensors/ppg_new.o
                               0x4332e (size before relaxing)
@@ -5030,21 +5030,21 @@ END GROUP
                               0x42afa (size before relaxing)
  .debug_str     0x0004a7a5      0x251 i2c_int.o
                               0x42ec4 (size before relaxing)
- .debug_str     0x0004a9f6      0x506 interrupts.o
-                              0x4680d (size before relaxing)
- .debug_str     0x0004aefc      0x13d lib/CMSIS_CM3/core_cm3.o
+ .debug_str     0x0004a9f6      0x503 interrupts.o
+                              0x4680a (size before relaxing)
+ .debug_str     0x0004aef9      0x13d lib/CMSIS_CM3/core_cm3.o
                                0x2c89 (size before relaxing)
- .debug_str     0x0004b039      0x138 lib/CMSIS_CM3/system_stm32f10x.o
+ .debug_str     0x0004b036      0x138 lib/CMSIS_CM3/system_stm32f10x.o
                               0x3fda6 (size before relaxing)
- .debug_str     0x0004b171      0x555 main.o
+ .debug_str     0x0004b16e      0x555 main.o
                               0x46c99 (size before relaxing)
- .debug_str     0x0004b6c6       0x4b pwr.o
+ .debug_str     0x0004b6c3       0x4b pwr.o
                               0x42893 (size before relaxing)
- .debug_str     0x0004b711      0x284 timer.o
+ .debug_str     0x0004b70e      0x284 timer.o
                               0x4094f (size before relaxing)
- .debug_str     0x0004b995       0xef usart.o
+ .debug_str     0x0004b992       0xef usart.o
                               0x43432 (size before relaxing)
- .debug_str     0x0004ba84       0x7b watchdog.o
+ .debug_str     0x0004ba81       0x7b watchdog.o
                               0x3fd2c (size before relaxing)
 
 .debug_loc      0x00000000    0x1055a
@@ -5545,7 +5545,7 @@ OUTPUT(main.elf elf32-littlearm)
 Cross Reference Table
 
 Symbol                                            File
-ADC1_2_IRQHandler                                 interrupts.o
+ADC1_2_IRQHandler                                 lib/CMSIS_CM3/startup/gcc/startup_stm32f10x_md.o
 ADC1_Convertion_buff                              interrupts.o
                                                   adc.o
 ADC_AnalogWatchdogCmd                             lib/STM32F10x_StdPeriph_Driver/libstm32fw.a(stm32f10x_adc.o)
@@ -5591,7 +5591,7 @@ ADC_GetResetCalibrationStatus                     lib/STM32F10x_StdPeriph_Driver
                                                   adc.o
 ADC_GetSoftwareStartConvStatus                    lib/STM32F10x_StdPeriph_Driver/libstm32fw.a(stm32f10x_adc.o)
 ADC_GetSoftwareStartInjectedConvCmdStatus         lib/STM32F10x_StdPeriph_Driver/libstm32fw.a(stm32f10x_adc.o)
-ADC_IRQHandler                                    lib/libcs3-lanchon-stm32.a(lanchon_stm32_isr_interrupt.o)
+ADC_IRQHandler                                    interrupts.o
                                                   lib/libcs3-lanchon-stm32.a(lanchon-stm32-vector.o)
 ADC_ITConfig                                      lib/STM32F10x_StdPeriph_Driver/libstm32fw.a(stm32f10x_adc.o)
                                                   adc.o

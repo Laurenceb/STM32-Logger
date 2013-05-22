@@ -1,26 +1,11 @@
-function [sig]=timsim(counter3,counter2,counter4)
-sig=[];
-for(a=1:1161216)
-	counter3+=1;
-	if(counter3<5983)
-		counter2+=1;
-		if(counter2<5921)
-			counter4+=1;
-			if(counter4==5983)
-				counter4=0;
-			endif
-		else
-			if(counter2==5952)
-				counter2=0;
-			endif
-		endif
-	else
-		if(counter3==6048)
-			counter3=0;
-		endif
-	endif
-	sig(a,:)=[counter3,counter2,counter4];
-	printf("%f   \r",a/1161216);
-	fflush(stdout);
-endfor
-endfunction  
+function timers=timsim()
+	numclks=6048*192*3;
+	timers=zeros(numclks,3);
+	timers(:,1)=repmat([1:6048]',192*3,1);
+	pwmout_one=zeros(numclks,1);
+	pwmout_one(find(timers(:,1)<5921))=1;
+	timers(:,2)=mod(cumsum(pwmout_one),5952);
+	pwmout_two=zeros(numclks,1);
+	pwmout_two(find(timers(:,1)<5984))=1;
+	timers(:,3)=mod(cumsum(pwmout_two),6048);
+endfunction
