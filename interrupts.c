@@ -169,14 +169,14 @@ __attribute__((externally_visible)) void DMAChannel1_IRQHandler(void) {
   * @param  None
   * @retval None
   */
-__attribute__((externally_visible)) void ADC1_2_IRQHandler(void) {
+__attribute__((externally_visible)) void ADC_IRQHandler(void) {
 	if(ADC_GetITStatus(ADC2, ADC_IT_AWD))			//Analogue watchdog was triggered
 		Shutdown_System=LOW_BATTERY;			//Shutdown to save battery
 	ADC_ClearITPendingBit(ADC2, ADC_IT_EOC);
 	ADC_ClearITPendingBit(ADC2, ADC_IT_JEOC);
 	ADC_ClearITPendingBit(ADC1, ADC_IT_EOC);
 	ADC_ClearITPendingBit(ADC1, ADC_IT_JEOC);		//None of these should ever happen, but best to be safe
-	ADC_ClearITPendingBit(ADC1, ADC_IT_AWD);		//make sure flags are clear
+	ADC_ClearITPendingBit(ADC2, ADC_IT_AWD);		//make sure flags are clear
 }
 
 
