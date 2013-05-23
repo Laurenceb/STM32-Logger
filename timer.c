@@ -2,6 +2,8 @@
 #include "gpio.h"
 #include "Sensors/ppg.h"
 
+#define CR1_CEN_Set                 ((uint16_t)0x0001)
+
 /**
   * @brief  Configure the timer channels for PWM out on CRT board
   * @param  None
@@ -133,7 +135,7 @@ void setup_pwm(void) {
   TIM_OC1Init(TIM2, &TIM_OCInitStructure);		//Tim2,ch1 used for gating
   TIM_OC1PreloadConfig(TIM2, TIM_OCPreload_Enable);
   #if PPG_CHANNELS>1
-  //TIM_SelectMasterSlaveMode(TIM4,TIM_MasterSlaveMode_Enable);
+  TIM_SelectMasterSlaveMode(TIM4,TIM_MasterSlaveMode_Enable);
   TIM_SelectInputTrigger(TIM4,TIM_TS_ITR1);		//Tim4 off tim2
   TIM_SelectSlaveMode(TIM4,TIM_SlaveMode_Gated);	//Tim4 is gated by the tim2 channel1 input
   #endif
@@ -146,14 +148,16 @@ void setup_pwm(void) {
     #endif
     TIM_Cmd(TIM2, ENABLE);
   #else
+      TIM2->CNT=0;
+      TIM3->CNT=0;
     #if PPG_CHANNELS>2
       TIM4->CNT=PWM_PERIOD_CENTER/2;//This causes the third timer to be in antiphase, giving reduce peak ADC signal
-      TIM_Cmd(TIM4, ENABLE);
+      TIM4->CR1 |= CR1_CEN_Set;
     #endif
     #if PPG_CHANNELS>1
-      TIM_Cmd(TIM2, ENABLE);
+      TIM2->CR1 |= CR1_CEN_Set;
     #endif
-    TIM_Cmd(TIM3, ENABLE);
+    TIM3->CR1 |= CR1_CEN_Set;
   #endif
   __enable_irq();
 

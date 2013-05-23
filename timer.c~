@@ -61,11 +61,11 @@ void setup_pwm(void) {
   TIM_OCInitStructure.TIM_Pulse = 4;
   TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
 
-  /*Time base configuration  - timer 4 as PWM2/0*/
+  /*Time base configuration  - timer 4 as PWM0/2*/
   #if BOARD<3
-  TIM_TimeBaseStructure.TIM_Period = PWM_PERIOD_TWO;	//PWM2 on early boards
+  TIM_TimeBaseStructure.TIM_Period = PWM_PERIOD_ZERO;	//PWM0 on early boards
   #else
-  TIM_TimeBaseStructure.TIM_Period = PWM_PERIOD_ZERO;	//PWM0 on later boards
+  TIM_TimeBaseStructure.TIM_Period = PWM_PERIOD_TWO;	//PWM2 on later boards
   #endif
   /*setup 4*/
   TIM_TimeBaseInit(TIM4, &TIM_TimeBaseStructure);
@@ -84,11 +84,11 @@ void setup_pwm(void) {
   TIM_ARRPreloadConfig(TIM4, ENABLE);
 
 
-  /*Now setup timer 2 as PWM1/2*/
+  /*Now setup timer 2 as PWM1/0*/
   #if BOARD<3
   TIM_TimeBaseStructure.TIM_Period = PWM_PERIOD_ONE;
   #else
-  TIM_TimeBaseStructure.TIM_Period = PWM_PERIOD_TWO;
+  TIM_TimeBaseStructure.TIM_Period = PWM_PERIOD_ZERO;
   #endif
   TIM_TimeBaseInit(TIM2, &TIM_TimeBaseStructure);	//Same as timer4
   /* PWM1 Mode configuration: Channel3 */
@@ -133,7 +133,7 @@ void setup_pwm(void) {
   TIM_OC1Init(TIM2, &TIM_OCInitStructure);		//Tim2,ch1 used for gating
   TIM_OC1PreloadConfig(TIM2, TIM_OCPreload_Enable);
   #if PPG_CHANNELS>1
-  //TIM_SelectMasterSlaveMode(TIM4,TIM_MasterSlaveMode_Enable);
+  TIM_SelectMasterSlaveMode(TIM4,TIM_MasterSlaveMode_Enable);
   TIM_SelectInputTrigger(TIM4,TIM_TS_ITR1);		//Tim4 off tim2
   TIM_SelectSlaveMode(TIM4,TIM_SlaveMode_Gated);	//Tim4 is gated by the tim2 channel1 input
   #endif
@@ -146,14 +146,16 @@ void setup_pwm(void) {
     #endif
     TIM_Cmd(TIM2, ENABLE);
   #else
+      TIM2->CNT=0;
+      TIM3->CNT=0;
     #if PPG_CHANNELS>2
       TIM4->CNT=PWM_PERIOD_CENTER/2;//This causes the third timer to be in antiphase, giving reduce peak ADC signal
-      TIM_Cmd(TIM4, ENABLE);
+      TIM4->CR1 |= CR1_CEN_Set;
     #endif
     #if PPG_CHANNELS>1
-      TIM_Cmd(TIM2, ENABLE);
+      TIM2->CR1 |= CR1_CEN_Set;
     #endif
-    TIM_Cmd(TIM3, ENABLE);
+    TIM3->CR1 |= CR1_CEN_Set;
   #endif
   __enable_irq();
 

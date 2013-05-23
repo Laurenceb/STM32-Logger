@@ -9,7 +9,7 @@
 #define PWM_PERIOD_TWO 6047ul
 
 #define GATING_PERIOD_ZERO 5983ul
-#define GATING_PERIOD_ONE  5920ul
+#define GATING_PERIOD_ONE  5921ul
 
 #define PWM_PERIOD_CENTER PWM_PERIOD_ONE
 //Macros to link to the periph functions
