@@ -61,11 +61,11 @@ void setup_pwm(void) {
   TIM_OCInitStructure.TIM_Pulse = 4;
   TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
 
-  /*Time base configuration  - timer 4 as PWM0/2*/
+  /*Time base configuration  - timer 4 as PWM2/0*/
   #if BOARD<3
-  TIM_TimeBaseStructure.TIM_Period = PWM_PERIOD_ZERO;	//PWM0 on early boards
+  TIM_TimeBaseStructure.TIM_Period = PWM_PERIOD_TWO;	//PWM2 on early boards
   #else
-  TIM_TimeBaseStructure.TIM_Period = PWM_PERIOD_TWO;	//PWM2 on later boards
+  TIM_TimeBaseStructure.TIM_Period = PWM_PERIOD_ZERO;	//PWM0 on later boards
   #endif
   /*setup 4*/
   TIM_TimeBaseInit(TIM4, &TIM_TimeBaseStructure);
@@ -84,11 +84,11 @@ void setup_pwm(void) {
   TIM_ARRPreloadConfig(TIM4, ENABLE);
 
 
-  /*Now setup timer 2 as PWM1/0*/
+  /*Now setup timer 2 as PWM1/2*/
   #if BOARD<3
   TIM_TimeBaseStructure.TIM_Period = PWM_PERIOD_ONE;
   #else
-  TIM_TimeBaseStructure.TIM_Period = PWM_PERIOD_ZERO;
+  TIM_TimeBaseStructure.TIM_Period = PWM_PERIOD_TWO;
   #endif
   TIM_TimeBaseInit(TIM2, &TIM_TimeBaseStructure);	//Same as timer4
   /* PWM1 Mode configuration: Channel3 */
