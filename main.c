@@ -237,7 +237,7 @@ int main(void)
 		//Check the level to see if we are saturating
 		{uint8_t m=0;
 		for( uint8_t n=0;n<PPG_CHANNELS;n++ ) {	//Loop through the PPG channels
-			if( Last_PPG_Values[n]>((TARGET_ADC*5)/6) )
+			if( (((uint32_t)Last_PPG_Values[n])>>8)>(((((uint32_t)TARGET_ADC)>>8)*5)/4) )
 				m=1;
 		}
 		if(m)		
@@ -315,18 +315,6 @@ uint8_t detect_sensors(void) {
 	uint32_t millis=Millis;				//Store the time on entry
 	uint8_t sensors=0;
 	SCHEDULE_CONFIG;				//Run the I2C devices config
-	//Detect if there is an air hose connected
-	Pressure_control|=0x80;				//Set msb - indicates motor is free to run
-	Set_Motor((int16_t)(MAX_DUTY*3)/4);		//Set the motor to 75% max duty cycle
-	while(Millis<(millis+500)) {			//Wait 500ms
-		if(Reported_Pressure>(PRESSURE_MARGIN*4)) {//We got some sane pressure increase
-			sensors|=(1<<PRESSURE_HOSE);
-			init_buffer(&Pressures_Buffer,TMP102_BUFFER_SIZE);//reuse the TMP102 buffer size - as we want the same amount of buffering
-			break;				//Exit loop at this point
-		}
-	}
-	Pressure_control&=~0x80;			//Clear the Pressure_control msb so that motor is disabled in control off mode
-	Set_Motor((int16_t)0);				//Set the motor and solenoid off
 	//Detect if there is a temperature sensor connected
 	if(Completed_Jobs&(1<<TMP102_CONFIG)) {
 		sensors|=(1<<TEMPERATURE_SENSOR);	//The I2C job completion means the sensor must be working
@@ -351,5 +339,19 @@ uint8_t detect_sensors(void) {
 	if(Get_PWM_2()<=PPG_DETECTION_LIMIT)
 		sensors|=(1<<PPG_SENSOR_TWO);
 	Sensors&=~PPG_SENSORS;				//Make sure this is not set
+	//Detect if there is an air hose connected - but only if we found a PPG sensor
+	if(sensors &(1<<PPG_SENSOR_ZERO)|(1<<PPG_SENSOR_ONE)|(1<<PPG_SENSOR_TWO) ) {
+		Pressure_control|=0x80;			//Set msb - indicates motor is free to run
+		Set_Motor((int16_t)(MAX_DUTY*3)/4);	//Set the motor to 75% max duty cycle
+		while(Millis<(millis+500)) {		//Wait 500ms
+			if(Reported_Pressure>(PRESSURE_MARGIN*4)) {//We got some sane pressure increase
+				sensors|=(1<<PRESSURE_HOSE);
+				init_buffer(&Pressures_Buffer,TMP102_BUFFER_SIZE);//reuse the TMP102 buffer size - as we want the same amount of buffering
+				break;			//Exit loop at this point
+			}
+		}
+		Pressure_control&=~0x80;		//Clear the Pressure_control msb so that motor is disabled in control off mode
+		Set_Motor((int16_t)0);			//Set the motor and solenoid off
+	}
 	return sensors;
 }
