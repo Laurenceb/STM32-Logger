@@ -240,7 +240,7 @@ int main(void)
 		for( uint8_t n=0;n<PPG_CHANNELS;n++ ) {	//Loop through the PPG channels
 			if( (((uint32_t)Last_PPG_Values[n])>>8)>(((((uint32_t)TARGET_ADC)>>8)*5)/4) )
 				m=1;
-			if( (uint32_t)Last_PPG_Values[n]< ((uint32_t)TARGET_ADC)>>2 )
+			if( ((uint32_t)Last_PPG_Values[n]< ((uint32_t)TARGET_ADC)>>2) && (Sensors&(1<<(PPG_SENSOR_ZERO+n))))//Only check the channels that are detected
 				l=1;
 		}
 		if(m)		
@@ -256,7 +256,7 @@ int main(void)
 			Oversaturation=0;
 			system_state=255;		//Marker to show we adjusted automatically
 		}
-		if( Undersaturation>(uint8_t)(PPG_SAMPLE_RATE*1.00) && (Sensors &(1<<PPG_SENSOR_ZERO)|(1<<PPG_SENSOR_ONE)|(1<<PPG_SENSOR_TWO)))//If we are supposed to have PPG but don't 
+		if( Undersaturation>(uint8_t)(PPG_SAMPLE_RATE*1.00))//If we are supposed to have PPG but don't 
 			Shutdown_System=NO_SENSOR;	//We turn off if sensor is off for too long
 		}
 		printf(",%d\n",system_state);		//Terminating newline
@@ -321,7 +321,6 @@ void __str_print_char(char c) {
   * @retval Bitmask of detected sensors
   */
 uint8_t detect_sensors(void) {
-	uint32_t millis=Millis;				//Store the time on entry
 	uint8_t sensors=0;
 	SCHEDULE_CONFIG;				//Run the I2C devices config
 	//Detect if there is a temperature sensor connected
@@ -349,7 +348,8 @@ uint8_t detect_sensors(void) {
 		sensors|=(1<<PPG_SENSOR_TWO);
 	Sensors&=~PPG_SENSORS;				//Make sure this is not set
 	//Detect if there is an air hose connected - but only if we found a PPG sensor
-	if(sensors &(1<<PPG_SENSOR_ZERO)|(1<<PPG_SENSOR_ONE)|(1<<PPG_SENSOR_TWO) ) {
+	if(sensors &((1<<PPG_SENSOR_ZERO)|(1<<PPG_SENSOR_ONE)|(1<<PPG_SENSOR_TWO)) ) {
+		uint32_t millis=Millis;			//Store the time here
 		Pressure_control|=0x80;			//Set msb - indicates motor is free to run
 		Set_Motor((int16_t)(MAX_DUTY*3)/4);	//Set the motor to 75% max duty cycle
 		while(Millis<(millis+500)) {		//Wait 500ms
