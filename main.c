@@ -107,6 +107,7 @@ int main(void)
 	EXTI_ONOFF_EN();				//Enable the off interrupt - allow some time for debouncing
 	I2C_Config();					//Setup the I2C bus
 	uint8_t sensors_=detect_sensors();		//Search for connected sensors
+	uint8_t Oversaturation=0;			//Use this to detect oversaturating adc input
 	sensor_data=GET_BATTERY_VOLTAGE;		//Have to flush adc for some reason
 	Delay(10000);
 	if(!(sensors_&~(1<<PRESSURE_HOSE))||GET_BATTERY_VOLTAGE<BATTERY_STARTUP_LIMIT) {//We will have to turn off
@@ -146,7 +147,7 @@ int main(void)
 #ifndef SINGLE_LOGFILE
 		rtc_gettime(&RTC_time);			//Get the RTC time and put a timestamp on the start of the file
 		rprintfInit(__str_print_char);		//Print to the string
-		printf("%d-%d-%dT%d-%d-%d.csv",RTC_time.year,RTC_time.month,RTC_time.mday,RTC_time.hour,RTC_time.min,RTC_time.sec);//Timestamp name
+		printf("%02d-%02d-%02dT%02d-%02d-%02d.csv",RTC_time.year,RTC_time.month,RTC_time.mday,RTC_time.hour,RTC_time.min,RTC_time.sec);//Timestamp name
 		rprintfInit(__usart_send_char);		//Printf over the bluetooth
 #endif
 		if((f_err_code=f_open(&FATFS_logfile,LOGFILE_NAME,FA_CREATE_ALWAYS | FA_WRITE))) {//Present
@@ -179,7 +180,7 @@ int main(void)
 	Pressure_Setpoint=0;				//Not applied pressure, should cause motor and solenoid to go to idle state
 	rtc_gettime(&RTC_time);				//Get the RTC time and put a timestamp on the start of the file
 	print_string[0]=0x00;				//Set string length to 0
-	printf("%d-%d-%dT%d:%d:%d\n",RTC_time.year,RTC_time.month,RTC_time.mday,RTC_time.hour,RTC_time.min,RTC_time.sec);//ISO 8601 timestamp header
+	printf("%02d-%02d-%02dT%02d:%02d:%02d\n",RTC_time.year,RTC_time.month,RTC_time.mday,RTC_time.hour,RTC_time.min,RTC_time.sec);//ISO 8601 timestamp header
 	printf("Battery: %3fV\n",GET_BATTERY_VOLTAGE);	//Get the battery voltage using blocking regular conversion and print
 	printf("Time");					//Print out the sensors that are present in the CSV file
 	if(sensors_&1<<PPG_SENSOR_ZERO)
@@ -233,6 +234,22 @@ int main(void)
 				PPG_Automatic_Brightness_Control();//At the moment this is the only function implimented
 			System_state_Global&=~0x80;	//Wipe the flag bit to show this has been processed
 		}
+		//Check the level to see if we are saturating
+		{uint8_t m=0;
+		for( uint8_t n=0;n<PPG_CHANNELS;n++ ) {	//Loop through the PPG channels
+			if( Last_PPG_Values[n]>((TARGET_ADC*5)/6) )
+				m=1;
+		}
+		if(m)		
+			Oversaturation++;
+		else
+			Oversaturation=m;
+		if( Oversaturation>(uint8_t)(PPG_SAMPLE_RATE*0.25) ) {
+			PPG_Automatic_Brightness_Control();//Fix the brightness
+			Oversaturation=0;
+			system_state=255;		//Marker to show we adjusted automatically
+		}
+		}
 		printf(",%d\n",system_state);		//Terminating newline
 		system_state=0;				//Reset this
 		if(file_opened  & 0x01) {
@@ -260,10 +277,11 @@ int main(void)
 				shutdown();		//Puts us into sleep mode
 			}
 		}
-		if(Millis%15000>4000)			//15 second cycle of pressure control - 11s dump, 4s pump to 3psi
+		//Pressure control is here
+		if(Millis%20000>4000)			//20 second cycle of pressure control - 16s dump, 4s pump to 3psi
 			Pressure_Setpoint=-1;
 		else
-			Pressure_Setpoint=3;		//3PSI setpoint
+			Pressure_Setpoint=2.5;		//2.5PSI setpoint
 	}
 }
 
