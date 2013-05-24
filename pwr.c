@@ -40,6 +40,8 @@ void shutdown_filesystem(uint8_t reason, uint8_t file_flags) {
 		strncpy(c,"\r\nLogger turned off\r\n",sizeof(c));
 	else if(reason==USB_INSERTED)
 		strncpy(c,"\r\nUSB cable inserted\r\n",sizeof(c));
+	else if(reason==NO_SENSOR)
+		strncpy(c,"\r\nPPG sensor removed\r\n",sizeof(c));
 	else
 		strncpy(c,"\r\nLow Battery\r\n",sizeof(c));
 	if(file_flags&0x01) {

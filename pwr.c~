@@ -49,8 +49,4 @@ void shutdown_filesystem(uint8_t reason, uint8_t file_flags) {
 		f_truncate(&FATFS_logfile);		//Truncate the lenght - fix pre allocation
 		f_close(&FATFS_logfile);		//Close any opened file
 	}
-	if(file_flags&0x02)
-		wave_terminate(&FATFS_wavfile_accel);	//Close all opened files - terminate wav files correctly
-	if(file_flags&0x04)
-		wave_terminate(&FATFS_wavfile_gyro);	//Close all opened files - terminate wav files correctly
 }
