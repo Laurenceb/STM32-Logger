@@ -286,8 +286,8 @@ int main(void)
 				shutdown();		//Puts us into sleep mode
 			}
 		}
-		//Pressure control is here
-		if(Millis%20000>4000)			//20 second cycle of pressure control - 16s dump, 4s pump to 3psi
+		//Pressure control is here - note that very low sensor signal for >0.6 seconds will force an air dump 
+		if((Millis%20000>4000) || (Undersaturation>(uint8_t)(PPG_SAMPLE_RATE*0.60)))//20 second cycle of pressure control - 16s dump, 4s pump to 3psi
 			Pressure_Setpoint=-1;
 		else
 			Pressure_Setpoint=2.5;		//2.5PSI setpoint
