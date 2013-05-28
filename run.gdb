@@ -1,4 +1,4 @@
-thbreak main.c:53
+tbreak main.c:53
 continue
 disconnect
 
